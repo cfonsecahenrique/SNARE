@@ -6,16 +6,18 @@ from agent import Agent
 
 
 def print_norm(sn):
-    readable = np.chararray((2,2))
+    readable = [["", ""], ["", ""]]
     for i in range(len(sn)):
         for j in range(len(sn[i])):
-            readable[i][j] = "G" if sn[i][j][0]==1 else "B"
+            part = rep_char(sn[i][j][0]) + "," + rep_char(sn[i][j][1])
+            readable[i][j] = part
     print("2nd Order Social norm:")
     # socialNorm[action][reputation]
-    print("\t   G B")
-    print("\t-------")
-    print("\tC|", readable[1][1].decode(), readable[1][0].decode())
-    print("\tD|", readable[0][1].decode(), readable[0][0].decode())
+    print("\t    G   B")
+    print("\t----------")
+    print("\tC|", readable[1][1], readable[1][0])
+    print("\tD|", readable[0][1], readable[0][0])
+
 
 def get_random_agent_pair(agents):
     return rand.sample(agents, 2)

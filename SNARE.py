@@ -17,45 +17,27 @@ converge = 200
 # M = 0, N = 1
 
 
-def main(r: int):
-    Z = 50
-    G = 5000 * Z
-    mu = 0.1 / Z
-    chi = 0.1 / Z
-    # Eps will be an array for the experiments
-    eps = 5 / Z
+def main(social_norm, runs: int = 50, z: int = 50, g: int = 5000, mu: float = 0.1, chi: float = 0.1, eps: float = 0.1):
 
-    # Normal SJ
-    social_norm = [[(1, 1), (0, 0)], [(0, 0), (1, 1)]]
-    # Mean SJ
-    #social_norm = [[(1, 1), (0, 0)], [(0, 0), (1, 1)]]
-    # Nice SJ
-    #social_norm = [[(1, 1), (0, 1)], [(0, 1), (1, 1)]]
-    # Normal IS
-    #social_norm = [[(0, 0), (0, 0)], [(1, 1), (1, 1)]]
-    # Normal SS
-    #social_norm = [[(1, 1), (0, 0)], [(1, 1), (1, 1)]]
-    # Normal SH
-    #social_norm = [[(0, 0), (0, 0)], [(0, 0), (1, 1)]]
-    # All G
-    # social_norm = [[(1, 1), (1, 1)], [(1, 1), (1, 1)]]
-    # All B
-    # social_norm = [[(0, 0), (0, 0)], [(0, 0), (0, 0)]]
+    mu = mu / z
+    chi = chi / z
+    eps = eps / z
+    g = g * z
 
-    print("Dilemma: " + str(pd))
+    all_games = np.zeros(runs)
 
-    all_games = np.zeros(r)
-
-    for r in range(r):
-        all_games[r] = simulation(Z, G, mu, eps, chi, r, social_norm)
+    for r in range(runs):
+        all_games[r] = simulation(z, g, mu, eps, chi, r, social_norm)
 
     print([round(a, 3) for a in all_games])
-    print("Final Average of ", r, " games: ", all_games.mean())
+    print("Final Average of ", runs, " runs: ", all_games.mean())
+
+    export_results(all_games)
 
 
-def simulation(Z: int, G: int, mu: float, eps: float, chi: float, i: int, sn):
+def simulation(Z: int, gens: int, mu: float, eps: float, chi: float, i: int, sn):
 
-    print("Run", i, "Z", Z, ", G:", G, ", mu:", mu, ", eps:", eps, ", chi:", chi)
+    print("Run", i, "Z", Z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi)
     games_played = 0
     cooperative_acts = 0
     number_mutations = 0
@@ -68,7 +50,7 @@ def simulation(Z: int, G: int, mu: float, eps: float, chi: float, i: int, sn):
 
     #aux.print_population(agents)
 
-    for current_gen in tqdm(range(G)):
+    for current_gen in tqdm(range(gens)):
         if rand.random() < mu:
             # Trait Exploration
             a1 = aux.get_random_agent(agents)
@@ -124,4 +106,39 @@ def simulation(Z: int, G: int, mu: float, eps: float, chi: float, i: int, sn):
     return acr
 
 
-main(5)
+def read_args():
+    f = open("args.txt", "r")
+    lines = f.readlines()
+
+    for line in lines:
+        if line[0] == "#":
+            continue
+        else:
+            args = line.split(" ")
+            sn_list = [int(a) for a in args[0][1:-1].split(",")]
+            sn = make_sn_from_list(sn_list)
+            z: int = int(args[1])
+            chi: float = float(args[2])
+            eps: float = float(args[3])
+            main(sn, z=z, chi=chi, eps=eps, runs=5)
+
+
+def make_sn_from_list(l: list):
+    sn = []
+    entry = []
+    for i in np.arange(0, len(l)-1, 2):
+        entry.append((l[i], l[i+1]))
+        if len(entry) == 2:
+            sn.append(entry)
+            entry = []
+        #i += 1
+    return sn
+
+
+def export_results(all_runs: np.ndarray):
+    builder: str = ""
+
+    pass
+
+
+read_args()
