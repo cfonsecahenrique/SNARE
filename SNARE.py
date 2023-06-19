@@ -3,7 +3,7 @@ import pandas as pd
 import random as rand
 from agent import Agent
 from tqdm import tqdm
-import aux
+import aux_functions as aux
 
 converge = 200
 
@@ -18,41 +18,44 @@ converge = 200
 
 
 def main(r: int):
-    Z = 30
+    Z = 50
     G = 5000 * Z
     mu = 0.1 / Z
+    chi = 0.1 / Z
     # Eps will be an array for the experiments
-    # eps = 0.1 / Z
-    eps = 0
-    b = 5
-    c = 1
+    eps = 5 / Z
 
     # Normal SJ
-    socialNorm = [[(1, 1), (0, 0)], [(0, 0), (1, 1)]]
+    social_norm = [[(1, 1), (0, 0)], [(0, 0), (1, 1)]]
+    # Mean SJ
+    #social_norm = [[(1, 1), (0, 0)], [(0, 0), (1, 1)]]
+    # Nice SJ
+    #social_norm = [[(1, 1), (0, 1)], [(0, 1), (1, 1)]]
     # Normal IS
-    #socialNorm = [[(0, 0), (0, 0)], [(1, 1), (1, 1)]]
+    #social_norm = [[(0, 0), (0, 0)], [(1, 1), (1, 1)]]
     # Normal SS
-    #socialNorm = [[(1, 1), (1, 1)], [(0, 0), (1, 1)]]
+    #social_norm = [[(1, 1), (0, 0)], [(1, 1), (1, 1)]]
+    # Normal SH
+    #social_norm = [[(0, 0), (0, 0)], [(0, 0), (1, 1)]]
     # All G
-    # socialNorm = [[(1, 1), (1, 1)], [(1, 1), (1, 1)]]
+    # social_norm = [[(1, 1), (1, 1)], [(1, 1), (1, 1)]]
     # All B
-    # socialNorm = [[(0, 0), (0, 0)], [(0, 0), (0, 0)]]
+    # social_norm = [[(0, 0), (0, 0)], [(0, 0), (0, 0)]]
 
     print("Dilemma: " + str(pd))
 
     all_games = np.zeros(r)
 
     for r in range(r):
-        all_games[r] = simulation(Z, G, mu, eps, r, socialNorm)
+        all_games[r] = simulation(Z, G, mu, eps, chi, r, social_norm)
 
     print([round(a, 3) for a in all_games])
     print("Final Average of ", r, " games: ", all_games.mean())
 
 
-def simulation(Z: int, G: int, mu: float, eps: float, i: int, sn):
+def simulation(Z: int, G: int, mu: float, eps: float, chi: float, i: int, sn):
 
-    print("Run", i, "Z", Z, ", G:", G, ", mu:", mu, ", eps:", eps)
-    current_gen = 0
+    print("Run", i, "Z", Z, ", G:", G, ", mu:", mu, ", eps:", eps, ", chi:", chi)
     games_played = 0
     cooperative_acts = 0
     number_mutations = 0
@@ -86,30 +89,30 @@ def simulation(Z: int, G: int, mu: float, eps: float, i: int, sn):
             for i in range(Z):
                 # increment # of played games, 4 because it's 2*2DG=2PD
                 if current_gen > converge: games_played += 4
-                print("----------------- GAME", i, "------------------------")
+                #print("----------------- GAME", i, "------------------------")
                 az = rand.choice(aux_list)
                 # print("Agent " + str(a1.get_agent_id()) + " will play with Agent ", str(az.get_agent_id()))
-                res1, n = aux.prisoners_dilemma(a1, az, sn, eps)
-                #res1 = res[0]
+                res, n = aux.prisoners_dilemma(a1, az, sn, eps, chi)
+                res1 = res[0]
                 if current_gen > converge: cooperative_acts += n
                 # print("Res1:", res1, "resZ:", resZ)
                 a1.add_fitness(res1)
 
                 ax = rand.choice(aux_list)
                 # print("Agent " + str(a2.get_agent_id()) + " will play with Agent ", str(ax.get_agent_id()))
-                res2, n = aux.prisoners_dilemma(a2, ax, sn, eps)
-                #res2 = res[0]
+                res, n = aux.prisoners_dilemma(a2, ax, sn, eps, chi)
+                res2 = res[0]
                 if current_gen > converge: cooperative_acts += n
                 # print("Res2:", res1, "resX:", resX)
                 a2.add_fitness(res2)
 
             a1.set_fitness(a1.get_fitness() / Z)
             a2.set_fitness(a2.get_fitness() / Z)
-            # print("f(a1):", a1.get_fitness(), "f(a2):", a2.get_fitness())
+            #print("f(a1):", a1.get_fitness(), "f(a2):", a2.get_fitness())
 
             # Calculate Probability of imitation
             p = (1 + np.exp(a1.get_fitness() - a2.get_fitness())) ** (-1)
-            # print("Probability of a1 imitating a2:", p)
+            #print("Probability of a1 imitating a2:", p)
             if rand.random() < p:
                 a1.set_trait(a2.get_trait())
 
@@ -121,4 +124,4 @@ def simulation(Z: int, G: int, mu: float, eps: float, i: int, sn):
     return acr
 
 
-main(1)
+main(5)
