@@ -132,7 +132,7 @@ def read_args():
             mu: float = float(args[2])
             chi: float = float(args[3])
             eps: float = float(args[4])
-            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=5, gens=2500)
+            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=50, gens=5000)
             main(model_parameters)
     f.close()
 
