@@ -4,51 +4,59 @@ import random as rand
 from agent import Agent
 from tqdm import tqdm
 import aux_functions as aux
-
-converge = 200
+from ModelParameters import ModelParameters as MP
 
 # social norm - new reputation : socialNorm[action][rec_reputation][emotion profile]
 # [ [ [DBM,DBN],[DGM,DGN] ],[ [CBM,CBN],[CGM,CGN] ] ]
 # R   ....0.... ....1....     ....0.... ....1....
 # A  ..........0...........  ...........1..........
-
+# ----------------------------------------------------
 # B = 0, G = 1
 # D = 0, C = 1
 # M = 0, N = 1
+# -------------
 
 
-def main(social_norm, runs: int = 50, z: int = 50, g: int = 5000, mu: float = 0.1, chi: float = 0.1, eps: float = 0.1):
+def main(mp: MP):
 
-    mu = mu / z
-    chi = chi / z
-    eps = eps / z
-    g = g * z
-
-    all_games = np.zeros(runs)
-
-    for r in range(runs):
-        all_games[r] = simulation(z, g, mu, eps, chi, r, social_norm)
+    # list with ACR results of each run
+    all_games = np.zeros(mp.runs)
+    for r in range(mp.runs):
+        all_games[r] = simulation(mp, r)
 
     print([round(a, 3) for a in all_games])
-    print("Final Average of ", runs, " runs: ", all_games.mean())
-
-    export_results(all_games)
+    print("Final Average of ", mp.runs, " runs: ", all_games.mean())
 
 
-def simulation(Z: int, gens: int, mu: float, eps: float, chi: float, i: int, sn):
+def simulation(model_parameters: MP, run: int):
 
-    print("Run", i, "Z", Z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi)
+    # Population Size
+    Z = model_parameters.z
+    # Strategy Exploration Probability
+    mu: float = model_parameters.mu / model_parameters.z
+    # Reputation Assessment Error Probability
+    chi: float = model_parameters.chi / model_parameters.z
+    # (cooperation) Execution Error
+    eps: float = model_parameters.eps / model_parameters.z
+    # Number of Generation to run
+    gens: int = model_parameters.gens * model_parameters.z
+    # Number of Simulations to run
+    runs: int = model_parameters.runs
+    # Social Norm
+    social_norm = model_parameters.social_norm
+    # Converging period
+    converge: int = model_parameters.converge
+
+    print("Run", run, "Z", Z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi)
     games_played = 0
     cooperative_acts = 0
     number_mutations = 0
-    aux.print_norm(sn)
+    aux.print_norm(social_norm)
     # Initialization
     agents = []
     for i in range(Z):
         a = Agent(i)
         agents.append(a)
-
-    #aux.print_population(agents)
 
     for current_gen in tqdm(range(gens)):
         if rand.random() < mu:
@@ -74,7 +82,7 @@ def simulation(Z: int, gens: int, mu: float, eps: float, chi: float, i: int, sn)
                 #print("----------------- GAME", i, "------------------------")
                 az = rand.choice(aux_list)
                 # print("Agent " + str(a1.get_agent_id()) + " will play with Agent ", str(az.get_agent_id()))
-                res, n = aux.prisoners_dilemma(a1, az, sn, eps, chi)
+                res, n = aux.prisoners_dilemma(a1, az, social_norm, eps, chi)
                 res1 = res[0]
                 if current_gen > converge: cooperative_acts += n
                 # print("Res1:", res1, "resZ:", resZ)
@@ -82,7 +90,7 @@ def simulation(Z: int, gens: int, mu: float, eps: float, chi: float, i: int, sn)
 
                 ax = rand.choice(aux_list)
                 # print("Agent " + str(a2.get_agent_id()) + " will play with Agent ", str(ax.get_agent_id()))
-                res, n = aux.prisoners_dilemma(a2, ax, sn, eps, chi)
+                res, n = aux.prisoners_dilemma(a2, ax, social_norm, eps, chi)
                 res2 = res[0]
                 if current_gen > converge: cooperative_acts += n
                 # print("Res2:", res1, "resX:", resX)
@@ -99,9 +107,11 @@ def simulation(Z: int, gens: int, mu: float, eps: float, chi: float, i: int, sn)
                 a1.set_trait(a2.get_trait())
 
     acr = 100 * cooperative_acts / games_played
-    print("Final ACR: " + str(round(acr, 3)))
+    print("\nFinal ACR: " + str(round(acr, 3)))
     print("#Cooperative acts: " + str(cooperative_acts) + ", #Played Games: " + str(games_played))
     print("#Mutations: " + str(number_mutations))
+
+    aux.export_results(acr, model_parameters)
     #aux.print_population(agents)
     return acr
 
@@ -114,31 +124,18 @@ def read_args():
         if line[0] == "#":
             continue
         else:
+            print("Current Instruction:", line)
             args = line.split(" ")
             sn_list = [int(a) for a in args[0][1:-1].split(",")]
-            sn = make_sn_from_list(sn_list)
+            sn: list = aux.make_sn_from_list(sn_list)
             z: int = int(args[1])
-            chi: float = float(args[2])
-            eps: float = float(args[3])
-            main(sn, z=z, chi=chi, eps=eps, runs=5)
+            mu: float = float(args[2])
+            chi: float = float(args[3])
+            eps: float = float(args[4])
+            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=5, gens=2500)
+            main(model_parameters)
+    f.close()
 
 
-def make_sn_from_list(l: list):
-    sn = []
-    entry = []
-    for i in np.arange(0, len(l)-1, 2):
-        entry.append((l[i], l[i+1]))
-        if len(entry) == 2:
-            sn.append(entry)
-            entry = []
-        #i += 1
-    return sn
-
-
-def export_results(all_runs: np.ndarray):
-    builder: str = ""
-
-    pass
-
-
+# Read lines from args.txt and run each one
 read_args()

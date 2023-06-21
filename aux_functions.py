@@ -1,7 +1,6 @@
 import random as rand
-
 import numpy as np
-
+from ModelParameters import ModelParameters as MP
 from agent import Agent
 
 
@@ -111,4 +110,23 @@ def print_agent(ag: Agent):
     else:
         strat = "AllC"
     print("Agent: " + str(ag.get_agent_id()) + ", Strat: " + strat + ", Rep: " + str(ag.get_reputation()))
+
+
+def export_results(acr: float, mp: MP):
+    builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\n"
+    f = open("results.txt", "a")
+    f.write(builder)
+    f.close()
+
+
+def make_sn_from_list(l: list):
+    sn = []
+    entry = []
+    for i in np.arange(0, len(l) - 1, 2):
+        entry.append((l[i], l[i + 1]))
+        if len(entry) == 2:
+            sn.append(entry)
+            entry = []
+    return sn
+
 
