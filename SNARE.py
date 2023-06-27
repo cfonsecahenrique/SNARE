@@ -31,7 +31,7 @@ def main(mp: MP):
 def simulation(model_parameters: MP, run: int):
 
     # Population Size
-    Z = model_parameters.z
+    z = model_parameters.z
     # Strategy Exploration Probability
     mu: float = model_parameters.mu / model_parameters.z
     # Reputation Assessment Error Probability
@@ -47,14 +47,14 @@ def simulation(model_parameters: MP, run: int):
     # Converging period
     converge: int = model_parameters.converge
 
-    print("Run", run, "Z", Z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi)
+    print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi)
     games_played = 0
     cooperative_acts = 0
     number_mutations = 0
     aux.print_norm(social_norm)
     # Initialization
     agents = []
-    for i in range(Z):
+    for i in range(z):
         a = Agent(i)
         agents.append(a)
 
@@ -76,7 +76,7 @@ def simulation(model_parameters: MP, run: int):
                         a.get_agent_id() != a1.get_agent_id() and a.get_agent_id() != a2.get_agent_id()]
 
             # Each agent plays Z games
-            for i in range(Z):
+            for i in range(z):
                 # increment # of played games, 4 because it's 2*2DG=2PD
                 if current_gen > converge: games_played += 4
                 #print("----------------- GAME", i, "------------------------")
@@ -96,8 +96,8 @@ def simulation(model_parameters: MP, run: int):
                 # print("Res2:", res1, "resX:", resX)
                 a2.add_fitness(res2)
 
-            a1.set_fitness(a1.get_fitness() / Z)
-            a2.set_fitness(a2.get_fitness() / Z)
+            a1.set_fitness(a1.get_fitness() / z)
+            a2.set_fitness(a2.get_fitness() / z)
             #print("f(a1):", a1.get_fitness(), "f(a2):", a2.get_fitness())
 
             # Calculate Probability of imitation
