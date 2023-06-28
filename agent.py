@@ -5,12 +5,13 @@ class Agent:
     def __init__(self, agent_id):
         self._agent_id = agent_id
         self._reputation = rand.randint(0, 1)
-        self._trait = ((rand.randint(0, 1), rand.randint(0, 1)), rand.randint(0, 1))
+        self.trait_mutation()
         self._fitness_score = 0
 
     def trait_mutation(self):
         self._trait = ((rand.randint(0, 1), rand.randint(0, 1)), rand.randint(0, 1))
-
+        if self._trait == ((0, 0), 1) or self._trait == ((1, 1), 0):
+            self.trait_mutation()
         # Getter for agent_id
 
     def get_agent_id(self):

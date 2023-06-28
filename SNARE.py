@@ -108,8 +108,8 @@ def simulation(model_parameters: MP, run: int):
 
     acr = 100 * cooperative_acts / games_played
     print("\nFinal ACR: " + str(round(acr, 3)))
-    print("#Cooperative acts: " + str(cooperative_acts) + ", #Played Games: " + str(games_played))
-    print("#Mutations: " + str(number_mutations))
+    #print("#Cooperative acts: " + str(cooperative_acts) + ", #Played Games: " + str(games_played))
+    #print("#Mutations: " + str(number_mutations))
 
     aux.export_results(acr, model_parameters)
     #aux.print_population(agents)
