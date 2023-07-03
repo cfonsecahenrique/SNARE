@@ -112,11 +112,46 @@ def print_agent(ag: Agent):
     print("Agent: " + str(ag.get_agent_id()) + ", Strat: " + strat + ", Rep: " + str(ag.get_reputation()))
 
 
-def export_results(acr: float, mp: MP):
-    builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\n"
+def export_results(acr: float, mp: MP, population: list[Agent]):
+    builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\t"
+    builder += make_strat_str(calculate_strategy_frequency(population))
     f = open("results.txt", "a")
     f.write(builder)
     f.close()
+
+
+def calculate_strategy_frequency(population: list[Agent]):
+    strategy_freqs = {}
+    strats = [
+        (((0, 0), 0)),
+        (((0, 0), 1)),
+        (((0, 1), 0)),
+        (((0, 1), 1)),
+        (((1, 0), 0)),
+        (((1, 0), 1)),
+        (((1, 1), 0)),
+        (((1, 1), 1))
+    ]
+
+    for strat in strats:
+        strategy_freqs[strat] = 0
+
+    for agent in population:
+        strategy_freqs[agent.get_trait()] += 1
+
+    for strat in strats:
+        strategy_freqs[strat] = strategy_freqs[strat]/len(population)
+
+    print(strategy_freqs)
+    return strategy_freqs
+
+
+def make_strat_str(frequencies: dict):
+    builder: str = ""
+    for key in frequencies:
+        builder += str(frequencies.get(key)) + "\t"
+    builder += "\n"
+    return builder
 
 
 def make_sn_from_list(l: list):

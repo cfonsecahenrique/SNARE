@@ -53,7 +53,7 @@ def simulation(model_parameters: MP, run: int):
     number_mutations = 0
     aux.print_norm(social_norm)
     # Initialization
-    agents = []
+    agents: list[Agent] = []
     for i in range(z):
         a = Agent(i)
         agents.append(a)
@@ -110,9 +110,8 @@ def simulation(model_parameters: MP, run: int):
     print("\nFinal ACR: " + str(round(acr, 3)))
     #print("#Cooperative acts: " + str(cooperative_acts) + ", #Played Games: " + str(games_played))
     #print("#Mutations: " + str(number_mutations))
-
-    aux.export_results(acr, model_parameters)
     #aux.print_population(agents)
+    aux.export_results(acr, model_parameters, agents)
     return acr
 
 

@@ -1,3 +1,6 @@
+from agent import Agent
+import numpy as np
+
 class ModelParameters:
 
     def __init__(self, sn_str: str, sn_list: list, z: int, mu: float, chi: float, eps: float, runs: int = 50, gens: int = 5000, pdx_strats: bool = True):
