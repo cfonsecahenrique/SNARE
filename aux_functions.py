@@ -142,7 +142,6 @@ def calculate_strategy_frequency(population: list[Agent]):
     for strat in strats:
         strategy_freqs[strat] = strategy_freqs[strat]/len(population)
 
-    print(strategy_freqs)
     return strategy_freqs
 
 

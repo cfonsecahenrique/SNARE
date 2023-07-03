@@ -1,17 +1,18 @@
 import random as rand
 
-
 class Agent:
-    def __init__(self, agent_id):
+    def __init__(self, agent_id: int, mp):
         self._agent_id = agent_id
         self._reputation = rand.randint(0, 1)
-        self.trait_mutation()
+        self._trait = None
+        self.trait_mutation(mp)
         self._fitness_score = 0
 
-    def trait_mutation(self):
+    def trait_mutation(self, mp):
         self._trait = ((rand.randint(0, 1), rand.randint(0, 1)), rand.randint(0, 1))
-        if self._trait == ((0, 0), 1) or self._trait == ((1, 1), 0):
-            self.trait_mutation()
+        if not mp.paradoxical_strats and (self._trait == ((0, 0), 1) or self._trait == ((1, 1), 0)):
+            self.trait_mutation(mp)
+
         # Getter for agent_id
 
     def get_agent_id(self):

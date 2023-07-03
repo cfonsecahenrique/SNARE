@@ -21,7 +21,7 @@ class ModelParameters:
 
     def generate_mp_string(self) -> str:
         builder: str = self._social_norm_str + "\t" + str(self.z) + "\t" + str(self._gens) + "\t" + str(self.mu) + "\t" \
-                       + str(self.chi) + "\t" + str(self.eps)
+                       + str(self.chi) + "\t" + str(self.eps) + "\t" + str(self._paradoxical_strats)
         return builder
 
     @property

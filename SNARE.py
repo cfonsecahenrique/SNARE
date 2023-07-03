@@ -55,14 +55,14 @@ def simulation(model_parameters: MP, run: int):
     # Initialization
     agents: list[Agent] = []
     for i in range(z):
-        a = Agent(i)
+        a = Agent(i, MP)
         agents.append(a)
 
     for current_gen in tqdm(range(gens)):
         if rand.random() < mu:
             # Trait Exploration
             a1 = aux.get_random_agent(agents)
-            a1.trait_mutation()
+            a1.trait_mutation(model_parameters)
             number_mutations += 1
             # print("Agent " + str(a1.get_agent_id()) + " randomly explored. New trait: " + str(a1.get_trait()))
         else:
@@ -127,11 +127,12 @@ def read_args():
             args = line.split(" ")
             sn_list = [int(a) for a in args[0][1:-1].split(",")]
             sn: list = aux.make_sn_from_list(sn_list)
-            z: int = int(args[1])
-            mu: float = float(args[2])
-            chi: float = float(args[3])
-            eps: float = float(args[4])
-            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=10, gens=5000)
+            pdx: bool = bool(args[1])
+            z: int = int(args[2])
+            mu: float = float(args[3])
+            chi: float = float(args[4])
+            eps: float = float(args[5])
+            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=10, gens=5000, pdx_strats=pdx)
             main(model_parameters)
     f.close()
 
