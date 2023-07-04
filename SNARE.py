@@ -1,5 +1,5 @@
+import sys
 import numpy as np
-import pandas as pd
 import random as rand
 from agent import Agent
 from tqdm import tqdm
@@ -116,7 +116,8 @@ def simulation(model_parameters: MP, run: int):
 
 
 def read_args():
-    f = open("args.txt", "r")
+    file_name: str = str(sys.argv[1])
+    f = open(file_name, "r")
     lines = f.readlines()
 
     for line in lines:
@@ -132,7 +133,7 @@ def read_args():
             mu: float = float(args[3])
             chi: float = float(args[4])
             eps: float = float(args[5])
-            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=10, gens=5000, pdx_strats=pdx)
+            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=50, gens=5000, pdx_strats=pdx)
             main(model_parameters)
     f.close()
 

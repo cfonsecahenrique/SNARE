@@ -1,0 +1,20 @@
+# Normal SJ
+# social_norm = [[(1, 1), (0, 0)], [(0, 0), (1, 1)]]
+#               (1,1,0,0,0,0,1,1)
+# Nice SJ
+# social_norm = [[(1, 1), (0, 1)], [(0, 1), (1, 1)]]
+#               (1,1,0,1,0,1,1,1)
+# Normal IS
+# social_norm = [[(0, 0), (0, 0)], [(1, 1), (1, 1)]]
+# (nice) IScoring-Standing
+# social_norm = [[(0, 0), (0, 1)], [(1, 1), (1, 1)]]
+# Normal SS
+# social_norm = [[(1, 1), (0, 0)], [(1, 1), (1, 1)]]
+# Normal SH
+# social_norm = [[(0, 0), (0, 0)], [(0, 0), (1, 1)]]
+# All G
+# social_norm = [[(1, 1), (1, 1)], [(1, 1), (1, 1)]]
+# All B
+# social_norm = [[(0, 0), (0, 0)], [(0, 0), (0, 0)]]
+# Social Norm      pdx  Z  mu  chi eps
+(1,1,1,1,1,1,1,1) true 20 0.1 0.1 10
