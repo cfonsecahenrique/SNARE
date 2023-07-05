@@ -38,7 +38,7 @@ def simulation(model_parameters: MP, run: int):
     chi: float = model_parameters.chi / model_parameters.z
     # (cooperation) Execution Error
     eps: float = model_parameters.eps / model_parameters.z
-    # Number of Generation to run
+    # Number of Generations to run
     gens: int = model_parameters.gens * model_parameters.z
     # Number of Simulations to run
     runs: int = model_parameters.runs
@@ -47,7 +47,7 @@ def simulation(model_parameters: MP, run: int):
     # Converging period
     converge: int = model_parameters.converge
 
-    print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi)
+    print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", pdx:", model_parameters.paradoxical_strats)
     games_played = 0
     cooperative_acts = 0
     number_mutations = 0
@@ -128,12 +128,12 @@ def read_args():
             args = line.split(" ")
             sn_list = [int(a) for a in args[0][1:-1].split(",")]
             sn: list = aux.make_sn_from_list(sn_list)
-            pdx: bool = bool(args[1])
+            pdx: bool = args[1] == "true"
             z: int = int(args[2])
             mu: float = float(args[3])
             chi: float = float(args[4])
             eps: float = float(args[5])
-            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=50, gens=5000, pdx_strats=pdx)
+            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=10, gens=5000, pdx_strats=pdx)
             main(model_parameters)
     f.close()
 

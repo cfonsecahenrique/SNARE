@@ -10,8 +10,10 @@ class Agent:
 
     def trait_mutation(self, mp):
         self._trait = ((rand.randint(0, 1), rand.randint(0, 1)), rand.randint(0, 1))
-        if not mp.paradoxical_strats and (self._trait == ((0, 0), 1) or self._trait == ((1, 1), 0)):
-            self.trait_mutation(mp)
+        if not mp.paradoxical_strats:
+            if self._trait == ((0, 0), 1) or self._trait == ((1, 1), 0):
+                self.trait_mutation(mp)
+
 
         # Getter for agent_id
 

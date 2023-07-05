@@ -83,6 +83,7 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, SN, eps: float, chi:float):
     #print_norm(SN)
     #print("Agent A", agent1.get_agent_id(), "action was", action_char(a1_action), "while Agent", agent2.get_agent_id(), "reputation was", rep_char(a2_rep))
     #print("Agent B", agent2.get_agent_id(), "action was", action_char(a2_action), "while Agent", agent1.get_agent_id(), "reputation was", rep_char(a1_rep))
+    #print("Additionally, A showed the", ep_char(agent1.get_trait()[1]), "emotion profile and B showed", ep_char(agent2.get_trait()[1]))
 
     agent1.set_reputation(SN[a1_action][a2_rep][agent1.get_trait()[1]])
     agent2.set_reputation(SN[a2_action][a1_rep][agent2.get_trait()[1]])
@@ -94,6 +95,10 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, SN, eps: float, chi:float):
 
 def action_char(act: int):
     return "C" if act == 1 else "D"
+
+
+def ep_char(ep: int):
+    return "M" if ep == 0 else "N"
 
 
 def rep_char(rep: int):
@@ -113,15 +118,26 @@ def print_agent(ag: Agent):
 
 
 def export_results(acr: float, mp: MP, population: list[Agent]):
-    builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\t"
+    builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\t" + str(reputation_frequencies(population)) + "\t"
     builder += make_strat_str(calculate_strategy_frequency(population))
     f = open("results.txt", "a")
     f.write(builder)
     f.close()
 
 
+def reputation_frequencies(population: list[Agent]):
+    # Only works binarily, for now
+    # 0: B, 1: G
+    rep_freqs: dict = {0: 0, 1: 0}
+    for agent in population:
+        rep_freqs[agent.get_reputation()] += 1
+    rep_freqs[0] /= len(population)
+    rep_freqs[1] /= len(population)
+    return [rep_freqs[0], rep_freqs[1]]
+
+
 def calculate_strategy_frequency(population: list[Agent]):
-    strategy_freqs = {}
+    strategy_freqs: dict = {}
     strats = [
         (((0, 0), 0)),
         (((0, 0), 1)),
