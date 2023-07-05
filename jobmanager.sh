@@ -24,5 +24,5 @@ do
 	# Submit the job using the sbatch command
 	sbatch $script_name
 	# Remove temp script
-	#rm $script_name
+	rm $script_name
 done < jobs.txt
