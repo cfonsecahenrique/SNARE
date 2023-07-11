@@ -85,8 +85,11 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, SN, eps: float, chi:float):
     #print("Agent B", agent2.get_agent_id(), "action was", action_char(a2_action), "while Agent", agent1.get_agent_id(), "reputation was", rep_char(a1_rep))
     #print("Additionally, A showed the", ep_char(agent1.get_trait()[1]), "emotion profile and B showed", ep_char(agent2.get_trait()[1]))
 
-    agent1.set_reputation(SN[a1_action][a2_rep][agent1.get_trait()[1]])
-    agent2.set_reputation(SN[a2_action][a1_rep][agent2.get_trait()[1]])
+    #agent1.set_reputation(SN[a1_action][a2_rep][agent1.get_trait()[1]])
+    #agent2.set_reputation(SN[a2_action][a1_rep][agent2.get_trait()[1]])
+
+    agent1.set_reputation(SN[a1_action][a1_rep][agent1.get_trait()[1]])
+    agent2.set_reputation(SN[a2_action][a2_rep][agent2.get_trait()[1]])
 
     #print("Agent A", agent1.get_agent_id(), "new rep =", rep_char(agent1.get_reputation()), "payoff:", pd[a1_action][a2_action][0])
     #print("Agent B", agent2.get_agent_id(), "new rep =", rep_char(agent2.get_reputation()), "payoff:", pd[a1_action][a2_action][1])
