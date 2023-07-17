@@ -3,14 +3,19 @@ import numpy as np
 
 class ModelParameters:
 
-    def __init__(self, sn_str: str, sn_list: list, z: int, mu: float, chi: float, eps: float, runs: int = 50, gens: int = 5000, pdx_strats: bool = True):
+    def __init__(self, sn_str: str, sn_list: list, ebsn_str: str, ebsn_list: list, z: int,
+                 mu: float, chi: float, eps: float, gamma: float,
+                 runs: int = 50, gens: int = 5000, pdx_strats: bool = True):
         self._social_norm = sn_list
         self._social_norm_str = sn_str
+        self._eb_social_norm = ebsn_list
+        self._ebsn_str = ebsn_str
         self._mu = mu
         self._z = z
         self._gens = gens
         self._chi = chi
         self._eps = eps
+        self._gamma = gamma
         self._runs = runs
         self._converge = z*10
         self._paradoxical_strats = pdx_strats
@@ -19,10 +24,19 @@ class ModelParameters:
     def paradoxical_strats(self):
         return self._paradoxical_strats
 
+
     def generate_mp_string(self) -> str:
-        builder: str = self._social_norm_str + "\t" + str(self.z) + "\t" + str(self._gens) + "\t" + str(self.mu) + "\t" \
-                       + str(self.chi) + "\t" + str(self.eps) + "\t" + str(self._paradoxical_strats)
+        builder: str = self._ebsn_str + "\t" + self._social_norm_str + "\t" + str(self.z) + "\t" + str(self._gens) + "\t" + str(self.mu) + "\t" \
+                       + str(self.chi) + "\t" + str(self.eps) + "\t" + str(self.gamma) + "\t" + str(self._paradoxical_strats)
         return builder
+
+    @property
+    def gamma(self):
+        return self._gamma
+
+    @property
+    def ebsn(self):
+        return self._eb_social_norm
 
     @property
     def eps(self):

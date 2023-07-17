@@ -40,18 +40,22 @@ def simulation(model_parameters: MP, run: int):
     eps: float = model_parameters.eps / model_parameters.z
     # Number of Generations to run
     gens: int = model_parameters.gens * model_parameters.z
-    # Number of Simulations to run
-    runs: int = model_parameters.runs
     # Social Norm
     social_norm = model_parameters.social_norm
+    # EB Social norm
+    eb_social_norm = model_parameters.ebsn
     # Converging period
     converge: int = model_parameters.converge
+    # Probability of looking at emotion
+    gamma: float = model_parameters.gamma
 
-    print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", pdx:", model_parameters.paradoxical_strats)
+    print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, " gamma:", gamma,
+          ", pdx:", model_parameters.paradoxical_strats)
     games_played = 0
     cooperative_acts = 0
     number_mutations = 0
-    aux.print_norm(social_norm)
+    aux.print_sn(social_norm)
+    aux.print_ebnorm(eb_social_norm)
     # Initialization
     agents: list[Agent] = []
     for i in range(z):
@@ -82,7 +86,7 @@ def simulation(model_parameters: MP, run: int):
                 #print("----------------- GAME", i, "------------------------")
                 az = rand.choice(aux_list)
                 # print("Agent " + str(a1.get_agent_id()) + " will play with Agent ", str(az.get_agent_id()))
-                res, n = aux.prisoners_dilemma(a1, az, social_norm, eps, chi)
+                res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, gamma)
                 res1 = res[0]
                 if current_gen > converge: cooperative_acts += n
                 # print("Res1:", res1, "resZ:", resZ)
@@ -90,7 +94,7 @@ def simulation(model_parameters: MP, run: int):
 
                 ax = rand.choice(aux_list)
                 # print("Agent " + str(a2.get_agent_id()) + " will play with Agent ", str(ax.get_agent_id()))
-                res, n = aux.prisoners_dilemma(a2, ax, social_norm, eps, chi)
+                res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, gamma)
                 res2 = res[0]
                 if current_gen > converge: cooperative_acts += n
                 # print("Res2:", res1, "resX:", resX)
@@ -104,7 +108,8 @@ def simulation(model_parameters: MP, run: int):
             p = (1 + np.exp(a1.get_fitness() - a2.get_fitness())) ** (-1)
             #print("Probability of a1 imitating a2:", p)
             if rand.random() < p:
-                a1.set_trait(a2.get_trait())
+                a1.set_strategy(a2.strategy())
+                a1.set_emotion_profile(a2.emotion_profile())
 
     acr = 100 * cooperative_acts / games_played
     print("\nFinal ACR: " + str(round(acr, 3)))
@@ -126,14 +131,19 @@ def read_args():
         else:
             print("Current Instruction:", line)
             args = line.split(" ")
-            sn_list = [int(a) for a in args[0][1:-1].split(",")]
+            # [1:-1] is because of the ()
+            ebsn_list: list = [int(a) for a in args[0][1:-1].split(",")]
+            eb_sn: list = aux.make_ebsn_from_list(ebsn_list)
+            sn_list: list = [int(b) for b in args[1][1:-1].split(",")]
             sn: list = aux.make_sn_from_list(sn_list)
-            pdx: bool = args[1] == "true"
-            z: int = int(args[2])
-            mu: float = float(args[3])
-            chi: float = float(args[4])
-            eps: float = float(args[5])
-            model_parameters: MP = MP(args[0], sn, z, mu, chi, eps, runs=10, gens=4000, pdx_strats=pdx)
+            pdx: bool = args[2] == "true"
+            z: int = int(args[3])
+            mu: float = float(args[4])
+            chi: float = float(args[5])
+            eps: float = float(args[6])
+            gamma: float = float(args[7])
+            model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, gamma,
+                                      runs=1, gens=4000, pdx_strats=pdx)
             main(model_parameters)
     f.close()
 

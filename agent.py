@@ -2,21 +2,34 @@ import random as rand
 
 class Agent:
     def __init__(self, agent_id: int, mp):
-        self._agent_id = agent_id
-        self._reputation = rand.randint(0, 1)
-        self._trait = None
+        self._agent_id: int = agent_id
+        self._reputation: int = rand.randint(0, 1)
+        self._fitness_score: int = 0
+        self._strategy: tuple = (-1, -1)
+        self._emotion_profile: int = -1
         self.trait_mutation(mp)
-        self._fitness_score = 0
 
     def trait_mutation(self, mp):
-        self._trait = ((rand.randint(0, 1), rand.randint(0, 1)), rand.randint(0, 1))
+        self._emotion_profile = rand.randint(0,1)
+        self._strategy = (rand.randint(0, 1), rand.randint(0, 1))
         if not mp.paradoxical_strats:
-            if self._trait == ((0, 0), 1) or self._trait == ((1, 1), 0):
+            if (self._strategy == (0, 0) and self._emotion_profile == 1) or \
+                    (self._strategy == (1, 1) and self._emotion_profile == 0):
                 self.trait_mutation(mp)
 
+    def strategy(self):
+        return self._strategy
+
+    def emotion_profile(self):
+        return self._emotion_profile
+
+    def set_strategy(self, strat):
+        self._strategy = strat
+
+    def set_emotion_profile(self, ep):
+        self._emotion_profile = ep
 
         # Getter for agent_id
-
     def get_agent_id(self):
         return self._agent_id
         # Setter for agent_id
@@ -33,16 +46,6 @@ class Agent:
 
     def set_reputation(self, reputation: int):
         self._reputation = reputation
-
-        # Getter for trait
-
-    def get_trait(self):
-        return self._trait
-
-        # Setter for trait
-
-    def set_trait(self, trait):
-        self._trait = trait
 
         # Getter for fitness_score
 
