@@ -1,0 +1,11 @@
+FILES
+.py files -> model
+jobmanager.sh -> script that manages job scheduling to the cluster
+jobs.txt -> used by jobmanager to choose which input file to use
+
+FOLDERS
+inputs -> all the used input files
+	e.g.:
+	inputs/SJ.txt -> all model configurations regarding the SJ experiment
+outputs -> results.txt files
+	outputs/results.txt -> all results together
