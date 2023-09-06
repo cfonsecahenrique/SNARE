@@ -74,18 +74,37 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     # print("a1_trait = " + str(a1.get_trait()[0]))
     # print("This means a1_action: " + str(a1_action))
 
-    if a1_action == 1:
-        if rand.random() < eps:
-            a1_action = invert_binary(a1_action)
-            # print("Agent " + str(agent1.get_agent_id()) + " tried to cooperate but failed!")
+    # Execution error for action of agent 1
+    if rand.random() < eps:
+        a1_action = invert_binary(a1_action)
+        # print("Agent " + str(agent1.get_agent_id()) + " tried to cooperate but failed!")
+        if rand.random() < gamma:
+            # Look at Emotion Based Social Norm
+            agent1.set_reputation(EBSN[a1_action][a1_rep][agent1.emotion_profile()])
         else:
-            cooperative_acts += 1
-    if a2_action == 1:
-        if rand.random() < eps:
-            a2_action = invert_binary(a2_action)
-            # print("Agent " + str(agent2.get_agent_id()) + " tried to cooperate but failed!")
+            # Look at simple social norm
+            agent1.set_reputation(SN[a1_action][a1_rep])
+    else:
+        # Look at simple social norm
+        agent1.set_reputation(SN[a1_action][a1_rep])
+
+    # Execution error for action of agent 2
+    if rand.random() < eps:
+        a2_action = invert_binary(a2_action)
+        # print("Agent " + str(agent2.get_agent_id()) + " tried to cooperate but failed!")
+        if rand.random() < gamma:
+            agent2.set_reputation(EBSN[a2_action][a2_rep][agent2.emotion_profile()])
         else:
-            cooperative_acts += 1
+            # Look at simple social norm
+            agent1.set_reputation(SN[a1_action][a1_rep])
+    else:
+        # Look at simple social norm
+        agent1.set_reputation(SN[a1_action][a1_rep])
+
+    # Count coop acts
+    # coop = 1, def = 0
+    cooperative_acts += a1_action
+    cooperative_acts += a2_action
 
     # Reputation stuff
     # print("----------------------------")
@@ -93,17 +112,6 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     # print("Agent A", agent1.get_agent_id(), "action was", action_char(a1_action), "while Agent", agent2.get_agent_id(), "reputation was", rep_char(a2_rep))
     # print("Agent B", agent2.get_agent_id(), "action was", action_char(a2_action), "while Agent", agent1.get_agent_id(), "reputation was", rep_char(a1_rep))
     # print("Additionally, A showed the", ep_char(agent1.get_trait()[1]), "emotion profile and B showed", ep_char(agent2.get_trait()[1]))
-
-    if rand.random() < gamma:
-        # Normal 2nd Order Norm
-        agent1.set_reputation(EBSN[a1_action][a2_rep][agent1.emotion_profile()])
-        agent2.set_reputation(EBSN[a2_action][a1_rep][agent2.emotion_profile()])
-    else:
-        agent1.set_reputation(SN[a1_action][a2_rep])
-        agent2.set_reputation(SN[a2_action][a1_rep])
-    # Inverted donor only norm
-    # agent1.set_reputation(SN[a1_action][a1_rep][agent1.get_trait()[1]])
-    # agent2.set_reputation(SN[a2_action][a2_rep][agent2.get_trait()[1]])
 
     # print("Agent A", agent1.get_agent_id(), "new rep =", rep_char(agent1.get_reputation()), "payoff:", pd[a1_action][a2_action][0])
     # print("Agent B", agent2.get_agent_id(), "new rep =", rep_char(agent2.get_reputation()), "payoff:", pd[a1_action][a2_action][1])
@@ -135,11 +143,13 @@ def print_agent(ag: Agent):
 
 
 def export_results(acr: float, mp: MP, population: list[Agent]):
-    builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\t" + str(reputation_frequencies(population)) + "\t"
+    builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\t"
+    rep_freqs = reputation_frequencies(population)
+    builder += str(rep_freqs[0]) + "\t" + str(rep_freqs[1]) + "\t"
     builder += make_strat_str(calculate_strategy_frequency(population))
     builder += make_strat_str(calculate_ep_frequencies(population))
     builder += "\n"
-    f = open("results.txt", "a")
+    f = open("outputs/results.txt", "a")
     f.write(builder)
     f.close()
 
