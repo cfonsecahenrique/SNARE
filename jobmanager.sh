@@ -34,3 +34,5 @@ do
 	# Remove temp script
 	rm $script_name
 done < jobs.txt
+
+echo "FINISHED"
