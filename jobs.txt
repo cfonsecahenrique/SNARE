@@ -1,1 +1,1 @@
-python3 SNARE.py inputs/IS.txt
+python3 SNARE.py inputs/SJ.txt

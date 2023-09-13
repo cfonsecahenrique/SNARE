@@ -2,6 +2,7 @@
 # Set the threshold for the maximum number of running jobs
 threshold=464
 echo "Job Threshold set to $threshold"
+job_number=0
 # Read the list of job commands from a text file
 while read -r line
 do
@@ -28,11 +29,12 @@ do
 	do
 		echo "Run number $run"
 		# Submit the job using the sbatch command
-		sbatch -J "job_$run" $script_name
+		sbatch -J "$job_number_$run" $script_name
 		((run++))
 	done
 	# Remove temp script
 	rm $script_name
+	((job_number++))
 done < jobs.txt
 
 echo "FINISHED"
