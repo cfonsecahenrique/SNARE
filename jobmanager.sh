@@ -29,7 +29,7 @@ do
 	do
 		echo "Run number $run"
 		# Submit the job using the sbatch command
-		sbatch -J "$job_number_$run" $script_name
+		sbatch -J "${run}_${job_number}" $script_name
 		((run++))
 	done
 	# Remove temp script
