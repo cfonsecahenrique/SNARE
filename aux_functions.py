@@ -60,6 +60,8 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     a1_rep: int = agent1.get_reputation()
     a2_rep: int = agent2.get_reputation()
     # get_trait()[0]: action rule
+
+    # Check for rep assessment error
     if rand.random() > chi:
         a1_action: int = agent1.strategy()[a2_rep]
     else:
@@ -69,6 +71,7 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         a2_action: int = agent2.strategy()[a1_rep]
     else:
         a2_action: int = agent2.strategy()[invert_binary(a1_rep)]
+
     # print("------------------")
     # print("a2rep = " + str(agent2.get_reputation()))
     # print("a1_trait = " + str(a1.get_trait()[0]))
