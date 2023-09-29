@@ -1,3 +1,5 @@
-python3 SNARE.py inputs/IS1.txt
-python3 SNARE.py inputs/IS2.txt
-python3 SNARE.py inputs/IS3.txt
+python3 SNARE.py inputs/SJ1.txt
+python3 SNARE.py inputs/SJ2.txt
+python3 SNARE.py inputs/SJ3.txt
+python3 SNARE.py inputs/SJ4.txt
+python3 SNARE.py inputs/SJ5.txt
