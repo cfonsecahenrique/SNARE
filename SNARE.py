@@ -88,7 +88,8 @@ def simulation(model_parameters: MP, run: int):
                 # print("Agent " + str(a1.get_agent_id()) + " will play with Agent ", str(az.get_agent_id()))
                 res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, gamma)
                 res1 = res[0]
-                if current_gen > converge: cooperative_acts += n
+                if current_gen > converge:
+                    cooperative_acts += n
                 # print("Res1:", res1, "resZ:", resZ)
                 a1.add_fitness(res1)
 
@@ -96,7 +97,8 @@ def simulation(model_parameters: MP, run: int):
                 # print("Agent " + str(a2.get_agent_id()) + " will play with Agent ", str(ax.get_agent_id()))
                 res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, gamma)
                 res2 = res[0]
-                if current_gen > converge: cooperative_acts += n
+                if current_gen > converge:
+                    cooperative_acts += n
                 # print("Res2:", res1, "resX:", resX)
                 a2.add_fitness(res2)
 
