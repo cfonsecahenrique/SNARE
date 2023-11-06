@@ -5,6 +5,7 @@ from agent import Agent
 from tqdm import tqdm
 import aux_functions as aux
 from ModelParameters import ModelParameters as MP
+import multiprocessing
 
 # social norm - new reputation : socialNorm[action][rec_reputation][emotion profile]
 # [ [ [DBM,DBN],[DGM,DGN] ],[ [CBM,CBN],[CGM,CGN] ] ]
@@ -122,7 +123,8 @@ def simulation(model_parameters: MP, run: int):
     return acr
 
 
-def read_args():
+# Read lines from args.txt and run each one
+def read_args(process_id):
     file_name: str = str(sys.argv[1])
     f = open(file_name, "r")
     lines = f.readlines()
@@ -150,5 +152,9 @@ def read_args():
     f.close()
 
 
-# Read lines from args.txt and run each one
-read_args()
+if __name__ == '__main__':
+    num_simulations: int = 50
+    num_cores = 48
+    with multiprocessing.Pool(num_cores) as pool:
+        pool.map(read_args, range(num_simulations))
+
