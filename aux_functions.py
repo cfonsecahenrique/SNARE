@@ -4,20 +4,6 @@ from ModelParameters import ModelParameters as MP
 from agent import Agent
 
 
-def print_ebnorm(sn):
-    readable = [["", ""], ["", ""]]
-    for i in range(len(sn)):
-        for j in range(len(sn[i])):
-            part = rep_char(sn[i][j][0]) + "," + rep_char(sn[i][j][1])
-            readable[i][j] = part
-    print("2nd Order Emotion Based Social norm:")
-    # socialNorm[action][reputation]
-    print("\t    G   B")
-    print("\t----------")
-    print("\tC|", readable[1][1], readable[1][0])
-    print("\tD|", readable[0][1], readable[0][0])
-
-
 def print_sn(sn):
     print("2nd Order Social norm:")
     # socialNorm[action][reputation]
@@ -72,11 +58,6 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     else:
         a2_action: int = agent2.strategy()[invert_binary(a1_rep)]
 
-    # print("------------------")
-    # print("a2rep = " + str(agent2.get_reputation()))
-    # print("a1_trait = " + str(a1.get_trait()[0]))
-    # print("This means a1_action: " + str(a1_action))
-
     # Execution error for action of agent 1
     if rand.random() < eps:
         a1_action = invert_binary(a1_action)
@@ -109,15 +90,16 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     cooperative_acts += a1_action
     cooperative_acts += a2_action
 
-    # Reputation stuff
-    # print("----------------------------")
-    # print_norm(SN)
-    # print("Agent A", agent1.get_agent_id(), "action was", action_char(a1_action), "while Agent", agent2.get_agent_id(), "reputation was", rep_char(a2_rep))
-    # print("Agent B", agent2.get_agent_id(), "action was", action_char(a2_action), "while Agent", agent1.get_agent_id(), "reputation was", rep_char(a1_rep))
-    # print("Additionally, A showed the", ep_char(agent1.get_trait()[1]), "emotion profile and B showed", ep_char(agent2.get_trait()[1]))
+    ## Reputation stuff
+    # print("----------------------------") print_norm(SN) print("Agent A", agent1.get_agent_id(),
+    # "action was", action_char(a1_action), "while Agent", agent2.get_agent_id(), "reputation was", rep_char(a2_rep))
+    # print("Agent B", agent2.get_agent_id(), "action was", action_char(a2_action), "while Agent",
+    # agent1.get_agent_id(), "reputation was", rep_char(a1_rep)) print("Additionally, A showed the",
+    # ep_char(agent1.get_trait()[1]), "emotion profile and B showed", ep_char(agent2.get_trait()[1]))
+    # print("Agent A", agent1.get_agent_id(), "new rep =", rep_char(agent1.get_reputation()), "payoff:",
+    # pd[a1_action][a2_action][0]) print("Agent B", agent2.get_agent_id(), "new rep =", rep_char(
+    # agent2.get_reputation()), "payoff:", pd[a1_action][a2_action][1])
 
-    # print("Agent A", agent1.get_agent_id(), "new rep =", rep_char(agent1.get_reputation()), "payoff:", pd[a1_action][a2_action][0])
-    # print("Agent B", agent2.get_agent_id(), "new rep =", rep_char(agent2.get_reputation()), "payoff:", pd[a1_action][a2_action][1])
     return pd[a1_action][a2_action], cooperative_acts
 
 
@@ -219,3 +201,17 @@ def make_ebsn_from_list(l: list):
 def make_sn_from_list(l: list):
     sn = [[l[0], l[1]], [l[2], l[3]]]
     return sn
+
+
+def print_ebnorm(sn):
+    readable = [["", ""], ["", ""]]
+    for i in range(len(sn)):
+        for j in range(len(sn[i])):
+            part = rep_char(sn[i][j][0]) + "," + rep_char(sn[i][j][1])
+            readable[i][j] = part
+    print("2nd Order Emotion Based Social norm:")
+    # socialNorm[action][reputation]
+    print("\t    G   B")
+    print("\t----------")
+    print("\tC|", readable[1][1], readable[1][0])
+    print("\tD|", readable[0][1], readable[0][0])

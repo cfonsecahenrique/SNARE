@@ -145,7 +145,7 @@ def read_args():
             eps: float = float(args[6])
             gamma: float = float(args[7])
             model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, gamma,
-                                      runs=1, gens=4000, pdx_strats=pdx)
+                                      runs=1, gens=2500, pdx_strats=pdx)
             main(model_parameters)
     f.close()
 
