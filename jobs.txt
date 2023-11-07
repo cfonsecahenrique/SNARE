@@ -1,5 +1,2 @@
-python3 SNARE.py inputs/SJ1.txt
-python3 SNARE.py inputs/SJ2.txt
-python3 SNARE.py inputs/SJ3.txt
-python3 SNARE.py inputs/SJ4.txt
-python3 SNARE.py inputs/SJ5.txt
+#!/bin/bash
+python3 SNARE.py inputs/IS_chis.txt
