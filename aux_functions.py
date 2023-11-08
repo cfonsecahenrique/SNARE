@@ -62,25 +62,20 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     if rand.random() < eps:
         a1_action = invert_binary(a1_action)
         # print("Agent " + str(agent1.get_agent_id()) + " tried to cooperate but failed!")
-        if rand.random() < gamma:
-            # Look at Emotion Based Social Norm
-            agent1.set_reputation(EBSN[a1_action][a1_rep][agent1.emotion_profile()])
-        else:
-            # Look at simple social norm
-            agent1.set_reputation(SN[a1_action][a1_rep])
+    # Execution error for action of agent 2
+    if rand.random() < eps:
+        a2_action = invert_binary(a2_action)
+
+    if rand.random() < gamma:
+        # Look at Emotion Based Social Norm
+        agent1.set_reputation(EBSN[a1_action][a1_rep][agent1.emotion_profile()])
     else:
         # Look at simple social norm
         agent1.set_reputation(SN[a1_action][a1_rep])
 
-    # Execution error for action of agent 2
-    if rand.random() < eps:
-        a2_action = invert_binary(a2_action)
-        # print("Agent " + str(agent2.get_agent_id()) + " tried to cooperate but failed!")
-        if rand.random() < gamma:
-            agent2.set_reputation(EBSN[a2_action][a2_rep][agent2.emotion_profile()])
-        else:
-            # Look at simple social norm
-            agent1.set_reputation(SN[a1_action][a1_rep])
+    # print("Agent " + str(agent2.get_agent_id()) + " tried to cooperate but failed!")
+    if rand.random() < gamma:
+        agent2.set_reputation(EBSN[a2_action][a2_rep][agent2.emotion_profile()])
     else:
         # Look at simple social norm
         agent1.set_reputation(SN[a1_action][a1_rep])
@@ -90,7 +85,8 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     cooperative_acts += a1_action
     cooperative_acts += a2_action
 
-    ## Reputation stuff
+    # prints of Reputation stuff
+
     # print("----------------------------") print_norm(SN) print("Agent A", agent1.get_agent_id(),
     # "action was", action_char(a1_action), "while Agent", agent2.get_agent_id(), "reputation was", rep_char(a2_rep))
     # print("Agent B", agent2.get_agent_id(), "action was", action_char(a2_action), "while Agent",
@@ -134,7 +130,7 @@ def export_results(acr: float, mp: MP, population: list[Agent]):
     builder += make_strat_str(calculate_strategy_frequency(population))
     builder += make_strat_str(calculate_ep_frequencies(population))
     builder += "\n"
-    f = open("outputs/results.txt", "a")
+    f = open("outputs/results.old2", "a")
     f.write(builder)
     f.close()
 
