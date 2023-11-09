@@ -130,7 +130,7 @@ def export_results(acr: float, mp: MP, population: list[Agent]):
     builder += make_strat_str(calculate_strategy_frequency(population))
     builder += make_strat_str(calculate_ep_frequencies(population))
     builder += "\n"
-    f = open("outputs/results.old2", "a")
+    f = open("outputs/results.txt", "a")
     f.write(builder)
     f.close()
 
