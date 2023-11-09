@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 SNARE.py inputs/IS_chis.txt
+python3 SNARE.py inputs/IS_emp_chis.txt
