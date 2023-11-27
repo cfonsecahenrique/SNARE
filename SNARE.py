@@ -157,8 +157,8 @@ def read_args(process_id):
 
 
 if __name__ == '__main__':
-    num_simulations: int = 1
-    num_cores = 1
+    num_simulations: int = 50
+    num_cores = 48
     with multiprocessing.Pool(num_cores) as pool:
         pool.map(read_args, range(num_simulations))
 
