@@ -17,5 +17,5 @@
 # All B
 # social_norm = [[(0, 0), (0, 0)], [(0, 0), (0, 0)]]
 #
-# EB Social Norm  SN        pdx  Z  mu  chi eps gamma
-(0,0,0,1,0,1,1,1) (0,0,1,1) true 50 0.1 0.1 0.001 0.6
+# EB Social Norm  SN        pdx  Z  mu  chi eps alpha gamma
+(0,0,0,1,0,1,1,1) (0,0,1,1) true 50 0.1 0.001 0.001 1 0.8

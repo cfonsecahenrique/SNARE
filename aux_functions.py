@@ -30,7 +30,7 @@ def print_population(agents):
         print_agent(ag)
 
 
-def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, gamma: float):
+def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, gamma: float):
     # pd = ( [ [D,D],[D,C] ],[ [C,D],[C,C] ] )
     T = 5
     R = 4
@@ -66,35 +66,37 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     if rand.random() < eps:
         a2_action = invert_binary(a2_action)
 
+    # AGENT 1 new rep --------------------------
+    # Probability of using EB Norm
     if rand.random() < gamma:
         # Look at Emotion Based Social Norm
-        agent1.set_reputation(EBSN[a1_action][a1_rep][agent1.emotion_profile()])
+        new_rep: int = EBSN[a1_action][a1_rep][agent1.emotion_profile()]
     else:
         # Look at simple social norm
-        agent1.set_reputation(SN[a1_action][a1_rep])
+        new_rep: int = SN[a1_action][a1_rep]
 
-    # print("Agent " + str(agent2.get_agent_id()) + " tried to cooperate but failed!")
+    # Assignment error
+    if rand.random() < alpha:
+        new_rep = invert_binary(new_rep)
+
+    agent1.set_reputation(new_rep)
+
+    # AGENT 2 new rep --------------------------
     if rand.random() < gamma:
-        agent2.set_reputation(EBSN[a2_action][a2_rep][agent2.emotion_profile()])
+        new_rep: int = EBSN[a2_action][a2_rep][agent2.emotion_profile()]
     else:
         # Look at simple social norm
-        agent1.set_reputation(SN[a1_action][a1_rep])
+        new_rep: int = SN[a2_action][a2_rep]
+
+    if rand.random() < alpha:
+        new_rep = invert_binary(new_rep)
+
+    agent2.set_reputation(new_rep)
 
     # Count coop acts
     # coop = 1, def = 0
     cooperative_acts += a1_action
     cooperative_acts += a2_action
-
-    # prints of Reputation stuff
-
-    # print("----------------------------") print_norm(SN) print("Agent A", agent1.get_agent_id(),
-    # "action was", action_char(a1_action), "while Agent", agent2.get_agent_id(), "reputation was", rep_char(a2_rep))
-    # print("Agent B", agent2.get_agent_id(), "action was", action_char(a2_action), "while Agent",
-    # agent1.get_agent_id(), "reputation was", rep_char(a1_rep)) print("Additionally, A showed the",
-    # ep_char(agent1.get_trait()[1]), "emotion profile and B showed", ep_char(agent2.get_trait()[1]))
-    # print("Agent A", agent1.get_agent_id(), "new rep =", rep_char(agent1.get_reputation()), "payoff:",
-    # pd[a1_action][a2_action][0]) print("Agent B", agent2.get_agent_id(), "new rep =", rep_char(
-    # agent2.get_reputation()), "payoff:", pd[a1_action][a2_action][1])
 
     return pd[a1_action][a2_action], cooperative_acts
 

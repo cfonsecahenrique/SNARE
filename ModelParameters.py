@@ -4,7 +4,7 @@ import numpy as np
 class ModelParameters:
 
     def __init__(self, sn_str: str, sn_list: list, ebsn_str: str, ebsn_list: list, z: int,
-                 mu: float, chi: float, eps: float, gamma: float,
+                 mu: float, chi: float, eps: float, alpha: float, gamma: float,
                  runs: int = 50, gens: int = 5000, pdx_strats: bool = True):
         self._social_norm = sn_list
         self._social_norm_str = sn_str
@@ -15,6 +15,7 @@ class ModelParameters:
         self._gens = gens
         self._chi = chi
         self._eps = eps
+        self._alpha = alpha
         self._gamma = gamma
         self._runs = runs
         self._converge = z*10
@@ -73,3 +74,7 @@ class ModelParameters:
     @property
     def converge(self):
         return self._converge
+
+    @property
+    def alpha(self):
+        return self._alpha

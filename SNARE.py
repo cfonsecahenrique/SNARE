@@ -39,6 +39,8 @@ def simulation(model_parameters: MP, run: int):
     chi: float = model_parameters.chi / model_parameters.z
     # (cooperation) Execution Error
     eps: float = model_parameters.eps / model_parameters.z
+    # Judge assignment error
+    alpha: float = model_parameters.alpha / model_parameters.z
     # Number of Generations to run
     gens: int = model_parameters.gens * model_parameters.z
     # Social Norm
@@ -50,8 +52,9 @@ def simulation(model_parameters: MP, run: int):
     # Probability of looking at emotion
     gamma: float = model_parameters.gamma
 
-    print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, " gamma:", gamma,
-          ", pdx:", model_parameters.paradoxical_strats)
+    print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", alpha:", alpha,
+          " gamma:", gamma, ", pdx:", model_parameters.paradoxical_strats)
+
     games_played = 0
     cooperative_acts = 0
     number_mutations = 0
@@ -87,7 +90,7 @@ def simulation(model_parameters: MP, run: int):
                 #print("----------------- GAME", i, "------------------------")
                 az = rand.choice(aux_list)
                 # print("Agent " + str(a1.get_agent_id()) + " will play with Agent ", str(az.get_agent_id()))
-                res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, gamma)
+                res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, alpha, gamma)
                 res1 = res[0]
                 if current_gen > converge:
                     cooperative_acts += n
@@ -96,7 +99,7 @@ def simulation(model_parameters: MP, run: int):
 
                 ax = rand.choice(aux_list)
                 # print("Agent " + str(a2.get_agent_id()) + " will play with Agent ", str(ax.get_agent_id()))
-                res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, gamma)
+                res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, alpha, gamma)
                 res2 = res[0]
                 if current_gen > converge:
                     cooperative_acts += n
@@ -145,16 +148,17 @@ def read_args(process_id):
             mu: float = float(args[4])
             chi: float = float(args[5])
             eps: float = float(args[6])
-            gamma: float = float(args[7])
-            model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, gamma,
+            alpha: float = float(args[7])
+            gamma: float = float(args[8])
+            model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, alpha, gamma,
                                       runs=1, gens=2500, pdx_strats=pdx)
             main(model_parameters)
     f.close()
 
 
 if __name__ == '__main__':
-    num_simulations: int = 50
-    num_cores = 48
+    num_simulations: int = 1
+    num_cores = 1
     with multiprocessing.Pool(num_cores) as pool:
         pool.map(read_args, range(num_simulations))
 
