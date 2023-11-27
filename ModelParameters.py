@@ -25,10 +25,10 @@ class ModelParameters:
     def paradoxical_strats(self):
         return self._paradoxical_strats
 
-
     def generate_mp_string(self) -> str:
-        builder: str = self._ebsn_str + "\t" + self._social_norm_str + "\t" + str(self.z) + "\t" + str(self._gens) + "\t" + str(self.mu) + "\t" \
-                       + str(self.chi) + "\t" + str(self.eps) + "\t" + str(self.gamma) + "\t" + str(self._paradoxical_strats)
+        builder: str = self._ebsn_str + "\t" + self._social_norm_str + "\t" + str(self.z) + "\t" + str(self._gens) \
+                       + "\t" + str(self.mu) + "\t" + str(self.chi) + "\t" + str(self.eps) + "\t" + str(self._alpha) \
+                       + "\t" + str(self.gamma) + "\t" + str(self._paradoxical_strats)
         return builder
 
     @property
