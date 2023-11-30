@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 SNARE.py inputs/IS_alphas.txt
+python3 SNARE.py inputs/IS_eps09.txt
