@@ -1,6 +1,6 @@
 #!/bin/bash
 # Set the threshold for the maximum number of running jobs
-threshold=164
+threshold=450
 echo "Job Threshold set to $threshold"
 job_number=0
 # Read the list of job commands from a text file
