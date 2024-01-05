@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 SNARE.py inputs/IS_alphas09.txt
+python3 SNARE.py inputs/IS_allerrors.txt
