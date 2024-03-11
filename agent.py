@@ -12,10 +12,10 @@ class Agent:
     def trait_mutation(self, mp):
         self._emotion_profile = rand.randint(0,1)
         self._strategy = (rand.randint(0, 1), rand.randint(0, 1))
-        if not mp.paradoxical_strats:
-            if (self._strategy == (0, 0) and self._emotion_profile == 1) or \
-                    (self._strategy == (1, 1) and self._emotion_profile == 0):
-                self.trait_mutation(mp)
+        #if not mp.paradoxical_strats:
+        #    if (self._strategy == (0, 0) and self._emotion_profile == 1) or \
+        #            (self._strategy == (1, 1) and self._emotion_profile == 0):
+        #        self.trait_mutation(mp)
 
     def strategy(self):
         return self._strategy

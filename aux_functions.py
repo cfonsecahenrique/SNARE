@@ -1,4 +1,6 @@
 import random as rand
+from collections import defaultdict
+
 import numpy as np
 from ModelParameters import ModelParameters as MP
 from agent import Agent
@@ -114,27 +116,77 @@ def rep_char(rep: int):
 
 
 def print_agent(ag: Agent):
-    if ag.strategy()[0] == (0, 0):
-        strat = "AllD"
-    elif ag.strategy()[0] == (0, 1):
-        strat = "pDisc"
-    elif ag.strategy()[0] == (1, 0):
-        strat = "Disc"
-    else:
-        strat = "AllC"
-    print("Agent: " + str(ag.get_agent_id()) + ", Strat: " + strat + ", Rep: " + str(ag.get_reputation()))
+    print("Agent: " + str(ag.get_agent_id()) + ", Strat: " + strat_name(ag.strategy()) + ", Rep: " + str(ag.get_reputation()))
 
 
 def export_results(acr: float, mp: MP, population: list[Agent]):
+    #most_popular_per_ep = most_common_strats(population)
+    winner_et = most_common_evol_trait(population)
     builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\t"
     rep_freqs = reputation_frequencies(population)
     builder += str(rep_freqs[0]) + "\t" + str(rep_freqs[1]) + "\t"
     builder += make_strat_str(calculate_strategy_frequency(population))
     builder += make_strat_str(calculate_ep_frequencies(population))
+    builder += str(winner_et)
     builder += "\n"
-    f = open("outputs/results.txt", "a")
+    f = open("outputs/results_with_ets.txt", "a")
     f.write(builder)
     f.close()
+
+def most_common_evol_trait(population: list[Agent]):
+    eps = [0, 1]
+    strats = [(0,0), (0,1), (1,0), (1,1)]
+    counter_dict: dict = {}
+    for ep in eps:
+        for strat in strats:
+            counter_dict[(ep, strat)] = 0
+    for agent in population:
+        counter_dict[(agent.emotion_profile(), agent.strategy())] += 1
+    #print(counter_dict)
+    best = max(counter_dict, key=counter_dict.get)
+
+    string: str = str(best[0]) + str(best[1][0]) + str(best[1][1])
+    print(best)
+    print(string)
+    return string
+
+
+
+def most_common_strats(population: list[Agent]):
+    counter: dict = {}
+
+    there_is_ep0 = False
+    there_is_ep1 = False
+
+    # initialize
+    strat_counts_0: dict = {s: 0 for s in [(0,0), (0,1), (1,0), (1,1)]}
+    strat_counts_1: dict = {s: 0 for s in [(0,0), (0,1), (1,0), (1,1)]}
+
+    for agent in population:
+        if agent.emotion_profile() == 0:
+            there_is_ep0 = True
+            strat_counts_0[agent.strategy()] += 1
+        elif agent.emotion_profile() == 1:
+            there_is_ep1 = True
+            strat_counts_1[agent.strategy()] += 1
+
+    print("COMPETITIVE")
+    print(strat_counts_0)
+    print("COOPERATIVE")
+    print(strat_counts_1)
+
+    if there_is_ep0:
+        counter["Competitive"] = strat_name(max(strat_counts_0, key=strat_counts_0.get))
+    else:
+        counter["Competitive"] = None
+
+    if there_is_ep1:
+        counter["Cooperative"] = strat_name(max(strat_counts_1, key=strat_counts_1.get))
+    else:
+        counter["Cooperative"] = "NA"
+
+    print(counter)
+    return counter
 
 
 def reputation_frequencies(population: list[Agent]):
@@ -213,3 +265,8 @@ def print_ebnorm(sn):
     print("\t----------")
     print("\tC|", readable[1][1], readable[1][0])
     print("\tD|", readable[0][1], readable[0][0])
+
+
+def strat_name(strat):
+    d: dict = {(0, 0): "AllD", (0, 1): "pDisc", (1, 0): "Disc", (1, 1): "AllC"}
+    return d[strat]

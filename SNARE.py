@@ -152,14 +152,14 @@ def read_args(process_id):
             alpha: float = float(args[7])
             gamma: float = float(args[8])
             model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, alpha, gamma,
-                                      runs=1, gens=2500, pdx_strats=pdx)
+                                      runs=1, gens=2000, pdx_strats=pdx)
             main(model_parameters)
     f.close()
 
 
 if __name__ == '__main__':
-    num_simulations: int = 1
-    num_cores = 1
+    num_simulations: int = 8
+    num_cores = 4
     with multiprocessing.Pool(num_cores) as pool:
         pool.map(read_args, range(num_simulations))
 
