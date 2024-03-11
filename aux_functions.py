@@ -32,10 +32,10 @@ def print_population(agents):
 
 def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, gamma: float):
     # pd = ( [ [D,D],[D,C] ],[ [C,D],[C,C] ] )
-    T = 5
-    R = 4
-    P = 0
-    S = -1
+    T: int = 5
+    R: int = 4
+    P: int = 0
+    S: int = -1
     pd = np.array([
         [(P, P), (T, S)],
         [(S, T), (R, R)]

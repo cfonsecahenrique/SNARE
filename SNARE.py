@@ -86,8 +86,9 @@ def simulation(model_parameters: MP, run: int):
             # Each agent plays Z games
             for i in range(z):
                 # increment # of played games, 4 because it's 2*2DG=2PD
+                # (a prisoner's dilemma can have at most 2 cooperative acts)
                 if current_gen > converge: games_played += 4
-                #print("----------------- GAME", i, "------------------------")
+
                 az = rand.choice(aux_list)
                 # print("Agent " + str(a1.get_agent_id()) + " will play with Agent ", str(az.get_agent_id()))
                 res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, alpha, gamma)
@@ -157,8 +158,8 @@ def read_args(process_id):
 
 
 if __name__ == '__main__':
-    num_simulations: int = 100
-    num_cores = 48
+    num_simulations: int = 1
+    num_cores = 1
     with multiprocessing.Pool(num_cores) as pool:
         pool.map(read_args, range(num_simulations))
 
