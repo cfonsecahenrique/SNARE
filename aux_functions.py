@@ -33,7 +33,9 @@ def print_population(agents):
 
 
 def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, gamma: float):
+    # Payoff matrix of the prisoner's dilemma (pd)
     # pd = ( [ [D,D],[D,C] ],[ [C,D],[C,C] ] )
+    # (T)emptation; (R)eward; (P)unishment; (S)ucker's payoff
     T: int = 5
     R: int = 4
     P: int = 0
@@ -45,6 +47,7 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
 
     cooperative_acts = 0
 
+    # Get agent's reputations locally so that the changed reputations aren't used in the wrong place
     a1_rep: int = agent1.get_reputation()
     a2_rep: int = agent2.get_reputation()
     # get_trait()[0]: action rule
@@ -72,25 +75,40 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     # Probability of using EB Norm
     if rand.random() < gamma:
         # Look at Emotion Based Social Norm
-        new_rep: int = EBSN[a1_action][a1_rep][agent1.emotion_profile()]
+        # DONOR FOCAL
+        #new_rep: int = EBSN[a1_action][a1_rep][agent1.emotion_profile()]
+        # RECIPIENT FOCAL (common in IR)
+        new_rep: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
     else:
         # Look at simple social norm
-        new_rep: int = SN[a1_action][a1_rep]
+        # DONOR FOCAL
+        #new_rep: int = SN[a1_action][a1_rep]
+        # RECIPIENT FOCAL (common in IR)
+        new_rep: int = SN[a1_action][a2_rep]
 
     # Assignment error
     if rand.random() < alpha:
+        # REPUTATION ASSIGNMENT ERROR ag1
         new_rep = invert_binary(new_rep)
 
     agent1.set_reputation(new_rep)
 
     # AGENT 2 new rep --------------------------
     if rand.random() < gamma:
-        new_rep: int = EBSN[a2_action][a2_rep][agent2.emotion_profile()]
+        # Look at Emotion Based Social Norm
+        # DONOR FOCAL
+        #new_rep: int = EBSN[a2_action][a2_rep][agent2.emotion_profile()]
+        # RECIPIENT FOCAL (common in IR)
+        new_rep: int = EBSN[a2_action][a1_rep][agent2.emotion_profile()]
     else:
         # Look at simple social norm
-        new_rep: int = SN[a2_action][a2_rep]
+        # DONOR FOCAL
+        #new_rep: int = SN[a2_action][a2_rep]
+        # RECIPIENT FOCAL (common in IR)
+        new_rep: int = SN[a2_action][a1_rep]
 
     if rand.random() < alpha:
+        # REPUTATION ASSIGNMENT ERROR ag2
         new_rep = invert_binary(new_rep)
 
     agent2.set_reputation(new_rep)
