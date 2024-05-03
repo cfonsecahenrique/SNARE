@@ -148,7 +148,11 @@ def export_results(acr: float, mp: MP, population: list[Agent]):
     builder += str(winner_et)
     builder += "\n"
     f = open("outputs/results_with_ets.txt", "a")
-    f.write(builder)
+
+    if " " not in builder:
+        f.write(builder)
+    else:
+        print("Exportation error")
     f.close()
 
 def most_common_evol_trait(population: list[Agent]):
@@ -272,12 +276,13 @@ def make_sn_from_list(l: list):
 
 
 def print_ebnorm(sn):
+    # prints the chosen social norm in a readable fashion
     readable = [["", ""], ["", ""]]
     for i in range(len(sn)):
         for j in range(len(sn[i])):
             part = rep_char(sn[i][j][0]) + "," + rep_char(sn[i][j][1])
             readable[i][j] = part
-    print("2nd Order Emotion Based Social norm:")
+    print("2nd Order Emotion Based Social norm: (m,n)")
     # socialNorm[action][reputation]
     print("\t    G   B")
     print("\t----------")
