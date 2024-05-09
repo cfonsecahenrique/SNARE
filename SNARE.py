@@ -84,37 +84,30 @@ def simulation(model_parameters: MP, run: int):
                         a.get_agent_id() != a1.get_agent_id() and a.get_agent_id() != a2.get_agent_id()]
 
             # Each agent plays Z games
+            # increment # of played games, 4 because it's each PD has 2 donation games
             for i in range(z):
-                # increment # of played games, 4 because it's 2*2DG=2PD
-                # (a prisoner's dilemma can have at most 2 cooperative acts)
+                # (each prisoner's dilemma can have at most 2 cooperative acts)
                 if current_gen > converge: games_played += 4
 
                 az = rand.choice(aux_list)
-                # print("Agent " + str(a1.get_agent_id()) + " will play with Agent ", str(az.get_agent_id()))
                 res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, alpha, gamma)
                 res1 = res[0]
-                if current_gen > converge:
-                    cooperative_acts += n
-                # print("Res1:", res1, "resZ:", resZ)
+                if current_gen > converge: cooperative_acts += n
                 a1.add_fitness(res1)
 
                 ax = rand.choice(aux_list)
-                # print("Agent " + str(a2.get_agent_id()) + " will play with Agent ", str(ax.get_agent_id()))
                 res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, alpha, gamma)
                 res2 = res[0]
-                if current_gen > converge:
-                    cooperative_acts += n
-                # print("Res2:", res1, "resX:", resX)
+                if current_gen > converge: cooperative_acts += n
                 a2.add_fitness(res2)
 
+            # normalize both players' fitness
             a1.set_fitness(a1.get_fitness() / z)
             a2.set_fitness(a2.get_fitness() / z)
-            #print("f(a1):", a1.get_fitness(), "f(a2):", a2.get_fitness())
 
             # Calculate Probability of imitation
-            p = (1 + np.exp(a1.get_fitness() - a2.get_fitness())) ** (-1)
-            #print("Probability of a1 imitating a2:", p)
-            if rand.random() < p:
+            pi: float = (1 + np.exp(a1.get_fitness() - a2.get_fitness())) ** (-1)
+            if rand.random() < pi:
                 a1.set_strategy(a2.strategy())
                 a1.set_emotion_profile(a2.emotion_profile())
 
@@ -152,7 +145,7 @@ def read_args(process_id):
             alpha: float = float(args[7])
             gamma: float = float(args[8])
             model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, alpha, gamma,
-                                      runs=1, gens=2000, pdx_strats=pdx)
+                                      runs=1, gens=1000, pdx_strats=pdx)
             main(model_parameters)
     f.close()
 

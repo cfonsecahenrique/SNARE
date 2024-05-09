@@ -140,7 +140,7 @@ def print_agent(ag: Agent):
 def export_results(acr: float, mp: MP, population: list[Agent]):
     #most_popular_per_ep = most_common_strats(population)
     winner_et = most_common_evol_trait(population)
-    builder: str = mp.generate_mp_string() + "\t" + str(acr) + "\t"
+    builder: str = mp.generate_mp_string() + "\t" + str(round(acr,3)) + "\t"
     rep_freqs = reputation_frequencies(population)
     builder += str(rep_freqs[0]) + "\t" + str(rep_freqs[1]) + "\t"
     builder += make_strat_str(calculate_strategy_frequency(population))
