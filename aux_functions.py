@@ -67,6 +67,7 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     if rand.random() < eps:
         a1_action = invert_binary(a1_action)
         # print("Agent " + str(agent1.get_agent_id()) + " tried to cooperate but failed!")
+
     # Execution error for action of agent 2
     if rand.random() < eps:
         a2_action = invert_binary(a2_action)
@@ -75,23 +76,28 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     # Probability of using EB Norm
     if rand.random() < gamma:
         # Look at Emotion Based Social Norm
+
         # DONOR FOCAL
         #new_rep: int = EBSN[a1_action][a1_rep][agent1.emotion_profile()]
         # RECIPIENT FOCAL (common in IR)
-        new_rep: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
+        new_rep_1: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
+        #if rand.random() < 0.000006:
+        #    print("EBNorm, donor action =", action(a1_action), "rec rep =", reputation(a2_rep), "emotion =", emotion(agent1.emotion_profile()),
+        #      "new donor rep =", reputation(new_rep_1))
     else:
         # Look at simple social norm
+
         # DONOR FOCAL
         #new_rep: int = SN[a1_action][a1_rep]
         # RECIPIENT FOCAL (common in IR)
-        new_rep: int = SN[a1_action][a2_rep]
+        new_rep_1: int = SN[a1_action][a2_rep]
 
     # Assignment error
     if rand.random() < alpha:
         # REPUTATION ASSIGNMENT ERROR ag1
-        new_rep = invert_binary(new_rep)
+        new_rep_1 = invert_binary(new_rep_1)
 
-    agent1.set_reputation(new_rep)
+    agent1.set_reputation(new_rep_1)
 
     # AGENT 2 new rep --------------------------
     if rand.random() < gamma:
@@ -99,19 +105,19 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         # DONOR FOCAL
         #new_rep: int = EBSN[a2_action][a2_rep][agent2.emotion_profile()]
         # RECIPIENT FOCAL (common in IR)
-        new_rep: int = EBSN[a2_action][a1_rep][agent2.emotion_profile()]
+        new_rep_2: int = EBSN[a2_action][a1_rep][agent2.emotion_profile()]
     else:
         # Look at simple social norm
         # DONOR FOCAL
         #new_rep: int = SN[a2_action][a2_rep]
         # RECIPIENT FOCAL (common in IR)
-        new_rep: int = SN[a2_action][a1_rep]
+        new_rep_2: int = SN[a2_action][a1_rep]
 
     if rand.random() < alpha:
         # REPUTATION ASSIGNMENT ERROR ag2
-        new_rep = invert_binary(new_rep)
+        new_rep_2 = invert_binary(new_rep_2)
 
-    agent2.set_reputation(new_rep)
+    agent2.set_reputation(new_rep_2)
 
     # Count coop acts
     # coop = 1, def = 0
@@ -168,8 +174,6 @@ def most_common_evol_trait(population: list[Agent]):
     best = max(counter_dict, key=counter_dict.get)
 
     string: str = str(best[0]) + str(best[1][0]) + str(best[1][1])
-    print(best)
-    print(string)
     return string
 
 
@@ -192,10 +196,10 @@ def most_common_strats(population: list[Agent]):
             there_is_ep1 = True
             strat_counts_1[agent.strategy()] += 1
 
-    print("COMPETITIVE")
-    print(strat_counts_0)
-    print("COOPERATIVE")
-    print(strat_counts_1)
+    #print("COMPETITIVE")
+    #print(strat_counts_0)
+    #print("COOPERATIVE")
+    #print(strat_counts_1)
 
     if there_is_ep0:
         counter["Competitive"] = strat_name(max(strat_counts_0, key=strat_counts_0.get))
@@ -205,9 +209,9 @@ def most_common_strats(population: list[Agent]):
     if there_is_ep1:
         counter["Cooperative"] = strat_name(max(strat_counts_1, key=strat_counts_1.get))
     else:
-        counter["Cooperative"] = "NA"
+        counter["Cooperative"] = None
 
-    print(counter)
+    #print(counter)
     return counter
 
 
@@ -293,3 +297,14 @@ def print_ebnorm(sn):
 def strat_name(strat):
     d: dict = {(0, 0): "AllD", (0, 1): "pDisc", (1, 0): "Disc", (1, 1): "AllC"}
     return d[strat]
+
+def action(a: int):
+    return "C" if a==1 else "D"
+
+
+def reputation(r: int):
+    return "G" if r==1 else "B"
+
+
+def emotion(e: int):
+    return "Coop" if e==1 else "Comp"

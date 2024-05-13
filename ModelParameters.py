@@ -5,7 +5,7 @@ class ModelParameters:
 
     def __init__(self, sn_str: str, sn_list: list, ebsn_str: str, ebsn_list: list, z: int,
                  mu: float, chi: float, eps: float, alpha: float, gamma: float,
-                 runs: int = 50, gens: int = 5000, pdx_strats: bool = True):
+                 runs: int = 50, gens: int = 1000, pdx_strats: bool = True):
         self._social_norm = sn_list
         self._social_norm_str = sn_str
         self._eb_social_norm = ebsn_list
@@ -26,6 +26,7 @@ class ModelParameters:
         return self._paradoxical_strats
 
     def generate_mp_string(self) -> str:
+        # for results exporting
         builder: str = self._ebsn_str + "\t" + self._social_norm_str + "\t" + str(self.z) + "\t" + str(self._gens) \
                        + "\t" + str(self.mu) + "\t" + str(self.chi) + "\t" + str(self.eps) + "\t" + str(self._alpha) \
                        + "\t" + str(self.gamma) + "\t" + str(self._paradoxical_strats)
@@ -37,6 +38,7 @@ class ModelParameters:
 
     @property
     def ebsn(self):
+        # emotion-based social norm
         return self._eb_social_norm
 
     @property
