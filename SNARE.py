@@ -51,9 +51,13 @@ def simulation(model_parameters: MP, run: int):
     converge: int = model_parameters.converge
     # Probability of looking at emotion
     gamma: float = model_parameters.gamma
+    # benefit to cost ratio
+    benefit: int = model_parameters.benefit
+    cost: int = model_parameters.cost
+    bc_ratio: float = benefit/cost
 
     print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", alpha:", alpha,
-          " gamma:", gamma, ", pdx:", model_parameters.paradoxical_strats)
+          " gamma:", gamma, ", pdx:", model_parameters.paradoxical_strats, " b/c ratio:", bc_ratio)
 
     games_played = 0
     cooperative_acts = 0
@@ -90,13 +94,13 @@ def simulation(model_parameters: MP, run: int):
                 if current_gen > converge: games_played += 4
 
                 az = rand.choice(aux_list)
-                res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, alpha, gamma)
+                res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, alpha, gamma, benefit, cost)
                 res1 = res[0]
                 if current_gen > converge: cooperative_acts += n
                 a1.add_fitness(res1)
 
                 ax = rand.choice(aux_list)
-                res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, alpha, gamma)
+                res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, alpha, gamma, benefit, cost)
                 res2 = res[0]
                 if current_gen > converge: cooperative_acts += n
                 a2.add_fitness(res2)
@@ -144,8 +148,10 @@ def read_args(process_id):
             eps: float = float(args[6])
             alpha: float = float(args[7])
             gamma: float = float(args[8])
+            ben: int = int(args[9])
+            cost: int = int(args[10])
             model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, alpha, gamma,
-                                      runs=1, gens=1000, pdx_strats=pdx)
+                                      runs=1, gens=1000, pdx_strats=pdx, b=ben, c=cost)
             main(model_parameters)
     f.close()
 

@@ -32,14 +32,15 @@ def print_population(agents):
         print_agent(ag)
 
 
-def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, gamma: float):
+def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, gamma: float, b: int = 5, c: int = -1):
     # Payoff matrix of the prisoner's dilemma (pd)
+    # also a DG with b>c
     # pd = ( [ [D,D],[D,C] ],[ [C,D],[C,C] ] )
     # (T)emptation; (R)eward; (P)unishment; (S)ucker's payoff
-    T: int = 5
-    R: int = 4
+    T: int = b
+    R: int = b-c
     P: int = 0
-    S: int = -1
+    S: int = -c
     pd = np.array([
         [(P, P), (T, S)],
         [(S, T), (R, R)]
