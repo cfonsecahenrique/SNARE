@@ -55,9 +55,11 @@ def simulation(model_parameters: MP, run: int):
     benefit: int = model_parameters.benefit
     cost: int = model_parameters.cost
     bc_ratio: float = benefit/cost
+    # selection strength beta
+    selection_strength: float = model_parameters.selection_strength
 
     print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", alpha:", alpha,
-          " gamma:", gamma, ", pdx:", model_parameters.paradoxical_strats, " b/c ratio:", bc_ratio)
+          " gamma:", gamma, ", pdx:", model_parameters.paradoxical_strats, " b/c ratio:", bc_ratio, " beta:", selection_strength)
 
     games_played = 0
     cooperative_acts = 0
@@ -110,7 +112,7 @@ def simulation(model_parameters: MP, run: int):
             a2.set_fitness(a2.get_fitness() / z)
 
             # Calculate Probability of imitation
-            pi: float = (1 + np.exp(a1.get_fitness() - a2.get_fitness())) ** (-1)
+            pi: float = (1 + np.exp(selection_strength*(a1.get_fitness() - a2.get_fitness()))) ** (-1)
             if rand.random() < pi:
                 a1.set_strategy(a2.strategy())
                 a1.set_emotion_profile(a2.emotion_profile())
@@ -150,8 +152,9 @@ def read_args(process_id):
             gamma: float = float(args[8])
             ben: int = int(args[9])
             cost: int = int(args[10])
+            beta: float = float(args[11])
             model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, alpha, gamma,
-                                      runs=1, gens=1000, pdx_strats=pdx, b=ben, c=cost)
+                                      runs=1, gens=1000, pdx_strats=pdx, b=ben, c=cost, beta=beta)
             main(model_parameters)
     f.close()
 

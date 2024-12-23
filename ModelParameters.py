@@ -1,11 +1,12 @@
 from agent import Agent
 import numpy as np
 
+
 class ModelParameters:
 
     def __init__(self, sn_str: str, sn_list: list, ebsn_str: str, ebsn_list: list, z: int,
                  mu: float, chi: float, eps: float, alpha: float, gamma: float,
-                 runs: int = 50, gens: int = 1000, pdx_strats: bool = True, b: int = 5, c: int = 1):
+                 runs: int = 50, gens: int = 1000, pdx_strats: bool = True, b: int = 5, c: int = 1, beta: float = 1):
         self._social_norm = sn_list
         self._social_norm_str = sn_str
         self._eb_social_norm = ebsn_list
@@ -18,20 +19,18 @@ class ModelParameters:
         self._alpha = alpha
         self._gamma = gamma
         self._runs = runs
-        self._converge = z*10
+        self._converge = z * 10
         self._paradoxical_strats = pdx_strats
         self._b = b
         self._c = c
-
-    @property
-    def paradoxical_strats(self):
-        return self._paradoxical_strats
+        self._beta = beta
 
     def generate_mp_string(self) -> str:
         # for results exporting
         builder: str = self._ebsn_str + "\t" + self._social_norm_str + "\t" + str(self._z) + "\t" + str(self._gens) \
                        + "\t" + str(self._mu) + "\t" + str(self._chi) + "\t" + str(self._eps) + "\t" + str(self._alpha) \
-                       + "\t" + str(self._gamma) + "\t" + str(self._paradoxical_strats) + "\t" + str(self._b) + "\t" + str(self._c)
+                       + "\t" + str(self._gamma) + "\t" + str(self._paradoxical_strats) + "\t" + str(self._b) + "\t" \
+                       + str(self._c) + "\t" + str(self._beta)
         return builder
 
     @property
@@ -85,8 +84,16 @@ class ModelParameters:
 
     @property
     def benefit(self):
-    	return self._b
+        return self._b
 
     @property
     def cost(self):
-    	return self._c
+        return self._c
+
+    @property
+    def selection_strength(self):
+        return self._beta
+
+    @property
+    def paradoxical_strats(self):
+        return self._paradoxical_strats

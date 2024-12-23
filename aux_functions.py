@@ -79,9 +79,9 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         # Look at Emotion Based Social Norm
 
         # DONOR FOCAL
-        #new_rep: int = EBSN[a1_action][a1_rep][agent1.emotion_profile()]
+        new_rep: int = EBSN[a1_action][a1_rep][agent1.emotion_profile()]
         # RECIPIENT FOCAL (common in IR)
-        new_rep_1: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
+        #new_rep_1: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
         #if rand.random() < 0.000006:
         #    print("EBNorm, donor action =", action(a1_action), "rec rep =", reputation(a2_rep), "emotion =", emotion(agent1.emotion_profile()),
         #      "new donor rep =", reputation(new_rep_1))
@@ -89,16 +89,16 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         # Look at simple social norm
 
         # DONOR FOCAL
-        #new_rep: int = SN[a1_action][a1_rep]
+        new_rep: int = SN[a1_action][a1_rep]
         # RECIPIENT FOCAL (common in IR)
-        new_rep_1: int = SN[a1_action][a2_rep]
+        #new_rep_1: int = SN[a1_action][a2_rep]
 
     # Assignment error
     if rand.random() < alpha:
         # REPUTATION ASSIGNMENT ERROR ag1
-        new_rep_1 = invert_binary(new_rep_1)
+        new_rep = invert_binary(new_rep)
 
-    agent1.set_reputation(new_rep_1)
+    agent1.set_reputation(new_rep)
 
     # AGENT 2 new rep --------------------------
     if rand.random() < gamma:
@@ -154,7 +154,7 @@ def export_results(acr: float, mp: MP, population: list[Agent]):
     builder += make_strat_str(calculate_ep_frequencies(population))
     builder += str(winner_et)
     builder += "\n"
-    f = open("outputs/results_with_ets.txt", "a")
+    f = open("outputs/results_bc.txt", "a")
 
     if " " not in builder:
         f.write(builder)
@@ -176,7 +176,6 @@ def most_common_evol_trait(population: list[Agent]):
 
     string: str = str(best[0]) + str(best[1][0]) + str(best[1][1])
     return string
-
 
 
 def most_common_strats(population: list[Agent]):
@@ -229,9 +228,7 @@ def reputation_frequencies(population: list[Agent]):
 
 def calculate_strategy_frequency(population: list[Agent]):
     strategy_freqs: dict = {}
-    strats = [
-        (0, 0), (0, 1), (1, 0), (1, 1)
-    ]
+    strats = [(0, 0), (0, 1), (1, 0), (1, 1)]
 
     for strat in strats:
         strategy_freqs[strat] = 0
@@ -298,6 +295,7 @@ def print_ebnorm(sn):
 def strat_name(strat):
     d: dict = {(0, 0): "AllD", (0, 1): "pDisc", (1, 0): "Disc", (1, 1): "AllC"}
     return d[strat]
+
 
 def action(a: int):
     return "C" if a==1 else "D"
