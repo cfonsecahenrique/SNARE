@@ -80,16 +80,23 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         # Look at Emotion Based Social Norm
 
         # DONOR FOCAL
-        new_rep: int = EBSN[a1_action][a1_rep][agent1.emotion_profile()]
+        new_rep: int = EBSN[a1_rep][a1_action][agent1.emotion_profile()]
         # RECIPIENT FOCAL (common in IR)
         #new_rep_1: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
-        print("EBNorm, donor action =", action(a1_action), "donor rep =", reputation(a1_rep), "emotion =", emotion(agent1.emotion_profile()),
-              "new donor rep =", reputation(new_rep))
+
+        # bug hunting prints
+        #if a1_action==0 and a1_rep==1:
+        #    print("Agent:", agent1.get_agent_id(), "(donor) rep =", reputation(a1_rep), "(donor) action =", action(a1_action), "emotion =", emotion(agent1.emotion_profile()),
+        #      "THEN new donor rep =", reputation(new_rep))
     else:
         # Look at simple social norm
 
         # DONOR FOCAL
         new_rep: int = SN[a1_action][a1_rep]
+        # bug hunting prints
+        #print("Agent:", agent1.get_agent_id(), "(donor) rep =", reputation(a1_rep), "(donor) action =", action(a1_action), "emotion =", emotion(agent1.emotion_profile()),
+        #      "THEN new donor rep =", reputation(new_rep))
+
         # RECIPIENT FOCAL (common in IR)
         #new_rep_1: int = SN[a1_action][a2_rep]
 
@@ -97,28 +104,26 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     if rand.random() < alpha:
         # REPUTATION ASSIGNMENT ERROR ag1
         new_rep = invert_binary(new_rep)
-
     agent1.set_reputation(new_rep)
 
     # AGENT 2 new rep --------------------------
     if rand.random() < gamma:
         # Look at Emotion Based Social Norm
         # DONOR FOCAL
-        #new_rep: int = EBSN[a2_action][a2_rep][agent2.emotion_profile()]
+        new_rep: int = EBSN[a2_rep][a2_action][agent2.emotion_profile()]
         # RECIPIENT FOCAL (common in IR)
-        new_rep_2: int = EBSN[a2_action][a1_rep][agent2.emotion_profile()]
+        #new_rep_2: int = EBSN[a2_action][a1_rep][agent2.emotion_profile()]
     else:
         # Look at simple social norm
         # DONOR FOCAL
-        #new_rep: int = SN[a2_action][a2_rep]
+        new_rep: int = SN[a2_action][a2_rep]
         # RECIPIENT FOCAL (common in IR)
-        new_rep_2: int = SN[a2_action][a1_rep]
+        #new_rep_2: int = SN[a2_action][a1_rep]
 
     if rand.random() < alpha:
         # REPUTATION ASSIGNMENT ERROR ag2
-        new_rep_2 = invert_binary(new_rep_2)
-
-    agent2.set_reputation(new_rep_2)
+        new_rep = invert_binary(new_rep)
+    agent2.set_reputation(new_rep)
 
     # Count coop acts
     # coop = 1, def = 0
@@ -133,7 +138,7 @@ def action_char(act: int):
 
 
 def ep_char(ep: int):
-    return "M" if ep == 0 else "N"
+    return "N" if ep == 1 else "M"
 
 
 def rep_char(rep: int):
@@ -262,6 +267,7 @@ def make_strat_str(frequencies: dict):
 
 
 def make_ebsn_from_list(l: list):
+    # (bdm, bdn, bcm, bcn, gdm, gdn, gcm, gcn)
     sn = []
     entry = []
     for i in np.arange(0, len(l) - 1, 2):
@@ -284,12 +290,17 @@ def print_ebnorm(sn):
         for j in range(len(sn[i])):
             part = rep_char(sn[i][j][0]) + "," + rep_char(sn[i][j][1])
             readable[i][j] = part
-    print("2nd Order Emotion Based Social norm: (m,n)")
+    print("2nd Order Emotion Based Social norm:")
     # socialNorm[action][reputation]
-    print("\t    G   B")
-    print("\t----------")
-    print("\tC|", readable[1][1], readable[1][0])
-    print("\tD|", readable[0][1], readable[0][0])
+    print("\tGOOD C nice: [", readable[1][1][2], "]")
+    print("\tGOOD C mean: [", readable[1][1][0], "]")
+    print("\tGOOD D nice: [", readable[1][0][2], "]")
+    print("\tGOOD D mean: [", readable[1][0][0], "]")
+    print("\tBAD  C nice: [", readable[0][1][2], "]")
+    print("\tBAD  C mean: [", readable[0][1][0], "]")
+    print("\tBAD  D nice: [", readable[0][0][2], "]")
+    print("\tBAD  D mean: [", readable[0][0][0], "]")
+
 
 
 def strat_name(strat):

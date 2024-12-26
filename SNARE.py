@@ -58,8 +58,9 @@ def simulation(model_parameters: MP, run: int):
     # selection strength beta
     selection_strength: float = model_parameters.selection_strength
 
-    print("Run", run, "Z", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", alpha:", alpha,
-          " gamma:", gamma, ", pdx:", model_parameters.paradoxical_strats, " b/c ratio:", bc_ratio, " beta:", selection_strength)
+    print("--------------------------------------------NEW RUN--------------------------------------------------------")
+    print("Run:", run, ", Z:", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", alpha:", alpha,
+          " gamma:", gamma, ", pdx:", model_parameters.paradoxical_strats, ", b/c ratio:", bc_ratio, ", beta:", selection_strength)
 
     games_played = 0
     cooperative_acts = 0
@@ -154,14 +155,14 @@ def read_args(process_id):
             cost: int = int(args[10])
             beta: float = float(args[11])
             model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, alpha, gamma,
-                                      runs=1, gens=1000, pdx_strats=pdx, b=ben, c=cost, beta=beta)
+                                      runs=1, gens=5000, pdx_strats=pdx, b=ben, c=cost, beta=beta)
             main(model_parameters)
     f.close()
 
 
 if __name__ == '__main__':
-    num_simulations: int = 1
-    num_cores = 4
+    num_simulations: int = 50
+    num_cores = 48
     with multiprocessing.Pool(num_cores) as pool:
         pool.map(read_args, range(num_simulations))
 
