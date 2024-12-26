@@ -32,7 +32,8 @@ def print_population(agents):
         print_agent(ag)
 
 
-def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, gamma: float, b: int = 5, c: int = -1):
+def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, gamma: float,
+                      b: int = 5, c: int = 1):
     # Payoff matrix of the prisoner's dilemma (pd)
     # also a DG with b>c
     # pd = ( [ [D,D],[D,C] ],[ [C,D],[C,C] ] )
@@ -82,9 +83,8 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         new_rep: int = EBSN[a1_action][a1_rep][agent1.emotion_profile()]
         # RECIPIENT FOCAL (common in IR)
         #new_rep_1: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
-        #if rand.random() < 0.000006:
-        #    print("EBNorm, donor action =", action(a1_action), "rec rep =", reputation(a2_rep), "emotion =", emotion(agent1.emotion_profile()),
-        #      "new donor rep =", reputation(new_rep_1))
+        print("EBNorm, donor action =", action(a1_action), "donor rep =", reputation(a1_rep), "emotion =", emotion(agent1.emotion_profile()),
+              "new donor rep =", reputation(new_rep))
     else:
         # Look at simple social norm
 

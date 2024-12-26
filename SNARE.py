@@ -97,22 +97,22 @@ def simulation(model_parameters: MP, run: int):
 
                 az = rand.choice(aux_list)
                 res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, alpha, gamma, benefit, cost)
-                res1 = res[0]
                 if current_gen > converge: cooperative_acts += n
-                a1.add_fitness(res1)
+                a1.add_fitness(res[0])
 
                 ax = rand.choice(aux_list)
                 res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, alpha, gamma, benefit, cost)
-                res2 = res[0]
                 if current_gen > converge: cooperative_acts += n
-                a2.add_fitness(res2)
+                a2.add_fitness(res[0])
 
             # normalize both players' fitness
             a1.set_fitness(a1.get_fitness() / z)
             a2.set_fitness(a2.get_fitness() / z)
 
+            #if current_gen > 0.5*gens: print("a1 fitness:", a1.get_fitness(), "a2 fitness:", a2.get_fitness())
             # Calculate Probability of imitation
             pi: float = (1 + np.exp(selection_strength*(a1.get_fitness() - a2.get_fitness()))) ** (-1)
+            #if current_gen > 0.5*gens: print("Prob of imitation:", pi)
             if rand.random() < pi:
                 a1.set_strategy(a2.strategy())
                 a1.set_emotion_profile(a2.emotion_profile())
@@ -160,8 +160,8 @@ def read_args(process_id):
 
 
 if __name__ == '__main__':
-    num_simulations: int = 50
-    num_cores = 48
+    num_simulations: int = 1
+    num_cores = 4
     with multiprocessing.Pool(num_cores) as pool:
         pool.map(read_args, range(num_simulations))
 
