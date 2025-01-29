@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import random as rand
+import yaml
 from agent import Agent
 from tqdm import tqdm
 import aux_functions as aux
@@ -18,18 +19,13 @@ import multiprocessing
 # -------------
 
 
-def main(mp: MP):
-
-    # list with ACR results of each run
-    all_games = np.zeros(mp.runs)
-    for r in range(mp.runs):
-        all_games[r] = simulation(mp, r)
-
-    print([round(a, 3) for a in all_games])
-    print("Final Average of ", mp.runs, " runs: ", all_games.mean())
+def main(mp: MP, lock: multiprocessing.Lock):
+    acr: float = simulation(mp, lock)
+    print(round(acr, 3))
 
 
-def simulation(model_parameters: MP, run: int):
+# Read lines from args.txt and run each one
+def simulation(model_parameters: MP, lock: multiprocessing.Lock):
 
     # Population Size
     z = model_parameters.z
@@ -58,9 +54,9 @@ def simulation(model_parameters: MP, run: int):
     # selection strength beta
     selection_strength: float = model_parameters.selection_strength
 
-    print("--------------------------------------------NEW RUN--------------------------------------------------------")
-    print("Run:", run, ", Z:", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", alpha:", alpha,
-          " gamma:", gamma, ", pdx:", model_parameters.paradoxical_strats, ", b/c ratio:", bc_ratio, ", beta:", selection_strength)
+    print("\n--------------------------------------------NEW RUN------------------------------------------------------")
+    print("Z:", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", alpha:", alpha,
+          " gamma:", gamma, ", b/c ratio:", bc_ratio, ", beta:", selection_strength)
 
     games_played = 0
     cooperative_acts = 0
@@ -123,46 +119,61 @@ def simulation(model_parameters: MP, run: int):
     #print("#Cooperative acts: " + str(cooperative_acts) + ", #Played Games: " + str(games_played))
     #print("#Mutations: " + str(number_mutations))
     #aux.print_population(agents)
-    aux.export_results(acr, model_parameters, agents)
+    aux.export_results(acr, model_parameters, agents, lock)
     return acr
 
 
-# Read lines from args.txt and run each one
-def read_args(process_id):
+def read_args(mp_args: tuple):
+    process_id, lock = mp_args  # Unpack the arguments
+    # Reads the arguments of the .yaml file
+    # Executes on __main__ function for each different instruction/experiment
     file_name: str = str(sys.argv[1])
-    f = open(file_name, "r")
-    lines = f.readlines()
 
-    for line in lines:
-        if line[0] == "#":
-            continue
-        else:
-            print("Current Instruction:", line)
-            args = line.split(" ")
-            # [1:-1] is because of the ()
-            ebsn_list: list = [int(a) for a in args[0][1:-1].split(",")]
-            eb_sn: list = aux.make_ebsn_from_list(ebsn_list)
-            sn_list: list = [int(b) for b in args[1][1:-1].split(",")]
-            sn: list = aux.make_sn_from_list(sn_list)
-            pdx: bool = args[2] == "true"
-            z: int = int(args[3])
-            mu: float = float(args[4])
-            chi: float = float(args[5])
-            eps: float = float(args[6])
-            alpha: float = float(args[7])
-            gamma: float = float(args[8])
-            ben: int = int(args[9])
-            cost: int = int(args[10])
-            beta: float = float(args[11])
-            model_parameters: MP = MP(args[1], sn, args[0], eb_sn, z, mu, chi, eps, alpha, gamma,
-                                      runs=1, gens=5000, pdx_strats=pdx, b=ben, c=cost, beta=beta)
-            main(model_parameters)
-    f.close()
+    # Open and parse the YAML file
+    with open(file_name, "r") as f:
+        data = yaml.safe_load(f)
+
+    # Loop through each set of parameters in the YAML file
+    for entry in data.get("instructions", []):
+        print("\nCurrent Instruction:", entry)
+        ebsn_list: list = entry["ebsn"]
+        eb_sn: list[list] = aux.make_ebsn_from_list(ebsn_list)
+        sn_list: list = entry["ebsn"]
+        sn: list[list] = aux.make_sn_from_list(sn_list)
+        z: int = int(entry["z"])
+        mu: float = float(entry["mu"])
+        chi: float = float(entry["chi"])
+        eps: float = float(entry["eps"])
+        alpha: float = float(entry["alpha"])
+        gamma: float = float(entry["gamma"])
+        benefit: int = int(entry["benefit"])
+        cost: int = int(entry["cost"])
+        beta: float = float(entry["beta"])
+        generations: int = int(entry["generations"])
+
+        model_parameters: MP = MP(
+            str(entry["sn"]), sn, str(entry["ebsn"]), eb_sn, z, mu, chi, eps, alpha, gamma,
+            gens=generations, b=benefit, c=cost, beta=beta
+        )
+
+        main(model_parameters, lock)
 
 
 if __name__ == '__main__':
-    num_simulations: int = 50
-    num_cores = 48
+    manager = multiprocessing.Manager()
+    lock = manager.Lock()
+    if len(sys.argv) == 1:
+        raise ValueError("No experiment configuration passed!")
+    elif len(sys.argv) == 4:
+        num_simulations: int = int(sys.argv[2])
+        num_cores: int = int(sys.argv[3])
+    else:
+        print("No number of runs or cores specified. Running default values")
+        num_simulations: int = 50
+        num_cores = 48
+    print("Running", num_simulations, "independent parallel simulations over", num_cores, "cpu core(s).")
+
+    args_list = [(i, lock) for i in range(num_simulations)]
     with multiprocessing.Pool(num_cores) as pool:
-        pool.map(read_args, range(num_simulations))
+        pool.map(read_args, args_list)
 

@@ -1,0 +1,15 @@
+---
+instructions:
+  - experiment: 1
+    ebsn: [0,0,1,1,0,1,1,1]
+    sn: [0,0,1,1]
+    z: 40
+    mu: 0.1
+    chi: 0.0
+    eps: 0.1
+    alpha: 0.1
+    gamma: 1
+    benefit: 5
+    cost: 1
+    beta: 1
+    generations: 500

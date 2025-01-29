@@ -4,6 +4,13 @@ from collections import defaultdict
 import numpy as np
 from ModelParameters import ModelParameters as MP
 from agent import Agent
+import multiprocessing
+
+
+def write_to_file(filename: str, data: str, lock):
+    with lock:
+        with open(filename, "a") as f:
+            f.write(data + "\n")
 
 
 def print_sn(sn):
@@ -149,7 +156,7 @@ def print_agent(ag: Agent):
     print("Agent: " + str(ag.get_agent_id()) + ", Strat: " + strat_name(ag.strategy()) + ", Rep: " + str(ag.get_reputation()))
 
 
-def export_results(acr: float, mp: MP, population: list[Agent]):
+def export_results(acr: float, mp: MP, population: list[Agent], lock: multiprocessing.Lock):
     #most_popular_per_ep = most_common_strats(population)
     winner_et = most_common_evol_trait(population)
     builder: str = mp.generate_mp_string() + "\t" + str(round(acr,3)) + "\t"
@@ -158,18 +165,13 @@ def export_results(acr: float, mp: MP, population: list[Agent]):
     builder += make_strat_str(calculate_strategy_frequency(population))
     builder += make_strat_str(calculate_ep_frequencies(population))
     builder += str(winner_et)
-    builder += "\n"
-    f = open("outputs/results_bc.txt", "a")
+    print(builder)
+    write_to_file("outputs/results.txt", builder, lock)
 
-    if " " not in builder:
-        f.write(builder)
-    else:
-        print("Exportation error")
-    f.close()
 
 def most_common_evol_trait(population: list[Agent]):
     eps = [0, 1]
-    strats = [(0,0), (0,1), (1,0), (1,1)]
+    strats = [(0, 0), (0, 1), (1, 0), (1, 1)]
     counter_dict: dict = {}
     for ep in eps:
         for strat in strats:
