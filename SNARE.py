@@ -16,6 +16,8 @@ import multiprocessing
 # B = 0, G = 1
 # D = 0, C = 1
 # M = 0, N = 1
+BAD, DEFECT, MEAN = 0, 0, 0
+GOOD, COOPERATE, NICE = 1, 1, 1
 # -------------
 
 
@@ -45,8 +47,6 @@ def simulation(model_parameters: MP, lock: multiprocessing.Lock):
     eb_social_norm = model_parameters.ebsn
     # Converging period
     converge: int = model_parameters.converge
-    # Probability of looking at emotion
-    gamma: float = model_parameters.gamma
     # benefit to cost ratio
     benefit: int = model_parameters.benefit
     cost: int = model_parameters.cost
@@ -54,9 +54,12 @@ def simulation(model_parameters: MP, lock: multiprocessing.Lock):
     # selection strength beta
     selection_strength: float = model_parameters.selection_strength
 
+    min_gamma: float = model_parameters.min_gamma
+    max_gamma: float = model_parameters.max_gamma
+
     print("\n--------------------------------------------NEW RUN------------------------------------------------------")
     print("Z:", z, ", Gens:", gens, ", mu:", mu, ", eps:", eps, ", chi:", chi, ", alpha:", alpha,
-          " gamma:", gamma, ", b/c ratio:", bc_ratio, ", beta:", selection_strength)
+          ", b/c ratio:", bc_ratio, ", beta:", selection_strength, ", min:_gamma:", min_gamma, ", max_gamma:", max_gamma)
 
     games_played = 0
     cooperative_acts = 0
@@ -65,15 +68,18 @@ def simulation(model_parameters: MP, lock: multiprocessing.Lock):
     aux.print_ebnorm(eb_social_norm)
     # Initialization
     agents: list[Agent] = []
+    a1: Agent
+    a2: Agent
+
     for i in range(z):
-        a = Agent(i, MP)
+        a = Agent(i, min_gamma, max_gamma)
         agents.append(a)
 
     for current_gen in tqdm(range(gens)):
         if rand.random() < mu:
             # Trait Exploration
             a1 = aux.get_random_agent(agents)
-            a1.trait_mutation(model_parameters)
+            a1.trait_mutation(min_gamma, max_gamma)
             number_mutations += 1
             # print("Agent " + str(a1.get_agent_id()) + " randomly explored. New trait: " + str(a1.get_trait()))
         else:
@@ -93,12 +99,12 @@ def simulation(model_parameters: MP, lock: multiprocessing.Lock):
                 if current_gen > converge: games_played += 4
 
                 az = rand.choice(aux_list)
-                res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, alpha, gamma, benefit, cost)
+                res, n = aux.prisoners_dilemma(a1, az, eb_social_norm, social_norm, eps, chi, alpha, benefit, cost)
                 if current_gen > converge: cooperative_acts += n
                 a1.add_fitness(res[0])
 
                 ax = rand.choice(aux_list)
-                res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, alpha, gamma, benefit, cost)
+                res, n = aux.prisoners_dilemma(a2, ax, eb_social_norm, social_norm, eps, chi, alpha, benefit, cost)
                 if current_gen > converge: cooperative_acts += n
                 a2.add_fitness(res[0])
 
@@ -113,12 +119,14 @@ def simulation(model_parameters: MP, lock: multiprocessing.Lock):
             if rand.random() < pi:
                 a1.set_strategy(a2.strategy())
                 a1.set_emotion_profile(a2.emotion_profile())
+                a1.set_gamma(a2.gamma())
 
     acr = 100 * cooperative_acts / games_played
     print("\nFinal ACR: " + str(round(acr, 3)))
     #print("#Cooperative acts: " + str(cooperative_acts) + ", #Played Games: " + str(games_played))
     #print("#Mutations: " + str(number_mutations))
     #aux.print_population(agents)
+
     aux.export_results(acr, model_parameters, agents, lock)
     return acr
 
@@ -138,21 +146,23 @@ def read_args(mp_args: tuple):
         print("\nCurrent Instruction:", entry)
         ebsn_list: list = entry["ebsn"]
         eb_sn: list[list] = aux.make_ebsn_from_list(ebsn_list)
-        sn_list: list = entry["ebsn"]
+        sn_list: list = entry["sn"]
         sn: list[list] = aux.make_sn_from_list(sn_list)
         z: int = int(entry["z"])
         mu: float = float(entry["mu"])
         chi: float = float(entry["chi"])
         eps: float = float(entry["eps"])
         alpha: float = float(entry["alpha"])
-        gamma: float = float(entry["gamma"])
         benefit: int = int(entry["benefit"])
         cost: int = int(entry["cost"])
         beta: float = float(entry["beta"])
         generations: int = int(entry["generations"])
+        min_gamma: float = float(entry["gamma_min"])
+        max_gamma: float = float(entry["gamma_max"])
 
         model_parameters: MP = MP(
-            str(entry["sn"]), sn, str(entry["ebsn"]), eb_sn, z, mu, chi, eps, alpha, gamma,
+            str(entry["sn"]), sn, str(entry["ebsn"]), eb_sn, z, mu, chi, eps, alpha,
+            min_gamma=min_gamma, max_gamma=max_gamma,
             gens=generations, b=benefit, c=cost, beta=beta
         )
 

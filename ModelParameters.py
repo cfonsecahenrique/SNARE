@@ -5,7 +5,7 @@ import numpy as np
 class ModelParameters:
 
     def __init__(self, sn_str: str, sn_list: list, ebsn_str: str, ebsn_list: list, z: int,
-                 mu: float, chi: float, eps: float, alpha: float, gamma: float,
+                 mu: float, chi: float, eps: float, alpha: float, min_gamma: float = 0, max_gamma: float = 0,
                  gens: int = 2000, b: int = 5, c: int = 1, beta: float = 1):
         self._social_norm: list = sn_list
         self._social_norm_str: str = sn_str
@@ -17,19 +17,27 @@ class ModelParameters:
         self._chi: float = chi
         self._eps: float = eps
         self._alpha: float = alpha
-        self._gamma: float = gamma
         self._converge: int = z * 10
         self._b: int = b
         self._c: int = c
+        self._min_gamma: float = min_gamma
+        self._max_gamma: float = max_gamma
         self._beta: float = beta
+
+    @property
+    def min_gamma(self):
+        return self._min_gamma
+
+    @property
+    def max_gamma(self):
+        return self._max_gamma
 
     def generate_mp_string(self) -> str:
         # for results exporting
         builder: str = self._ebsn_str.replace("[", "(").replace("]", ")").replace(" ", "") + "\t" + \
                        self._social_norm_str.replace("[", "(").replace("]", ")").replace(" ", "") + "\t" + \
                        str(self._z) + "\t" + str(self._gens) + "\t" + str(self._mu) + "\t" + str(self._chi) \
-                       + "\t" + str(self._eps) + "\t" + str(self._alpha) \
-                       + "\t" + str(self._gamma) + "\t" + str(self._b) + "\t" \
+                       + "\t" + str(self._eps) + "\t" + str(self._alpha) + "\t" + str(self._b) + "\t" \
                        + str(self._c) + "\t" + str(self._beta)
         return builder
 

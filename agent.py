@@ -1,18 +1,47 @@
 import random as rand
+import numpy as np
+ALWAYS_COOPERATE = (1, 1)
+DISCRIMINATE = (0, 1)
+PARADOXICALLY_DISC = (1, 0)
+ALWAYS_DEFECT = (0, 0)
 
 
 class Agent:
-    def __init__(self, agent_id: int, mp):
+    def __init__(self, agent_id: int, min_gamma, max_gamma):
         self._agent_id: int = agent_id
         self._reputation: int = rand.randint(0, 1)
         self._fitness_score: int = 0
         self._strategy: tuple = (-1, -1)
         self._emotion_profile: int = -1
-        self.trait_mutation(mp)
+        self._gamma: float = -1
+        self.initialise_traits(min_gamma, max_gamma)
 
-    def trait_mutation(self, mp):
-        self._emotion_profile = rand.randint(0, 1)
+    def initialise_traits(self, min_gamma, max_gamma):
+        # strategy
         self._strategy = (rand.randint(0, 1), rand.randint(0, 1))
+        # emotion profile
+        self._emotion_profile = rand.randint(0, 1)
+        # gamma
+        steps = np.arange(min_gamma, max_gamma + .01, 0.1)
+        #print(min_gamma, max_gamma, steps)
+        self._gamma = rand.choice(steps)
+
+    def trait_mutation(self, min_gamma, max_gamma):
+        # emotion profile
+        self._emotion_profile = 1 - self._emotion_profile
+        # strategy
+        self._strategy = rand.choice(list({ALWAYS_COOPERATE, DISCRIMINATE, PARADOXICALLY_DISC, ALWAYS_DEFECT}
+                                          - {self._strategy}))
+        # GAMMA; mutate gamma; TODO: Change to delta_gamma, tbd
+        #._gamma += rand.choice((-1, 1)) * 0.1
+        # clamp gamma
+        #self._gamma = max(min_gamma, min(max_gamma, self._gamma))
+
+    def gamma(self):
+        return self._gamma
+
+    def set_gamma(self, new_gamma: float):
+        self._gamma = new_gamma
 
     def strategy(self):
         return self._strategy

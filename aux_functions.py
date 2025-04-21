@@ -1,6 +1,5 @@
 import random as rand
 from collections import defaultdict
-
 import numpy as np
 from ModelParameters import ModelParameters as MP
 from agent import Agent
@@ -83,13 +82,13 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
 
     # AGENT 1 new rep --------------------------
     # Probability of using EB Norm
-    if rand.random() < gamma:
+    if rand.random() < agent1.gamma():
         # Look at Emotion Based Social Norm
-
         # DONOR FOCAL
-        new_rep: int = EBSN[a1_rep][a1_action][agent1.emotion_profile()]
+        # new_rep: int = EBSN[a1_rep][a1_action][agent1.emotion_profile()]
+
         # RECIPIENT FOCAL (common in IR)
-        #new_rep_1: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
+        new_rep: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
 
         # bug hunting prints
         #if a1_action==0 and a1_rep==1:
@@ -97,15 +96,15 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         #      "THEN new donor rep =", reputation(new_rep))
     else:
         # Look at simple social norm
-
         # DONOR FOCAL
-        new_rep: int = SN[a1_action][a1_rep]
+        # new_rep: int = SN[a1_action][a1_rep]
+
         # bug hunting prints
         #print("Agent:", agent1.get_agent_id(), "(donor) rep =", reputation(a1_rep), "(donor) action =", action(a1_action), "emotion =", emotion(agent1.emotion_profile()),
         #      "THEN new donor rep =", reputation(new_rep))
 
         # RECIPIENT FOCAL (common in IR)
-        #new_rep_1: int = SN[a1_action][a2_rep]
+        new_rep: int = SN[a1_action][a2_rep]
 
     # Assignment error
     if rand.random() < alpha:
@@ -114,18 +113,18 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     agent1.set_reputation(new_rep)
 
     # AGENT 2 new rep --------------------------
-    if rand.random() < gamma:
+    if rand.random() < agent2.gamma():
         # Look at Emotion Based Social Norm
         # DONOR FOCAL
-        new_rep: int = EBSN[a2_rep][a2_action][agent2.emotion_profile()]
+        #new_rep: int = EBSN[a2_rep][a2_action][agent2.emotion_profile()]
         # RECIPIENT FOCAL (common in IR)
-        #new_rep_2: int = EBSN[a2_action][a1_rep][agent2.emotion_profile()]
+        new_rep: int = EBSN[a2_action][a1_rep][agent2.emotion_profile()]
     else:
         # Look at simple social norm
         # DONOR FOCAL
-        new_rep: int = SN[a2_action][a2_rep]
+        # new_rep: int = SN[a2_action][a2_rep]
         # RECIPIENT FOCAL (common in IR)
-        #new_rep_2: int = SN[a2_action][a1_rep]
+        new_rep: int = SN[a2_action][a1_rep]
 
     if rand.random() < alpha:
         # REPUTATION ASSIGNMENT ERROR ag2
@@ -157,9 +156,9 @@ def print_agent(ag: Agent):
 
 
 def export_results(acr: float, mp: MP, population: list[Agent], lock: multiprocessing.Lock):
-    #most_popular_per_ep = most_common_strats(population)
+    # most_popular_per_ep = most_common_strats(population)
     winner_et = most_common_evol_trait(population)
-    builder: str = mp.generate_mp_string() + "\t" + str(round(acr,3)) + "\t"
+    builder: str = mp.generate_mp_string() + "\t" + str(round(acr, 3)) + "\t"
     rep_freqs = reputation_frequencies(population)
     builder += str(rep_freqs[0]) + "\t" + str(rep_freqs[1]) + "\t"
     builder += make_strat_str(calculate_strategy_frequency(population))
@@ -178,7 +177,7 @@ def most_common_evol_trait(population: list[Agent]):
             counter_dict[(ep, strat)] = 0
     for agent in population:
         counter_dict[(agent.emotion_profile(), agent.strategy())] += 1
-    #print(counter_dict)
+    # print(counter_dict)
     best = max(counter_dict, key=counter_dict.get)
 
     string: str = str(best[0]) + str(best[1][0]) + str(best[1][1])
@@ -192,8 +191,8 @@ def most_common_strats(population: list[Agent]):
     there_is_ep1 = False
 
     # initialize
-    strat_counts_0: dict = {s: 0 for s in [(0,0), (0,1), (1,0), (1,1)]}
-    strat_counts_1: dict = {s: 0 for s in [(0,0), (0,1), (1,0), (1,1)]}
+    strat_counts_0: dict = {s: 0 for s in [(0, 0), (0, 1), (1, 0), (1, 1)]}
+    strat_counts_1: dict = {s: 0 for s in [(0, 0), (0, 1), (1, 0), (1, 1)]}
 
     for agent in population:
         if agent.emotion_profile() == 0:
@@ -202,11 +201,6 @@ def most_common_strats(population: list[Agent]):
         elif agent.emotion_profile() == 1:
             there_is_ep1 = True
             strat_counts_1[agent.strategy()] += 1
-
-    #print("COMPETITIVE")
-    #print(strat_counts_0)
-    #print("COOPERATIVE")
-    #print(strat_counts_1)
 
     if there_is_ep0:
         counter["Competitive"] = strat_name(max(strat_counts_0, key=strat_counts_0.get))
