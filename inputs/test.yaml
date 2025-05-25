@@ -1,17 +1,19 @@
----
-instructions:
-  - experiment: 1
-    ebsn: [0,0,1,1,0,1,1,1]
-    sn: [1,0,0,1]
-    z: 50
-    mu: 0.1
-    chi: 0.0
-    eps: 0
-    alpha: 0
-    benefit: 5
-    cost: 1
-    beta: 1
-    gamma_min: 0
-    gamma_max: 0
-    # FIX error when gammas equal or close
-    generations: 2000
+running:
+  runs: 10
+  cores: 10
+simulation:
+  ebsn: [0,0,1,1,0,1,1,1]
+  sn: [1,0,0,1]
+  z: 50
+  mu: 1 # mu/Z
+  chi: 0.0
+  eps: 0
+  alpha: 0
+  benefit: 5
+  cost: 1
+  beta: 1
+  gamma_min: 0
+  gamma_max: 0
+  # FIX error when gammas equal or close
+  generations: 500
+  convergence period: 0.1

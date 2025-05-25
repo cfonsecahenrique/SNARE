@@ -49,6 +49,9 @@ class Agent:
     def emotion_profile(self):
         return self._emotion_profile
 
+    def get_trait(self):
+        return self._strategy, self._emotion_profile
+
     def set_strategy(self, strat):
         self._strategy = strat
 
@@ -58,8 +61,8 @@ class Agent:
     # Getter for agent_id
     def get_agent_id(self):
         return self._agent_id
-        # Setter for agent_id
 
+    # Setter for agent_id
     def set_agent_id(self, agent_id: int):
         self._agent_id = agent_id
 

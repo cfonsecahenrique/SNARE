@@ -1,24 +1,14 @@
 import random as rand
-from collections import defaultdict
+from collections import Counter
 import numpy as np
 from ModelParameters import ModelParameters as MP
 from agent import Agent
 import multiprocessing
 
 
-def write_to_file(filename: str, data: str, lock):
-    with lock:
-        with open(filename, "a") as f:
-            f.write(data + "\n")
-
-
-def print_sn(sn):
-    print("2nd Order Social norm:")
-    # socialNorm[action][reputation]
-    print("\t   G B")
-    print("\t----------")
-    print("\tC|", rep_char(sn[1][1]), rep_char(sn[1][0]))
-    print("\tD|", rep_char(sn[0][1]), rep_char(sn[0][0]))
+def write_to_file(filename: str, data: str):
+    with open(filename, "a") as f:
+        f.write(data + "\n")
 
 
 def get_random_agent_pair(agents):
@@ -155,7 +145,7 @@ def print_agent(ag: Agent):
     print("Agent: " + str(ag.get_agent_id()) + ", Strat: " + strat_name(ag.strategy()) + ", Rep: " + str(ag.get_reputation()))
 
 
-def export_results(acr: float, mp: MP, population: list[Agent], lock: multiprocessing.Lock):
+def export_results(acr: float, mp: MP, population: list[Agent]):
     # most_popular_per_ep = most_common_strats(population)
     winner_et = most_common_evol_trait(population)
     builder: str = mp.generate_mp_string() + "\t" + str(round(acr, 3)) + "\t"
@@ -164,8 +154,8 @@ def export_results(acr: float, mp: MP, population: list[Agent], lock: multiproce
     builder += make_strat_str(calculate_strategy_frequency(population))
     builder += make_strat_str(calculate_ep_frequencies(population))
     builder += str(winner_et)
-    print(builder)
-    write_to_file("outputs/results.txt", builder, lock)
+    #print(builder)
+    write_to_file("outputs/results.txt", builder)
 
 
 def most_common_evol_trait(population: list[Agent]):
@@ -216,43 +206,24 @@ def most_common_strats(population: list[Agent]):
     return counter
 
 
-def reputation_frequencies(population: list[Agent]):
-    # Only works binarily, for now
-    # 0: B, 1: G
-    rep_freqs: dict = {0: 0, 1: 0}
-    for agent in population:
-        rep_freqs[agent.get_reputation()] += 1
-    rep_freqs[0] /= len(population)
-    rep_freqs[1] /= len(population)
-    return [rep_freqs[0], rep_freqs[1]]
+def reputation_frequencies(population: list[Agent]) -> list[float]:
+    counts = Counter(agent.get_reputation() for agent in population)
+    total = len(population)
+    return [counts.get(0, 0) / total, counts.get(1, 0) / total]
 
 
-def calculate_strategy_frequency(population: list[Agent]):
-    strategy_freqs: dict = {}
+def calculate_strategy_frequency(population: list[Agent]) -> dict:
+    total = len(population)
+    counts = Counter(agent.strategy() for agent in population)
+    # Ensure all 4 strategies are present in the output
     strats = [(0, 0), (0, 1), (1, 0), (1, 1)]
-
-    for strat in strats:
-        strategy_freqs[strat] = 0
-
-    for agent in population:
-        strategy_freqs[agent.strategy()] += 1
-
-    for strat in strats:
-        strategy_freqs[strat] = strategy_freqs[strat] / len(population)
-
-    return strategy_freqs
+    return {strat: counts.get(strat, 0) / total for strat in strats}
 
 
-def calculate_ep_frequencies(population: list[Agent]):
-    ep_freqs = {0: 0, 1: 0}
-
-    for agent in population:
-        ep_freqs[agent.emotion_profile()] += 1
-
-    for ep in ep_freqs:
-        ep_freqs[ep] = ep_freqs[ep] / len(population)
-
-    return ep_freqs
+def calculate_ep_frequencies(population: list[Agent]) -> dict:
+    total = len(population)
+    counts = Counter(agent.emotion_profile() for agent in population)
+    return {ep: counts.get(ep, 0) / total for ep in (0, 1)}
 
 
 def make_strat_str(frequencies: dict):
@@ -297,6 +268,14 @@ def print_ebnorm(sn):
     print("\tBAD  D nice: [", readable[0][0][2], "]")
     print("\tBAD  D mean: [", readable[0][0][0], "]")
 
+
+def print_sn(sn):
+    print("2nd Order Social norm:")
+    # socialNorm[action][reputation]
+    print("\t   G B")
+    print("\t----------")
+    print("\tC|", rep_char(sn[1][1]), rep_char(sn[1][0]))
+    print("\tD|", rep_char(sn[0][1]), rep_char(sn[0][0]))
 
 
 def strat_name(strat):
