@@ -15,10 +15,6 @@ def get_random_agent_pair(agents):
     return rand.sample(agents, 2)
 
 
-def get_random_agent(agents) -> Agent:
-    return rand.choice(agents)
-
-
 def invert_binary(action: int):
     return 1 - action
 
@@ -28,8 +24,7 @@ def print_population(agents):
         print_agent(ag)
 
 
-def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, gamma: float,
-                      b: int = 5, c: int = 1):
+def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, b: int, c: int):
     # Payoff matrix of the prisoner's dilemma (pd)
     # also a DG with b>c
     # pd = ( [ [D,D],[D,C] ],[ [C,D],[C,C] ] )
@@ -43,7 +38,10 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         [(S, T), (R, R)]
     ])
 
-    cooperative_acts = 0
+    #print("\nPlaying a Prisoner's dilemma between agents", agent1.get_agent_id(),
+    #      "[" + rep_char(agent1.get_reputation()) + "]", "and", agent2.get_agent_id(), "[" + rep_char(agent2.get_reputation()) + "]")
+    #print("Strategies:", strat_name(agent1.strategy()), "and", strat_name(agent2.strategy()))
+    cooperative_acts: int = 0
 
     # Get agent's reputations locally so that the changed reputations aren't used in the wrong place
     a1_rep: int = agent1.get_reputation()
@@ -51,10 +49,10 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     # get_trait()[0]: action rule
 
     # Check for rep assessment error
-    if rand.random() > chi:
-        a1_action: int = agent1.strategy()[a2_rep]
-    else:
+    if rand.random() < chi:
         a1_action: int = agent1.strategy()[invert_binary(a2_rep)]
+    else:
+        a1_action: int = agent1.strategy()[a2_rep]
 
     if rand.random() > chi:
         a2_action: int = agent2.strategy()[a1_rep]
@@ -70,7 +68,7 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     if rand.random() < eps:
         a2_action = invert_binary(a2_action)
 
-    # AGENT 1 new rep --------------------------
+    # ---------------------- AGENT 1 new rep --------------------------
     # Probability of using EB Norm
     if rand.random() < agent1.gamma():
         # Look at Emotion Based Social Norm
@@ -79,7 +77,6 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
 
         # RECIPIENT FOCAL (common in IR)
         new_rep: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
-
         # bug hunting prints
         #if a1_action==0 and a1_rep==1:
         #    print("Agent:", agent1.get_agent_id(), "(donor) rep =", reputation(a1_rep), "(donor) action =", action(a1_action), "emotion =", emotion(agent1.emotion_profile()),
@@ -95,6 +92,8 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
 
         # RECIPIENT FOCAL (common in IR)
         new_rep: int = SN[a1_action][a2_rep]
+        #print("Agent with strategy", agent1.strategy(), "chose action", a1_action, "towards an agent seen as ", rep_char(a2_rep))
+        #print("So his new reputation is:", rep_char(new_rep))
 
     # Assignment error
     if rand.random() < alpha:
@@ -102,7 +101,7 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
         new_rep = invert_binary(new_rep)
     agent1.set_reputation(new_rep)
 
-    # AGENT 2 new rep --------------------------
+    # ---------------------- AGENT 2 new rep --------------------------
     if rand.random() < agent2.gamma():
         # Look at Emotion Based Social Norm
         # DONOR FOCAL
@@ -126,7 +125,7 @@ def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: f
     cooperative_acts += a1_action
     cooperative_acts += a2_action
 
-    return pd[a1_action][a2_action], cooperative_acts
+    return pd[a1_action, a2_action], cooperative_acts
 
 
 def action_char(act: int):
@@ -226,6 +225,16 @@ def calculate_ep_frequencies(population: list[Agent]) -> dict:
     return {ep: counts.get(ep, 0) / total for ep in (0, 1)}
 
 
+def calculate_reputation_frequencies(population: list[Agent]) -> dict:
+    total = len(population)
+    counts = Counter(agent.get_reputation() for agent in population)
+    return {rep: counts.get(rep, 0) / total for rep in (0, 1)}
+
+
+def calculate_average_gamma(population: list[Agent]) -> float:
+    return sum(a.gamma() for a in population) / len(population)
+
+
 def make_strat_str(frequencies: dict):
     builder: str = ""
     for key in frequencies:
@@ -279,7 +288,7 @@ def print_sn(sn):
 
 
 def strat_name(strat):
-    d: dict = {(0, 0): "AllD", (0, 1): "pDisc", (1, 0): "Disc", (1, 1): "AllC"}
+    d: dict = {(0, 0): "AllD", (0, 1): "Disc", (1, 0): "pDisc", (1, 1): "AllC"}
     return d[strat]
 
 
