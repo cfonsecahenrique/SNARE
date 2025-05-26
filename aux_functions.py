@@ -1,9 +1,8 @@
 import random as rand
 from collections import Counter
 import numpy as np
-from ModelParameters import ModelParameters as MP
+from model import Model
 from agent import Agent
-import multiprocessing
 
 
 def write_to_file(filename: str, data: str):
@@ -19,115 +18,6 @@ def invert_binary(action: int):
     return 1 - action
 
 
-def print_population(agents):
-    for ag in agents:
-        print_agent(ag)
-
-
-def prisoners_dilemma(agent1: Agent, agent2: Agent, EBSN, SN, eps: float, chi: float, alpha: float, b: int, c: int):
-    # Payoff matrix of the prisoner's dilemma (pd)
-    # also a DG with b>c
-    # pd = ( [ [D,D],[D,C] ],[ [C,D],[C,C] ] )
-    # (T)emptation; (R)eward; (P)unishment; (S)ucker's payoff
-    T: int = b
-    R: int = b-c
-    P: int = 0
-    S: int = -c
-    pd = np.array([
-        [(P, P), (T, S)],
-        [(S, T), (R, R)]
-    ])
-
-    #print("\nPlaying a Prisoner's dilemma between agents", agent1.get_agent_id(),
-    #      "[" + rep_char(agent1.get_reputation()) + "]", "and", agent2.get_agent_id(), "[" + rep_char(agent2.get_reputation()) + "]")
-    #print("Strategies:", strat_name(agent1.strategy()), "and", strat_name(agent2.strategy()))
-    cooperative_acts: int = 0
-
-    # Get agent's reputations locally so that the changed reputations aren't used in the wrong place
-    a1_rep: int = agent1.get_reputation()
-    a2_rep: int = agent2.get_reputation()
-    # get_trait()[0]: action rule
-
-    # Check for rep assessment error
-    if rand.random() < chi:
-        a1_action: int = agent1.strategy()[invert_binary(a2_rep)]
-    else:
-        a1_action: int = agent1.strategy()[a2_rep]
-
-    if rand.random() > chi:
-        a2_action: int = agent2.strategy()[a1_rep]
-    else:
-        a2_action: int = agent2.strategy()[invert_binary(a1_rep)]
-
-    # Execution error for action of agent 1
-    if rand.random() < eps:
-        a1_action = invert_binary(a1_action)
-        # print("Agent " + str(agent1.get_agent_id()) + " tried to cooperate but failed!")
-
-    # Execution error for action of agent 2
-    if rand.random() < eps:
-        a2_action = invert_binary(a2_action)
-
-    # ---------------------- AGENT 1 new rep --------------------------
-    # Probability of using EB Norm
-    if rand.random() < agent1.gamma():
-        # Look at Emotion Based Social Norm
-        # DONOR FOCAL
-        # new_rep: int = EBSN[a1_rep][a1_action][agent1.emotion_profile()]
-
-        # RECIPIENT FOCAL (common in IR)
-        new_rep: int = EBSN[a1_action][a2_rep][agent1.emotion_profile()]
-        # bug hunting prints
-        #if a1_action==0 and a1_rep==1:
-        #    print("Agent:", agent1.get_agent_id(), "(donor) rep =", reputation(a1_rep), "(donor) action =", action(a1_action), "emotion =", emotion(agent1.emotion_profile()),
-        #      "THEN new donor rep =", reputation(new_rep))
-    else:
-        # Look at simple social norm
-        # DONOR FOCAL
-        # new_rep: int = SN[a1_action][a1_rep]
-
-        # bug hunting prints
-        #print("Agent:", agent1.get_agent_id(), "(donor) rep =", reputation(a1_rep), "(donor) action =", action(a1_action), "emotion =", emotion(agent1.emotion_profile()),
-        #      "THEN new donor rep =", reputation(new_rep))
-
-        # RECIPIENT FOCAL (common in IR)
-        new_rep: int = SN[a1_action][a2_rep]
-        #print("Agent with strategy", agent1.strategy(), "chose action", a1_action, "towards an agent seen as ", rep_char(a2_rep))
-        #print("So his new reputation is:", rep_char(new_rep))
-
-    # Assignment error
-    if rand.random() < alpha:
-        # REPUTATION ASSIGNMENT ERROR ag1
-        new_rep = invert_binary(new_rep)
-    agent1.set_reputation(new_rep)
-
-    # ---------------------- AGENT 2 new rep --------------------------
-    if rand.random() < agent2.gamma():
-        # Look at Emotion Based Social Norm
-        # DONOR FOCAL
-        #new_rep: int = EBSN[a2_rep][a2_action][agent2.emotion_profile()]
-        # RECIPIENT FOCAL (common in IR)
-        new_rep: int = EBSN[a2_action][a1_rep][agent2.emotion_profile()]
-    else:
-        # Look at simple social norm
-        # DONOR FOCAL
-        # new_rep: int = SN[a2_action][a2_rep]
-        # RECIPIENT FOCAL (common in IR)
-        new_rep: int = SN[a2_action][a1_rep]
-
-    if rand.random() < alpha:
-        # REPUTATION ASSIGNMENT ERROR ag2
-        new_rep = invert_binary(new_rep)
-    agent2.set_reputation(new_rep)
-
-    # Count coop acts
-    # coop = 1, def = 0
-    cooperative_acts += a1_action
-    cooperative_acts += a2_action
-
-    return pd[a1_action, a2_action], cooperative_acts
-
-
 def action_char(act: int):
     return "C" if act == 1 else "D"
 
@@ -140,20 +30,14 @@ def rep_char(rep: int):
     return "G" if rep == 1 else "B"
 
 
-def print_agent(ag: Agent):
-    print("Agent: " + str(ag.get_agent_id()) + ", Strat: " + strat_name(ag.strategy()) + ", Rep: " + str(ag.get_reputation()))
-
-
-def export_results(acr: float, mp: MP, population: list[Agent]):
+def export_results(acr: float, model: Model, population: list[Agent]):
     # most_popular_per_ep = most_common_strats(population)
     winner_et = most_common_evol_trait(population)
-    builder: str = mp.generate_mp_string() + "\t" + str(round(acr, 3)) + "\t"
-    rep_freqs = reputation_frequencies(population)
-    builder += str(rep_freqs[0]) + "\t" + str(rep_freqs[1]) + "\t"
+    builder: str = model.generate_mp_string() + "\t" + str(round(acr, 3)) \
+                   + "\t" + str(calculate_average_consensus(model.image_matrix))
     builder += make_strat_str(calculate_strategy_frequency(population))
     builder += make_strat_str(calculate_ep_frequencies(population))
     builder += str(winner_et)
-    #print(builder)
     write_to_file("outputs/results.txt", builder)
 
 
@@ -201,14 +85,7 @@ def most_common_strats(population: list[Agent]):
     else:
         counter["Cooperative"] = None
 
-    #print(counter)
     return counter
-
-
-def reputation_frequencies(population: list[Agent]) -> list[float]:
-    counts = Counter(agent.get_reputation() for agent in population)
-    total = len(population)
-    return [counts.get(0, 0) / total, counts.get(1, 0) / total]
 
 
 def calculate_strategy_frequency(population: list[Agent]) -> dict:
@@ -225,10 +102,13 @@ def calculate_ep_frequencies(population: list[Agent]) -> dict:
     return {ep: counts.get(ep, 0) / total for ep in (0, 1)}
 
 
-def calculate_reputation_frequencies(population: list[Agent]) -> dict:
-    total = len(population)
-    counts = Counter(agent.get_reputation() for agent in population)
-    return {rep: counts.get(rep, 0) / total for rep in (0, 1)}
+def calculate_average_consensus(image_matrix: np.ndarray) -> float:
+    z = image_matrix.shape[0]
+    # Count number of 1s in each column (opinions about each focal agent)
+    total_good = np.sum(image_matrix == 1, axis=0)
+    total_bad = z - total_good  # Since only 0 or 1, and it's a square matrix
+    consensus_per_agent = np.abs(total_good - total_bad) / z
+    return float(np.mean(consensus_per_agent))
 
 
 def calculate_average_gamma(population: list[Agent]) -> float:
@@ -293,12 +173,12 @@ def strat_name(strat):
 
 
 def action(a: int):
-    return "C" if a==1 else "D"
+    return "C" if a else "D"
 
 
 def reputation(r: int):
-    return "G" if r==1 else "B"
+    return "G" if r else "B"
 
 
 def emotion(e: int):
-    return "Coop" if e==1 else "Comp"
+    return "Coop" if e else "Comp"
