@@ -33,8 +33,7 @@ def rep_char(rep: int):
 def export_results(acr: float, model: Model, population: list[Agent]):
     # most_popular_per_ep = most_common_strats(population)
     winner_et = most_common_evol_trait(population)
-    builder: str = model.generate_mp_string() + "\t" + str(round(acr, 3)) \
-                   + "\t" + str(calculate_average_consensus(model.image_matrix))
+    builder: str = model.generate_mp_string() + "\t" + str(round(acr, 3))
     builder += make_strat_str(calculate_strategy_frequency(population))
     builder += make_strat_str(calculate_ep_frequencies(population))
     builder += str(winner_et)
@@ -182,3 +181,9 @@ def reputation(r: int):
 
 def emotion(e: int):
     return "Coop" if e else "Comp"
+
+
+def calculate_reputation_frequencies(population: list[Agent]) -> dict:
+    total = len(population)
+    counts = Counter(agent.reputation() for agent in population)
+    return {rep: counts.get(rep, 0) / total for rep in (0, 1)}

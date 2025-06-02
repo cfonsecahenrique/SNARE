@@ -7,24 +7,26 @@ ALWAYS_DEFECT = (0, 0)
 
 
 class Agent:
-    def __init__(self, agent_id: int, min_gamma, max_gamma, gamma_normal_center):
+    def __init__(self, agent_id: int, min_gamma, max_gamma, gamma_normal_center, gamma_delta):
         self._agent_id: int = agent_id
         self._fitness_score: int = 0
         self._strategy: tuple = (-1, -1)
         self._emotion_profile: int = -1
+        self._reputation: int = rand.randint(0, 1)
         self._gamma: float = -1
-        self.initialise_traits(min_gamma, max_gamma, gamma_normal_center)
+        self.initialise_traits(min_gamma, max_gamma, gamma_normal_center, gamma_delta)
 
-    def initialise_traits(self, min_gamma, max_gamma, center):
+    def initialise_traits(self, min_gamma, max_gamma, center, delta):
         # strategy
         self._strategy = (rand.randint(0, 1), rand.randint(0, 1))
         # emotion profile
         self._emotion_profile = rand.randint(0, 1)
         # gamma
-        if center == 0 or center == 1:
+        if center == 0 or center == 1 or delta == 0:
+            # homogeneous population
             self._gamma = center
         else:
-            self._gamma = sample_normal_bounded(center, min_bound=min_gamma, max_bound=max_gamma, std=0.15)
+            self._gamma = round(sample_normal_bounded(center, min_bound=min_gamma, max_bound=max_gamma, std=delta), 1)
 
     def trait_mutation(self, min_gamma: float, max_gamma: float, gamma_delta: float):
         # emotion profile
@@ -33,7 +35,7 @@ class Agent:
         self._strategy = rand.choice(list({ALWAYS_COOPERATE, DISCRIMINATE, PARADOXICALLY_DISC, ALWAYS_DEFECT}
                                           - {self._strategy}))
 
-        self._gamma += rand.choice((-gamma_delta, gamma_delta))
+        self._gamma += rand.choice((-0.2, 0.2))
         # clamp gamma
         self._gamma = max(min_gamma, min(max_gamma, self._gamma))
 
@@ -77,6 +79,12 @@ class Agent:
     # Increment Fitness method
     def add_fitness(self, f):
         self._fitness_score += f
+
+    def reputation(self):
+        return self._reputation
+
+    def set_reputation(self, new_rep: int):
+        self._reputation = new_rep
 
 
 def sample_normal_bounded(m: float, min_bound=0.0, max_bound=1.0, std: float = 0.1) -> float:

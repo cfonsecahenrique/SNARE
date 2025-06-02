@@ -21,7 +21,6 @@ from time import time
 BAD, DEFECT, MEAN = 0, 0, 0
 GOOD, COOPERATE, NICE = 1, 1, 1
 # -------------
-
 ALWAYS_COOPERATE = (1, 1)
 DISCRIMINATE = (0, 1)
 PARADOXICALLY_DISC = (1, 0)
@@ -57,12 +56,12 @@ def read_args():
     min_gamma: float = float(simulation_parameters["gamma_min"])
     max_gamma: float = float(simulation_parameters["gamma_max"])
     gamma_delta: float = float(simulation_parameters["gamma_delta"])
-    gamma_normal_center: float = float(simulation_parameters["gamma_normal_center"])
+    gamma_gaussian_center: float = float(simulation_parameters["gamma_gaussian_n"])
     convergence: float = float(simulation_parameters["convergence period"])
 
     model_parameters: Model = Model(
         str(simulation_parameters["sn"]), sn, str(simulation_parameters["ebsn"]), eb_sn, z, mu, chi, eps, alpha,
-        min_gamma, max_gamma, gamma_delta, gamma_normal_center, generations, benefit, cost, beta, convergence
+        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence
     )
 
     print(model_parameters.__str__())
@@ -91,13 +90,14 @@ def simulation(model: Model):
     cooperation_per_gen: np.array = np.zeros(gens)
     allD, Disc, pDisc, allC = np.zeros(gens), np.zeros(gens), np.zeros(gens), np.zeros(gens)
     mean, nice = np.zeros(gens), np.zeros(gens)
-    avg_gammas, avg_consensus = np.zeros(gens), np.zeros(gens)
+    bad, good = np.zeros(gens), np.zeros(gens)
+    avg_gammas = np.zeros(gens)
 
     for i in range(z):
-        agents.append(Agent(i, model.min_gamma, model.max_gamma, model.gamma_normal_center))
+        agents.append(Agent(i, model.min_gamma, model.max_gamma, model.gamma_normal_center, model.gamma_delta))
         # add agent to the image matrix
-        agent_rep: int = rand.randint(0, 1)
-        model.image_matrix[:, i] = agent_rep
+        # agent_rep: int = rand.randint(0, 1)
+        # model.image_matrix[:, i] = agent_rep
 
     for current_gen in range(gens):
         past_convergence: bool = current_gen > converge
@@ -126,7 +126,7 @@ def simulation(model: Model):
                     # and can have at most 2 cooperative acts)
 
                     az: Agent = rand.choice(aux_list)
-                    res_z, n_z = model.prisoners_dilemma(a1, az, agents)
+                    res_z, n_z = model.prisoners_dilemma(a1, az)
                     # print("Agent", a1.get_agent_id(), "[" + aux.rep_char(a1.get_reputation()) + "],
                     # with strategy", aux.strat_name(a1.strategy()),
                     #      "played against", az.get_agent_id(), "(", aux.rep_char(az.get_reputation()), "),
@@ -139,7 +139,7 @@ def simulation(model: Model):
                     a1.add_fitness(res_z[0])
 
                     ax: Agent = rand.choice(aux_list)
-                    res_x, n_x = model.prisoners_dilemma(a2, ax, agents)
+                    res_x, n_x = model.prisoners_dilemma(a2, ax)
                     if past_convergence:
                         cooperative_acts += n_x
                         games_played += 2
@@ -154,7 +154,8 @@ def simulation(model: Model):
                 if rand.random() < pi:
                     a1.set_strategy(a2.strategy())
                     a1.set_emotion_profile(a2.emotion_profile())
-                    a1.set_gamma(a2.gamma())
+                    if model.gamma_delta != 0:
+                        a1.set_gamma(a2.gamma())
 
         if past_convergence:
             cooperation_per_gen[current_gen] = cooperative_acts/games_played
@@ -170,18 +171,21 @@ def simulation(model: Model):
         mean[current_gen] = emotion_profile_frequencies.get(0)
         nice[current_gen] = emotion_profile_frequencies.get(1)
 
-        avg_consensus[current_gen] = aux.calculate_average_consensus(model.image_matrix)
+        reputation_frequencies = aux.calculate_reputation_frequencies(agents)
+        bad[current_gen] = reputation_frequencies.get(BAD)
+        good[current_gen] = reputation_frequencies.get(GOOD)
+        # avg_consensus[current_gen] = aux.calculate_average_consensus(model.image_matrix)
         avg_gammas[current_gen] = aux.calculate_average_gamma(agents)
 
     aux.export_results(100 * cooperation_per_gen[gens-1], model, agents)
-    return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), avg_consensus, avg_gammas
+    return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas
 
 
 def plot_time_series(all_results: list):
     cooperation_results = [r[0] for r in all_results]  # list of arrays, each array shape=(gens,)
     strategy_results = [r[1] for r in all_results]     # list of arrays, each array shape=(4, gens)
     ep_results = [r[2] for r in all_results]           # list of arrays, each array shape=(2, gens)
-    consensus_results = [r[3] for r in all_results]
+    rep_results = [r[3] for r in all_results]
     gammas = [r[4] for r in all_results]
 
     gens = cooperation_results[0].shape[0]
@@ -203,10 +207,10 @@ def plot_time_series(all_results: list):
     ep_mean = ep_matrix.mean(axis=0)  # shape (2, gens)
     ep_std = ep_matrix.std(axis=0)    # shape (2, gens)
 
-    # === Reputation Consensus plot (1 time series) ===
-    consensus_matrix = np.stack(consensus_results)
-    consensus_mean = consensus_matrix.mean(axis=0)  # shape (2, gens)
-    consensus_std = consensus_matrix.std(axis=0)  # shape (2, gens)
+    # === Reputations plot (2 time series) ===
+    rep_matrix = np.stack(rep_results)
+    rep_mean = rep_matrix.mean(axis=0)  # shape (2, gens)
+    rep_std = rep_matrix.std(axis=0)  # shape (2, gens)
 
     # Average Gammas
     gammas_matrix = np.stack(gammas)
@@ -251,11 +255,14 @@ def plot_time_series(all_results: list):
     axes[2].grid(True)
 
     # --- Plot reputation frequencies ---
-    axes[3].plot(x, consensus_mean, color='tab:cyan', label="Average Consensus of the IM")
-    axes[3].fill_between(x, consensus_mean - consensus_std, consensus_mean + consensus_std,
-                             color='tab:cyan', alpha=0.3)
-    axes[3].set_ylabel("Average Consensus")
-    axes[3].set_title("Average Consensus in the Image Matrix")
+    rep_labels = ["bad", "good"]
+    rep_colors = ['tab:red', 'tab:cyan']
+    for i in range(2):
+        axes[3].plot(x, rep_mean[i], color=rep_colors[i], label=rep_labels[i])
+        axes[3].fill_between(x, rep_mean[i] - rep_std[i], rep_mean[i] + rep_std[i],
+                             color=rep_colors[i], alpha=0.3)
+    axes[3].set_ylabel("Reputation Frequency")
+    axes[3].set_title("Reputation Frequencies Across Simulations")
     axes[3].legend()
     axes[3].grid(True)
 

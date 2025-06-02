@@ -27,8 +27,7 @@ class Model:
         self._gamma_delta: float = gamma_delta
         self._gamma_normal_center: float = gamma_normal_center
         self._beta: float = beta
-
-        self.image_matrix = np.ones((z, z))
+        # self.image_matrix = np.ones((z, z))
 
     @property
     def gamma_normal_center(self):
@@ -108,11 +107,13 @@ class Model:
     def selection_strength(self):
         return self._beta
 
+    """
     def get_opinion(self, observer: Agent, observed: Agent) -> int:
         return int(self.image_matrix[observer.get_agent_id(), observed.get_agent_id()])
 
     def set_opinion(self, new_opinion: int, judge: Agent, judged: Agent):
         self.image_matrix[judge.get_agent_id(), judged.get_agent_id()] = new_opinion
+    """
 
     def __str__(self) -> str:
         return (
@@ -127,7 +128,7 @@ class Model:
             f"{'Social Norm (string):':<30} {self._social_norm_str:<20} {'EB Social Norm (string):':<30} {self._ebsn_str}\n"
         )
 
-    def prisoners_dilemma(self, agent1: Agent, agent2: Agent, population: list[Agent]):
+    def prisoners_dilemma(self, agent1: Agent, agent2: Agent):
         # Payoff matrix of the prisoner's dilemma (pd)
         # also a DG with b>c
         # pd = ( [ [D,D],[D,C] ],[ [C,D],[C,C] ] )
@@ -143,8 +144,8 @@ class Model:
 
         cooperative_acts: int = 0
         # Get agent's reputations locally so that the changed reputations aren't used in the wrong place
-        a1_rep: int = self.get_opinion(agent2, agent1)
-        a2_rep: int = self.get_opinion(agent1, agent2)
+        a1_rep: int = agent1.reputation()
+        a2_rep: int = agent2.reputation()
 
         # Check for rep assessment error
         if rand.random() < self.chi:
@@ -166,29 +167,34 @@ class Model:
         if rand.random() < self.eps:
             a2_action = aux.invert_binary(a2_action)
 
-        observers: list[Agent] = [x for x in population if x not in {agent1, agent2}]
-        for observer in observers:
-            # DONOR FOCAL would be
-            # gamma: new_rep: int = EBSN[a1_rep][self.get_opinion(observer, agent1)][agent1.emotion_profile()]
-            # 1-gamma: new_rep: int = SN[a1_action][self.get_opinion(observer, agent1)]
-            if rand.random() < observer.gamma():
-                # Look at Emotion Based Social Norm
-                # RECIPIENT FOCAL (common in IR)
-                new_rep_1: int = self.ebsn[a1_action][self.get_opinion(observer, agent2)][agent1.emotion_profile()]
-                new_rep_2: int = self.ebsn[a2_action][self.get_opinion(observer, agent1)][agent2.emotion_profile()]
-            else:
-                # Look at simple social norm
-                # RECIPIENT FOCAL (common in IR)
-                new_rep_1: int = self.social_norm[a1_action][self.get_opinion(observer, agent2)]
-                new_rep_2: int = self.social_norm[a2_action][self.get_opinion(observer, agent1)]
-            # Assignment error
-            if rand.random() < self.alpha:
-                new_rep_1 = aux.invert_binary(new_rep_1)
-            if rand.random() < self.alpha:
-                new_rep_2 = aux.invert_binary(new_rep_2)
+        # DONOR FOCAL would be
+        # gamma: new_rep: int = EBSN[a1_rep][self.get_opinion(observer, agent1)][agent1.emotion_profile()]
+        # 1-gamma: new_rep: int = SN[a1_action][self.get_opinion(observer, agent1)]
+        if rand.random() < agent1.gamma():
+            # Look at Emotion Based Social Norm
+            # RECIPIENT FOCAL (common in IR)
+            new_rep_1: int = self.ebsn[a1_action][agent2.reputation()][agent1.emotion_profile()]
+        else:
+            # Look at simple social norm
+            # RECIPIENT FOCAL (common in IR)
+            new_rep_1: int = self.social_norm[a1_action][agent2.reputation()]
 
-            self.set_opinion(new_rep_1, judge=observer, judged=agent1)
-            self.set_opinion(new_rep_2, judge=observer, judged=agent2)
+        if rand.random() < agent2.gamma():
+            new_rep_2: int = self.ebsn[a2_action][agent1.reputation()][agent2.emotion_profile()]
+        else:
+            new_rep_2: int = self.social_norm[a2_action][agent1.reputation()]
+
+        # Assignment error
+        if rand.random() < self.alpha:
+            new_rep_1 = aux.invert_binary(new_rep_1)
+        if rand.random() < self.alpha:
+            new_rep_2 = aux.invert_binary(new_rep_2)
+
+        # if image matrix
+        # self.set_opinion(new_rep_1, judge=observer, judged=agent1)
+        # self.set_opinion(new_rep_2, judge=observer, judged=agent2)
+        agent1.set_reputation(new_rep_1)
+        agent2.set_reputation(new_rep_2)
 
         # Count coop acts; coop = 1, def = 0
         cooperative_acts += a1_action
