@@ -35,7 +35,7 @@ class Agent:
         self._strategy = rand.choice(list({ALWAYS_COOPERATE, DISCRIMINATE, PARADOXICALLY_DISC, ALWAYS_DEFECT}
                                           - {self._strategy}))
 
-        self._gamma += rand.choice((-0.2, 0.2))
+        self._gamma += rand.choice((-gamma_delta, gamma_delta))
         # clamp gamma
         self._gamma = max(min_gamma, min(max_gamma, self._gamma))
 

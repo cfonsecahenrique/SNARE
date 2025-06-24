@@ -273,7 +273,7 @@ def plot_time_series(all_results: list):
     axes[4].set_title("Average Gammas Across Simulations")
     axes[4].set_ylabel("Gamma Frequency")
     axes[4].set_xlabel("Generation")
-    axes[4].set_ylim(0, 1)
+    #axes[4].set_ylim(0, 1)
     axes[4].legend()
     axes[4].grid(True)
 

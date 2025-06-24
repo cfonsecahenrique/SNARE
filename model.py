@@ -174,15 +174,21 @@ class Model:
             # Look at Emotion Based Social Norm
             # RECIPIENT FOCAL (common in IR)
             new_rep_1: int = self.ebsn[a1_action][agent2.reputation()][agent1.emotion_profile()]
+            # DONOR FOCAL
+            # new_rep_1: int = self.ebsn[a1_action][agent1.reputation()][agent1.emotion_profile()]
         else:
             # Look at simple social norm
             # RECIPIENT FOCAL (common in IR)
             new_rep_1: int = self.social_norm[a1_action][agent2.reputation()]
+            # DONOR FOCAL
+            # new_rep_1: int = self.social_norm[a1_action][agent1.reputation()]
 
         if rand.random() < agent2.gamma():
             new_rep_2: int = self.ebsn[a2_action][agent1.reputation()][agent2.emotion_profile()]
+            # new_rep_2: int = self.ebsn[a2_action][agent2.reputation()][agent2.emotion_profile()]
         else:
             new_rep_2: int = self.social_norm[a2_action][agent1.reputation()]
+            # new_rep_2: int = self.social_norm[a2_action][agent2.reputation()]
 
         # Assignment error
         if rand.random() < self.alpha:
