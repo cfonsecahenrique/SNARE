@@ -10,148 +10,106 @@ import aux_functions as aux
 from model import Model
 import multiprocessing
 from time import time
+from copy import deepcopy
 
-# social norm - new reputation : socialNorm[action][rec_reputation][emotion profile]
-# [ [ [DBM,DBN],[DGM,DGN] ],[ [CBM,CBN],[CGM,CGN] ] ]
-# R   ....0.... ....1....     ....0.... ....1....
-# A  ..........0...........  ...........1..........
-# ----------------------------------------------------
-# B = 0, G = 1
-# D = 0, C = 1
-# M = 0, N = 1
+
 BAD, DEFECT, MEAN = 0, 0, 0
 GOOD, COOPERATE, NICE = 1, 1, 1
-# -------------
-ALWAYS_COOPERATE = (1, 1)
-DISCRIMINATE = (0, 1)
-PARADOXICALLY_DISC = (1, 0)
-ALWAYS_DEFECT = (0, 0)
 
 
-def read_args():
-    # Reads the arguments of the .yaml file
-    # Open and parse the YAML file
-    with open(str(sys.argv[1]), "r") as f:
+def read_yaml(filename):
+    with open(filename, "r") as f:
         data = yaml.safe_load(f)
+    return data
 
-    n_runs: int = data["running"]["runs"]
-    cores: int = data["running"]["cores"]
 
-    simulation_parameters = data["simulation"]
+def make_model_from_params(simulation_parameters):
+    ebsn_list = simulation_parameters["ebsn"]
+    eb_sn = aux.make_ebsn_from_list(ebsn_list)
 
-    ebsn_list: list = simulation_parameters["ebsn"]
-    eb_sn: list[list] = aux.make_ebsn_from_list(ebsn_list)
+    sn_list = simulation_parameters["sn"]
+    sn = aux.make_sn_from_list(sn_list)
 
-    sn_list: list = simulation_parameters["sn"]
-    sn: list[list] = aux.make_sn_from_list(sn_list)
+    z = int(simulation_parameters["z"])
+    mu = float(simulation_parameters["mu"])
+    chi = float(simulation_parameters["chi"])
+    eps = float(simulation_parameters["eps"])
+    alpha = float(simulation_parameters["alpha"])
+    benefit = int(simulation_parameters["benefit"])
+    cost = int(simulation_parameters["cost"])
+    beta = float(simulation_parameters["beta"])
+    generations = int(simulation_parameters["generations"])
+    min_gamma = float(simulation_parameters["gamma_min"])
+    max_gamma = float(simulation_parameters["gamma_max"])
+    gamma_delta = float(simulation_parameters["gamma_delta"])
+    gamma_gaussian_center = float(simulation_parameters["gamma_gaussian_n"])
+    convergence = float(simulation_parameters.get("convergence period", 0))
 
-    z: int = int(simulation_parameters["z"])
-    mu: float = float(simulation_parameters["mu"])
-    chi: float = float(simulation_parameters["chi"])
-    eps: float = float(simulation_parameters["eps"])
-    alpha: float = float(simulation_parameters["alpha"])
-    benefit: int = int(simulation_parameters["benefit"])
-    cost: int = int(simulation_parameters["cost"])
-    beta: float = float(simulation_parameters["beta"])
-    generations: int = int(simulation_parameters["generations"])
-    min_gamma: float = float(simulation_parameters["gamma_min"])
-    max_gamma: float = float(simulation_parameters["gamma_max"])
-    gamma_delta: float = float(simulation_parameters["gamma_delta"])
-    gamma_gaussian_center: float = float(simulation_parameters["gamma_gaussian_n"])
-    convergence: float = float(simulation_parameters["convergence period"])
-
-    model_parameters: Model = Model(
+    model_parameters = Model(
         str(simulation_parameters["sn"]), sn, str(simulation_parameters["ebsn"]), eb_sn, z, mu, chi, eps, alpha,
         min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence
     )
+    return model_parameters
 
-    print(model_parameters.__str__())
-    return n_runs, cores, model_parameters
+
+def run_simulations_for_model(model, n_runs, n_cores):
+    all_models = [deepcopy(model) for _ in range(n_runs)]
+    with multiprocessing.Pool(processes=n_cores) as pool:
+        all_results = list(tqdm(pool.imap_unordered(simulation, all_models), total=n_runs))
+    return all_results
 
 
 def simulation(model: Model):
-    # Population Size
     z = model.z
-    # Strategy Exploration Probability
-    mu: float = model.mu / model.z
-    # Number of Generations to run
-    gens: int = model.gens
-    # Converging period
-    converge: int = model.converge
-    # selection strength beta
-    selection_strength: float = model.selection_strength
+    mu = model.mu / model.z
+    gens = model.gens
+    converge = model.converge
+    selection_strength = model.selection_strength
 
     games_played = 0
     cooperative_acts = 0
-    # Initialization
-    agents: list[Agent] = []
-    a1: Agent
-    a2: Agent
 
-    cooperation_per_gen: np.array = np.zeros(gens)
+    agents = [Agent(i, model.min_gamma, model.max_gamma, model.gamma_normal_center, model.gamma_delta) for i in range(z)]
+
+    cooperation_per_gen = np.zeros(gens)
     allD, Disc, pDisc, allC = np.zeros(gens), np.zeros(gens), np.zeros(gens), np.zeros(gens)
     mean, nice = np.zeros(gens), np.zeros(gens)
     bad, good = np.zeros(gens), np.zeros(gens)
     avg_gammas = np.zeros(gens)
 
-    for i in range(z):
-        agents.append(Agent(i, model.min_gamma, model.max_gamma, model.gamma_normal_center, model.gamma_delta))
-        # add agent to the image matrix
-        # agent_rep: int = rand.randint(0, 1)
-        # model.image_matrix[:, i] = agent_rep
-
     for current_gen in tqdm(range(gens)):
-        past_convergence: bool = current_gen > converge
-        # 1 Gen = Z evolutionary steps
+        past_convergence = current_gen > converge
+
         for _ in range(z):
-            # 1 evolutionary time-step = 1 Mutation or 1 Social Learning Step
             if rand.random() < mu:
-                # Trait Exploration
                 a1 = rand.choice(agents)
                 a1.trait_mutation(model.min_gamma, model.max_gamma, model.gamma_delta)
-                # print("Agent " + str(a1.get_agent_id()) + " randomly explored.
-                # New trait: " + str(a1.get_trait()))
             else:
-                # 1 Social Learning = 2 players playing Z games each
                 a1, a2 = aux.get_random_agent_pair(agents)
-                # print("Selected agents " + str(a1.get_agent_id()) + " and " + str(a2.get_agent_id()))
                 a1.set_fitness(0)
                 a2.set_fitness(0)
-                # Make a new list without a1 and a2
                 excluded_ids = {a1.get_agent_id(), a2.get_agent_id()}
                 aux_list = [a for a in agents if a.get_agent_id() not in excluded_ids]
 
-                # Each agent plays Z games
-                for i in range(z):
-                    # (each 2-player prisoner's dilemma has 2 actions
-                    # and can have at most 2 cooperative acts)
-
-                    az: Agent = rand.choice(aux_list)
+                for _ in range(z):
+                    az = rand.choice(aux_list)
                     res_z, n_z = model.prisoners_dilemma(a1, az)
-                    # print("Agent", a1.get_agent_id(), "[" + aux.rep_char(a1.get_reputation()) + "],
-                    # with strategy", aux.strat_name(a1.strategy()),
-                    #      "played against", az.get_agent_id(), "(", aux.rep_char(az.get_reputation()), "),
-                    #      with strategy", aux.strat_name(az.strategy()))
-                    # print("The result of the interaction was", res_z[0], "for agent", a1.get_agent_id(),
-                    # "and", res_z[1], "for agent", az.get_agent_id())
                     if past_convergence:
                         cooperative_acts += n_z
                         games_played += 2
                     a1.add_fitness(res_z[0])
 
-                    ax: Agent = rand.choice(aux_list)
+                    ax = rand.choice(aux_list)
                     res_x, n_x = model.prisoners_dilemma(a2, ax)
                     if past_convergence:
                         cooperative_acts += n_x
                         games_played += 2
                     a2.add_fitness(res_x[0])
 
-                # normalize both players' fitness
                 a1.set_fitness(a1.get_fitness() / z)
                 a2.set_fitness(a2.get_fitness() / z)
 
-                # Calculate Probability of imitation
-                pi: float = (1 + np.exp(selection_strength*(a1.get_fitness() - a2.get_fitness()))) ** (-1)
+                pi = (1 + np.exp(selection_strength*(a1.get_fitness() - a2.get_fitness()))) ** (-1)
                 if rand.random() < pi:
                     a1.set_strategy(a2.strategy)
                     a1.set_emotion_profile(a2.emotion_profile())
@@ -159,69 +117,61 @@ def simulation(model: Model):
                         a1.set_gamma(a2.gamma())
 
         if past_convergence:
-            cooperation_per_gen[current_gen] = cooperative_acts/games_played
-            # print(cooperative_acts, games_played, cooperation_per_gen[current_gen])
+            cooperation_per_gen[current_gen] = cooperative_acts/games_played if games_played > 0 else 0
 
-        strategy_frequencies = aux.calculate_strategy_frequency(agents)
-        allD[current_gen] = strategy_frequencies.get(Strategy.ALWAYS_DEFECT)
-        Disc[current_gen] = strategy_frequencies.get(Strategy.DISCRIMINATE)
-        pDisc[current_gen] = strategy_frequencies.get(Strategy.PARADOXICALLY_DISC)
-        allC[current_gen] = strategy_frequencies.get(Strategy.ALWAYS_COOPERATE)
+        strat_freq = aux.calculate_strategy_frequency(agents)
+        allD[current_gen] = strat_freq.get(Strategy.ALWAYS_DEFECT, 0)
+        Disc[current_gen] = strat_freq.get(Strategy.DISCRIMINATE, 0)
+        pDisc[current_gen] = strat_freq.get(Strategy.PARADOXICALLY_DISC, 0)
+        allC[current_gen] = strat_freq.get(Strategy.ALWAYS_COOPERATE, 0)
 
-        emotion_profile_frequencies = aux.calculate_ep_frequencies(agents)
-        mean[current_gen] = emotion_profile_frequencies.get(0)
-        nice[current_gen] = emotion_profile_frequencies.get(1)
+        ep_freq = aux.calculate_ep_frequencies(agents)
+        mean[current_gen] = ep_freq.get(0, 0)
+        nice[current_gen] = ep_freq.get(1, 0)
 
-        reputation_frequencies = aux.calculate_reputation_frequencies(agents)
-        bad[current_gen] = reputation_frequencies.get(BAD)
-        good[current_gen] = reputation_frequencies.get(GOOD)
-        # avg_consensus[current_gen] = aux.calculate_average_consensus(model.image_matrix)
+        rep_freq = aux.calculate_reputation_frequencies(agents)
+        bad[current_gen] = rep_freq.get(BAD, 0)
+        good[current_gen] = rep_freq.get(GOOD, 0)
+
         avg_gammas[current_gen] = aux.calculate_average_gamma(agents)
 
     aux.export_results(100 * cooperation_per_gen[gens-1], model, agents)
     return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas
 
 
-def plot_time_series(all_results: list):
-    cooperation_results = [r[0] for r in all_results]  # list of arrays, each array shape=(gens,)
-    strategy_results = [r[1] for r in all_results]     # list of arrays, each array shape=(4, gens)
-    ep_results = [r[2] for r in all_results]           # list of arrays, each array shape=(2, gens)
+def plot_time_series(all_results, model):
+    cooperation_results = [r[0] for r in all_results]
+    strategy_results = [r[1] for r in all_results]
+    ep_results = [r[2] for r in all_results]
     rep_results = [r[3] for r in all_results]
     gammas = [r[4] for r in all_results]
 
     gens = cooperation_results[0].shape[0]
     x = np.arange(gens)
 
-    # === Cooperation plot (single time series) ===
-    coop_matrix = np.stack(cooperation_results)  # shape: (runs, gens)
+    coop_matrix = np.stack(cooperation_results)
     coop_mean = coop_matrix.mean(axis=0)
     coop_std = coop_matrix.std(axis=0)
 
-    # === Strategy plot (4 time series) ===
-    # Stack into shape (runs, 4, gens)
     strat_matrix = np.stack(strategy_results)
-    strat_mean = strat_matrix.mean(axis=0)  # shape (4, gens)
-    strat_std = strat_matrix.std(axis=0)    # shape (4, gens)
+    strat_mean = strat_matrix.mean(axis=0)
+    strat_std = strat_matrix.std(axis=0)
 
-    # === EP plot (2 time series) ===
     ep_matrix = np.stack(ep_results)
-    ep_mean = ep_matrix.mean(axis=0)  # shape (2, gens)
-    ep_std = ep_matrix.std(axis=0)    # shape (2, gens)
+    ep_mean = ep_matrix.mean(axis=0)
+    ep_std = ep_matrix.std(axis=0)
 
-    # === Reputations plot (2 time series) ===
     rep_matrix = np.stack(rep_results)
-    rep_mean = rep_matrix.mean(axis=0)  # shape (2, gens)
-    rep_std = rep_matrix.std(axis=0)  # shape (2, gens)
+    rep_mean = rep_matrix.mean(axis=0)
+    rep_std = rep_matrix.std(axis=0)
 
-    # Average Gammas
     gammas_matrix = np.stack(gammas)
     gammas_mean = gammas_matrix.mean(axis=0)
     gammas_std = gammas_matrix.std(axis=0)
 
     fig, axes = plt.subplots(5, 1, figsize=(12, 8), sharex=True)
-    plt.title(model._ebsn_str)
+    plt.suptitle(model._ebsn_str)
 
-    # --- Plot cooperation ---
     axes[0].plot(x, coop_mean, color='blue', label='Mean Cooperation Rate')
     axes[0].fill_between(x, coop_mean - coop_std, coop_mean + coop_std,
                          color='blue', alpha=0.3, label='±1 Std Dev')
@@ -231,7 +181,6 @@ def plot_time_series(all_results: list):
     axes[0].legend()
     axes[0].grid(True)
 
-    # --- Plot strategies ---
     strategy_labels = ["AllD", "Disc", "pDisc", "AllC"]
     colors = ['tab:red', 'tab:blue', 'tab:orange', 'tab:green']
     for i in range(4):
@@ -243,7 +192,6 @@ def plot_time_series(all_results: list):
     axes[1].legend()
     axes[1].grid(True)
 
-    # --- Plot emotion profiles ---
     ep_labels = ["mean", "nice"]
     ep_colors = ['tab:brown', 'tab:cyan']
     for i in range(2):
@@ -255,7 +203,6 @@ def plot_time_series(all_results: list):
     axes[2].legend()
     axes[2].grid(True)
 
-    # --- Plot reputation frequencies ---
     rep_labels = ["bad", "good"]
     rep_colors = ['tab:red', 'tab:cyan']
     for i in range(2):
@@ -267,41 +214,126 @@ def plot_time_series(all_results: list):
     axes[3].legend()
     axes[3].grid(True)
 
-    # --- Plot cooperation ---
     axes[4].plot(x, gammas_mean, color='blue', label='Average Gamma')
     axes[4].fill_between(x, gammas_mean - gammas_std, gammas_mean + gammas_std,
                          color='blue', alpha=0.3, label='±1 Std Dev')
     axes[4].set_title("Average Gammas Across Simulations")
     axes[4].set_ylabel("Gamma Frequency")
     axes[4].set_xlabel("Generation")
-    #axes[4].set_ylim(0, 1)
     axes[4].legend()
     axes[4].grid(True)
 
-    path: str = "outputs/time_series/"
-
-    plt.savefig(path + str(time()) + ".png")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
 
 
+def expand_parameter(param):
+    """
+    Expands parameter if it is a list or a range string "start-end-step" or single value.
+    Returns a list of values.
+    """
+    if isinstance(param, list):
+        return param
+    if isinstance(param, str) and '-' in param:
+        parts = param.split('-')
+        if len(parts) == 3:
+            start, end, step = map(float, parts)
+            return list(np.arange(start, end + step, step))
+    return [param]
+
+
+def generate_parameter_sets(base_simulation_params):
+    # For now, only sweep gamma_gaussian_n
+    gamma_param = base_simulation_params.get('gamma_gaussian_n', 0)
+    gamma_values = expand_parameter(gamma_param)
+
+    param_sets = []
+    for gamma in gamma_values:
+        params_copy = deepcopy(base_simulation_params)
+        params_copy['gamma_gaussian_n'] = gamma
+        param_sets.append(params_copy)
+    return param_sets, gamma_values
+
+
+def run_experiments(n_runs, n_cores, base_model_params):
+    param_sets, param_values = generate_parameter_sets(base_model_params)
+
+    avg_cooperations = []
+
+    for i, sim_params in enumerate(param_sets):
+        print(f"Running simulations for gamma_gaussian_n = {param_values[i]}")
+
+        model = make_model_from_params(sim_params)
+        all_results = run_simulations_for_model(model, n_runs, n_cores)
+
+        cooperation_runs = [r[0][-1] for r in all_results]  # final cooperation for each run
+        avg_coop = np.mean(cooperation_runs)
+        avg_cooperations.append(avg_coop)
+
+    return param_values, avg_cooperations
+
+
+def plot_parameter_sweep(param_values, avg_cooperations, ebsn_list, param_name='gamma_gaussian_n'):
+    # Convert the EB social norm list to a reversed string of G/B
+    reversed_ebsn_str = ''.join('G' if bit == 1 else 'B' for bit in reversed(ebsn_list))
+    plt.figure(figsize=(8, 5))
+    plt.plot(param_values, avg_cooperations, marker='o')
+    plt.title(f'Average Cooperation Rate vs {param_name}\nEB Social Norm: {reversed_ebsn_str}')
+    plt.xlabel(param_name)
+    plt.ylabel('Average Cooperation Rate')
+    plt.ylim(0, 1)
+    plt.grid(True)
+    plt.show()
+
+
+def is_single_value(param):
+    return not isinstance(param, (list, tuple))
+
+
+def run_single_value_experiment(n_runs, n_cores, base_sim_params):
+    print(f"Running single gamma experiment for gamma_gaussian_n = {base_sim_params['gamma_gaussian_n']}")
+
+    model = make_model_from_params(base_sim_params)
+    print(model.__str__())
+    all_results = run_simulations_for_model(model, n_runs, n_cores)
+    plot_time_series(all_results, model)
+
+
+def run_sweep_experiment(n_runs, n_cores, base_sim_params):
+    param_sets, param_values = generate_parameter_sets(base_sim_params)
+
+    avg_cooperations = []
+
+    for i, sim_params in enumerate(param_sets):
+        print(f"Running simulations for gamma_gaussian_n = {param_values[i]}")
+
+        model = make_model_from_params(sim_params)
+        print(model.__str__())
+        all_results = run_simulations_for_model(model, n_runs, n_cores)
+
+        cooperation_runs = [r[0][-1] for r in all_results]  # final cooperation for each run
+        avg_coop = np.mean(cooperation_runs)
+        avg_cooperations.append(avg_coop)
+
+    plot_parameter_sweep(param_values, avg_cooperations, model.ebsn)
+
+
 if __name__ == '__main__':
-    manager = multiprocessing.Manager()
     if len(sys.argv) != 2:
-        raise ValueError("No experiment configuration passed!")
+        raise ValueError("Please provide the experiment YAML configuration file as argument!")
 
-    num_runs, num_cores, model = read_args()
+    config_file = sys.argv[1]
+    data = read_yaml(config_file)
 
-    aux.print_sn(model.social_norm)
-    aux.print_ebnorm(model.ebsn)
+    n_runs = data["running"]["runs"]
+    n_cores = data["running"]["cores"]
+    base_sim_params = data["simulation"]
 
-    print("Running", num_runs, "independent parallel simulations over", num_cores, "cpu core(s).")
+    gamma_param = base_sim_params.get('gamma_gaussian_n', 0)
 
-    all_models: list[Model] = [model] * num_runs
-    with multiprocessing.Pool(processes=num_cores) as pool:
-        all_results = list(
-            tqdm(pool.imap_unordered(simulation, all_models), total=num_runs)
-        )
-
-    plot_time_series(all_results)
-
+    start_time = time()
+    if is_single_value(gamma_param):
+        run_single_value_experiment(n_runs, n_cores, base_sim_params)
+    else:
+        run_sweep_experiment(n_runs, n_cores, base_sim_params)
+    print(f"Finished all experiments in {time() - start_time:.2f} seconds.")

@@ -29,6 +29,24 @@ class Model:
         self._beta: float = beta
         # self.image_matrix = np.ones((z, z))
 
+    def __str__(self) -> str:
+        s = (
+            "\nModel Parameters:\n"
+            "---------------------------------------------\n"
+            f"{'Population size (Z):':<30} {self._z:<20} {'Generations (G):':<30} {self._gens}\n"
+            f"{'Convergence time:':<30} {self._converge:<20} {'Strategy exploration (μ):':<30} {self._mu:.6f}\n"
+            f"{'Reputation error (χ):':<30} {self._chi:.6f} {'Execution error (ε):':<30} {self._eps:.6f}\n"
+            f"{'Judge assignment error (α):':<30} {self._alpha:.6f} {'Selection strength (β):':<30} {self._beta:.6f}\n"
+            f"{'Benefit (b):':<30} {self._b:<20} {'Cost (c):':<30} {self._c}\n"
+            f"{'Gamma range:':<30} [{self._min_gamma:.3f}, {self._max_gamma:.3f}]  {'':<30} \n"
+            f"{'Social Norm (string):':<30} {self._social_norm_str:<20} {'EB Social Norm (string):':<30} {self._ebsn_str}"
+        )
+        print(s)
+        print("\nSocial Norm Details:")
+        aux.print_sn(self._social_norm)
+        print("\nEB Social Norm Details:")
+        aux.print_ebnorm(self._eb_social_norm)
+        return ""
     @property
     def gamma_normal_center(self):
         return self._gamma_normal_center
@@ -114,19 +132,6 @@ class Model:
     def set_opinion(self, new_opinion: int, judge: Agent, judged: Agent):
         self.image_matrix[judge.get_agent_id(), judged.get_agent_id()] = new_opinion
     """
-
-    def __str__(self) -> str:
-        return (
-            "\nModel Parameters:\n"
-            "---------------------------------------------\n"
-            f"{'Population size (Z):':<30} {self._z:<20} {'Generations (G):':<30} {self._gens}\n"
-            f"{'Convergence time:':<30} {self._converge:<20} {'Strategy exploration (μ):':<30} {self._mu:.6f}\n"
-            f"{'Reputation error (χ):':<30} {self._chi:.6f} {'Execution error (ε):':<30} {self._eps:.6f}\n"
-            f"{'Judge assignment error (α):':<30} {self._alpha:.6f} {'Selection strength (β):':<30} {self._beta:.6f}\n"
-            f"{'Benefit (b):':<30} {self._b:<20} {'Cost (c):':<30} {self._c}\n"
-            f"{'Gamma range:':<30} [{self._min_gamma:.3f}, {self._max_gamma:.3f}]  {'':<30} \n"
-            f"{'Social Norm (string):':<30} {self._social_norm_str:<20} {'EB Social Norm (string):':<30} {self._ebsn_str}\n"
-        )
 
     def prisoners_dilemma(self, agent1: Agent, agent2: Agent):
         # Payoff matrix of the prisoner's dilemma (pd)

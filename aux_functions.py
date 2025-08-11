@@ -183,12 +183,20 @@ def print_ebnorm(sn):
 
 
 def print_sn(sn):
-    print("2nd Order Social norm:")
-    # socialNorm[action][reputation]
-    print("\t   G B")
-    print("\t----------")
-    print("\tC|", rep_char(sn[1][1]), rep_char(sn[1][0]))
-    print("\tD|", rep_char(sn[0][1]), rep_char(sn[0][0]))
+    def colored_rep_char(c):
+        # Example coloring based on char (adjust as needed)
+        if c == 1:  # Good
+            return Fore.GREEN + "G" + Style.RESET_ALL
+        elif c == 0:  # Bad
+            return Fore.RED + "B" + Style.RESET_ALL
+        else:
+            return c  # default no color
+
+    print(Fore.CYAN + "2nd Order Social norm:" + Style.RESET_ALL)
+    print(Fore.YELLOW + "   G B" + Style.RESET_ALL)
+    print(Fore.YELLOW + "----------" + Style.RESET_ALL)
+    print(f"{Fore.GREEN}C{Style.RESET_ALL}|", colored_rep_char(sn[1][1]), colored_rep_char(sn[1][0]))
+    print(f"{Fore.RED}D{Style.RESET_ALL}|", colored_rep_char(sn[0][1]), colored_rep_char(sn[0][0]))
 
 
 def strat_name(strat):
@@ -212,3 +220,5 @@ def calculate_reputation_frequencies(population: list[Agent]) -> dict:
     total = len(population)
     counts = Counter(agent.reputation() for agent in population)
     return {rep: counts.get(rep, 0) / total for rep in (0, 1)}
+
+

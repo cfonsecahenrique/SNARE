@@ -1,13 +1,13 @@
 running:
-  runs: 10
-  cores: 10
+  runs: 5
+  cores: 5
 simulation:
   ebsn: [1,1,0,0,0,1,1,1]
   sn: [1,0,1,1]
-  z: 40
+  z: 50
   mu: 1 # mu/Z
-  chi: 0.01
-  eps: 0.01
+  chi: 0.1
+  eps: 0.1
   alpha: 0
   benefit: 5
   cost: 1
@@ -15,7 +15,6 @@ simulation:
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
-  gamma_gaussian_n: 0.8
-  # FIX error when gammas equal or close
-  generations: 3000
+  gamma_gaussian_n: [0, 0.2, 0.4, 0.6, 0.8, 1]
+  generations: 2500
   convergence period: 0
