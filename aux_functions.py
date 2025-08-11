@@ -3,7 +3,10 @@ from collections import Counter
 import numpy as np
 from model import Model
 from agent import Agent
-
+from agent import Strategy
+from colorama import Fore, Style, init
+# Initialize colorama (needed for Windows)
+init()
 
 def write_to_file(filename: str, data: str):
     with open(filename, "a") as f:
@@ -42,18 +45,17 @@ def export_results(acr: float, model: Model, population: list[Agent]):
 
 def most_common_evol_trait(population: list[Agent]):
     eps = [0, 1]
-    strats = [(0, 0), (0, 1), (1, 0), (1, 1)]
+    strats = list(Strategy)
     counter_dict: dict = {}
     for ep in eps:
         for strat in strats:
             counter_dict[(ep, strat)] = 0
     for agent in population:
-        counter_dict[(agent.emotion_profile(), agent.strategy())] += 1
+        counter_dict[(agent.emotion_profile(), agent.strategy)] += 1
     # print(counter_dict)
     best = max(counter_dict, key=counter_dict.get)
 
-    string: str = str(best[0]) + str(best[1][0]) + str(best[1][1])
-    return string
+    return f"{best[0]}{best[1].value[0]}{best[1].value[1]}"
 
 
 def most_common_strats(population: list[Agent]):
@@ -89,9 +91,9 @@ def most_common_strats(population: list[Agent]):
 
 def calculate_strategy_frequency(population: list[Agent]) -> dict:
     total = len(population)
-    counts = Counter(agent.strategy() for agent in population)
+    counts = Counter(agent.strategy for agent in population)
     # Ensure all 4 strategies are present in the output
-    strats = [(0, 0), (0, 1), (1, 0), (1, 1)]
+    strats = list(Strategy)
     return {strat: counts.get(strat, 0) / total for strat in strats}
 
 
@@ -139,22 +141,45 @@ def make_sn_from_list(l: list):
 
 
 def print_ebnorm(sn):
-    # prints the chosen social norm in a readable fashion
+    """
+    Prints the social norm as a colored table.
+    Rows: Cooperate, Defect
+    Columns: Good, Bad
+    Cell entries: (nice, mean)
+    Each 'G' is green, each 'B' is red.
+    """
+    def rep_char(val):
+        return "G" if val == 1 else "B"
+
+    def color_char(ch):
+        if ch == "G":
+            return Fore.GREEN + ch + Style.RESET_ALL
+        elif ch == "B":
+            return Fore.RED + ch + Style.RESET_ALL
+        else:
+            return ch
+
+    # Build readable table values
     readable = [["", ""], ["", ""]]
     for i in range(len(sn)):
         for j in range(len(sn[i])):
-            part = rep_char(sn[i][j][0]) + "," + rep_char(sn[i][j][1])
-            readable[i][j] = part
-    print("2nd Order Emotion Based Social norm:")
-    # socialNorm[action][reputation]
-    print("\tGOOD C nice: [", readable[1][1][2], "]")
-    print("\tGOOD C mean: [", readable[1][1][0], "]")
-    print("\tGOOD D nice: [", readable[1][0][2], "]")
-    print("\tGOOD D mean: [", readable[1][0][0], "]")
-    print("\tBAD  C nice: [", readable[0][1][2], "]")
-    print("\tBAD  C mean: [", readable[0][1][0], "]")
-    print("\tBAD  D nice: [", readable[0][0][2], "]")
-    print("\tBAD  D mean: [", readable[0][0][0], "]")
+            nice = rep_char(sn[i][j][1])
+            mean = rep_char(sn[i][j][0])
+            readable[i][j] = f"({color_char(nice)},{color_char(mean)})"
+
+    # Header
+    print(Fore.CYAN + "2nd Order Emotion-Based Social Norm:" + Style.RESET_ALL)
+    header = f"{'':<12}{Fore.YELLOW}Good{Style.RESET_ALL:<8}{Fore.YELLOW}Bad{Style.RESET_ALL}"
+    print(header)
+    print("-" * 28)
+
+    # Rows: i=1 -> Cooperate, i=0 -> Defect
+    row_labels = {1: "Cooperate", 0: "Defect"}
+    for i in [1, 0]:
+        row_str = f"{row_labels[i]:<12}"
+        for j in [1, 0]:  # Good, Bad
+            row_str += f"{readable[i][j]:<8}"
+        print(row_str)
 
 
 def print_sn(sn):

@@ -149,14 +149,14 @@ class Model:
 
         # Check for rep assessment error
         if rand.random() < self.chi:
-            a1_action: int = agent1.strategy()[aux.invert_binary(a2_rep)]
+            a1_action: int = agent1.strategy.value[aux.invert_binary(a2_rep)]
         else:
-            a1_action: int = agent1.strategy()[a2_rep]
+            a1_action: int = agent1.strategy.value[a2_rep]
 
         if rand.random() > self.chi:
-            a2_action: int = agent2.strategy()[a1_rep]
+            a2_action: int = agent2.strategy.value[a1_rep]
         else:
-            a2_action: int = agent2.strategy()[aux.invert_binary(a1_rep)]
+            a2_action: int = agent2.strategy.value[aux.invert_binary(a1_rep)]
 
         # Execution error for action of agent 1
         if rand.random() < self.eps:

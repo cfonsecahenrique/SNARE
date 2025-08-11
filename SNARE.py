@@ -4,6 +4,7 @@ import random as rand
 import matplotlib.pyplot as plt
 import yaml
 from agent import Agent
+from agent import Strategy
 from tqdm import tqdm
 import aux_functions as aux
 from model import Model
@@ -99,7 +100,7 @@ def simulation(model: Model):
         # agent_rep: int = rand.randint(0, 1)
         # model.image_matrix[:, i] = agent_rep
 
-    for current_gen in range(gens):
+    for current_gen in tqdm(range(gens)):
         past_convergence: bool = current_gen > converge
         # 1 Gen = Z evolutionary steps
         for _ in range(z):
@@ -152,7 +153,7 @@ def simulation(model: Model):
                 # Calculate Probability of imitation
                 pi: float = (1 + np.exp(selection_strength*(a1.get_fitness() - a2.get_fitness()))) ** (-1)
                 if rand.random() < pi:
-                    a1.set_strategy(a2.strategy())
+                    a1.set_strategy(a2.strategy)
                     a1.set_emotion_profile(a2.emotion_profile())
                     if model.gamma_delta != 0:
                         a1.set_gamma(a2.gamma())
@@ -162,10 +163,10 @@ def simulation(model: Model):
             # print(cooperative_acts, games_played, cooperation_per_gen[current_gen])
 
         strategy_frequencies = aux.calculate_strategy_frequency(agents)
-        allD[current_gen] = strategy_frequencies.get(ALWAYS_DEFECT)
-        Disc[current_gen] = strategy_frequencies.get(DISCRIMINATE)
-        pDisc[current_gen] = strategy_frequencies.get(PARADOXICALLY_DISC)
-        allC[current_gen] = strategy_frequencies.get(ALWAYS_COOPERATE)
+        allD[current_gen] = strategy_frequencies.get(Strategy.ALWAYS_DEFECT)
+        Disc[current_gen] = strategy_frequencies.get(Strategy.DISCRIMINATE)
+        pDisc[current_gen] = strategy_frequencies.get(Strategy.PARADOXICALLY_DISC)
+        allC[current_gen] = strategy_frequencies.get(Strategy.ALWAYS_COOPERATE)
 
         emotion_profile_frequencies = aux.calculate_ep_frequencies(agents)
         mean[current_gen] = emotion_profile_frequencies.get(0)

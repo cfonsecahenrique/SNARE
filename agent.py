@@ -1,9 +1,21 @@
 import random as rand
+from enum import Enum
 
-ALWAYS_COOPERATE = (1, 1)
-DISCRIMINATE = (0, 1)
-PARADOXICALLY_DISC = (1, 0)
-ALWAYS_DEFECT = (0, 0)
+COOPERATE, GOOD = 1, 1
+DEFECT, BAD = 0, 0
+
+
+class Strategy(Enum):
+    ALWAYS_COOPERATE = (1, 1)
+    DISCRIMINATE = (0, 1)
+    PARADOXICALLY_DISC = (1, 0)
+    ALWAYS_DEFECT = (0, 0)
+
+    def strategy_name(self):
+        return self.name.replace("_", " ").title()
+
+    def as_tuple(self) -> tuple[int, int]:
+        return self.value
 
 
 class Agent:
@@ -18,7 +30,7 @@ class Agent:
 
     def initialise_traits(self, min_gamma, max_gamma, center, delta):
         # strategy
-        self._strategy = (rand.randint(0, 1), rand.randint(0, 1))
+        self._strategy: Strategy = rand.choice(list(Strategy))
         # emotion profile
         self._emotion_profile = rand.randint(0, 1)
         # gamma
@@ -32,9 +44,7 @@ class Agent:
         # emotion profile
         self._emotion_profile = 1 - self._emotion_profile
         # strategy
-        self._strategy = rand.choice(list({ALWAYS_COOPERATE, DISCRIMINATE, PARADOXICALLY_DISC, ALWAYS_DEFECT}
-                                          - {self._strategy}))
-
+        self._strategy: Strategy = rand.choice(list(set(Strategy) - {self.strategy}))
         self._gamma += rand.choice((-gamma_delta, gamma_delta))
         # clamp gamma
         self._gamma = max(min_gamma, min(max_gamma, self._gamma))
@@ -45,7 +55,8 @@ class Agent:
     def set_gamma(self, new_gamma: float):
         self._gamma = new_gamma
 
-    def strategy(self):
+    @property
+    def strategy(self) -> Strategy:
         return self._strategy
 
     def emotion_profile(self):
