@@ -1,22 +1,22 @@
-import random as rand
 from collections import Counter
 import numpy as np
 from model import Model
 from agent import Agent
-from agent import Strategy
+import os
+import csv
 from colorama import Fore, Style, init
+from constants import *
+from numba import njit
 # Initialize colorama (needed for Windows)
 init()
+
 
 def write_to_file(filename: str, data: str):
     with open(filename, "a") as f:
         f.write(data + "\n")
 
 
-def get_random_agent_pair(agents):
-    return rand.sample(agents, 2)
-
-
+@njit
 def invert_binary(action: int):
     return 1 - action
 
@@ -33,14 +33,51 @@ def rep_char(rep: int):
     return "G" if rep == 1 else "B"
 
 
-def export_results(acr: float, model: Model, population: list[Agent]):
-    # most_popular_per_ep = most_common_strats(population)
-    winner_et = most_common_evol_trait(population)
-    builder: str = model.generate_mp_string() + "\t" + str(round(acr, 3))
-    builder += make_strat_str(calculate_strategy_frequency(population))
-    builder += make_strat_str(calculate_ep_frequencies(population))
-    builder += str(winner_et)
-    write_to_file("outputs/results.txt", builder)
+def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/results.csv"):
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    result_data: dict = {
+        "base_social_norm": model.social_norm_str,
+        "eb_social_norm": model.ebsn_str,
+        "Z": model.population_size,
+        "gens": model.generations,
+        "mu": model.mutation_rate,
+        "chi": model._chi,
+        "eps": model.execution_error,
+        "alpha": model._alpha,
+        "b": model.benefit,
+        "c": model.cost,
+        "beta": model.beta,
+        "generations": model.generations,
+        "convergence_period": model.converge,
+        "gamma_min": model.min_gamma,
+        "gamma_max": model.max_gamma,
+        "gamma_delta": model.gamma_delta,
+        "gamma_center": model.gamma_normal_center,
+        "average_cooperation": round(acr, 3)
+    }
+
+    # Add strategy frequencies
+    frequencies = calculate_strategy_frequency(population)
+    for strat in Strategy:
+        result_data[strat.name] = round(frequencies.get(strat, 0), 4)
+
+    ep_frequencies = calculate_ep_frequencies(population)
+    for ep in ["Competitive", "Cooperative"]:
+        result_data[ep] = round(ep_frequencies.get(ep, 0), 2)
+
+    # Write to CSV
+    write_dict_to_csv(result_data, filename)
+
+
+def write_dict_to_csv(row: dict, filepath: str):
+    file_exists = os.path.isfile(filepath)
+    with open(filepath, mode="a", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=row.keys())
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(row)
 
 
 def most_common_evol_trait(population: list[Agent]):
@@ -51,7 +88,7 @@ def most_common_evol_trait(population: list[Agent]):
         for strat in strats:
             counter_dict[(ep, strat)] = 0
     for agent in population:
-        counter_dict[(agent.emotion_profile(), agent.strategy)] += 1
+        counter_dict[(agent.emotion_profile, agent.strategy)] += 1
     # print(counter_dict)
     best = max(counter_dict, key=counter_dict.get)
 
@@ -69,12 +106,12 @@ def most_common_strats(population: list[Agent]):
     strat_counts_1: dict = {s: 0 for s in [(0, 0), (0, 1), (1, 0), (1, 1)]}
 
     for agent in population:
-        if agent.emotion_profile() == 0:
+        if agent.emotion_profile == EmotionProfile.COMPETITIVE:
             there_is_ep0 = True
-            strat_counts_0[agent.strategy()] += 1
-        elif agent.emotion_profile() == 1:
+            strat_counts_0[agent.strategy] += 1
+        elif agent.emotion_profile == EmotionProfile.COOPERATIVE:
             there_is_ep1 = True
-            strat_counts_1[agent.strategy()] += 1
+            strat_counts_1[agent.strategy] += 1
 
     if there_is_ep0:
         counter["Competitive"] = strat_name(max(strat_counts_0, key=strat_counts_0.get))
@@ -99,10 +136,12 @@ def calculate_strategy_frequency(population: list[Agent]) -> dict:
 
 def calculate_ep_frequencies(population: list[Agent]) -> dict:
     total = len(population)
-    counts = Counter(agent.emotion_profile() for agent in population)
-    return {ep: counts.get(ep, 0) / total for ep in (0, 1)}
+    counts = Counter(agent.emotion_profile for agent in population)
+    eps = list(EmotionProfile)
+    return {ep: counts.get(ep, 0) / total for ep in eps}
 
 
+@njit
 def calculate_average_consensus(image_matrix: np.ndarray) -> float:
     z = image_matrix.shape[0]
     # Count number of 1s in each column (opinions about each focal agent)
@@ -124,7 +163,7 @@ def make_strat_str(frequencies: dict):
 
 
 def make_ebsn_from_list(l: list):
-    # (bdm, bdn, bcm, bcn, gdm, gdn, gcm, gcn)
+    # ((bdm, bdn), (bcm, bcn), (gdm, gdn), (gcm, gcn))
     sn = []
     entry = []
     for i in np.arange(0, len(l) - 1, 2):
@@ -222,3 +261,8 @@ def calculate_reputation_frequencies(population: list[Agent]) -> dict:
     return {rep: counts.get(rep, 0) / total for rep in (0, 1)}
 
 
+@njit
+def consume_random(r, idx):
+    val = r[idx]
+    idx += 1
+    return val, idx

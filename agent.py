@@ -1,29 +1,13 @@
 import random as rand
-from enum import Enum
-
-COOPERATE, GOOD = 1, 1
-DEFECT, BAD = 0, 0
-
-
-class Strategy(Enum):
-    ALWAYS_COOPERATE = (1, 1)
-    DISCRIMINATE = (0, 1)
-    PARADOXICALLY_DISC = (1, 0)
-    ALWAYS_DEFECT = (0, 0)
-
-    def strategy_name(self):
-        return self.name.replace("_", " ").title()
-
-    def as_tuple(self) -> tuple[int, int]:
-        return self.value
+from constants import *
 
 
 class Agent:
     def __init__(self, agent_id: int, min_gamma, max_gamma, gamma_normal_center, gamma_delta):
         self._agent_id: int = agent_id
         self._fitness_score: int = 0
-        self._strategy: tuple = (-1, -1)
-        self._emotion_profile: int = -1
+        self._strategy: Strategy = None
+        self._emotion_profile: EmotionProfile = None
         self._reputation: int = rand.randint(0, 1)
         self._gamma: float = -1
         self.initialise_traits(min_gamma, max_gamma, gamma_normal_center, gamma_delta)
@@ -32,7 +16,7 @@ class Agent:
         # strategy
         self._strategy: Strategy = rand.choice(list(Strategy))
         # emotion profile
-        self._emotion_profile = rand.randint(0, 1)
+        self._emotion_profile = rand.choice(list(EmotionProfile))
         # gamma
         if center == 0 or center == 1 or delta == 0:
             # homogeneous population
@@ -42,7 +26,7 @@ class Agent:
 
     def trait_mutation(self, min_gamma: float, max_gamma: float, gamma_delta: float):
         # emotion profile
-        self._emotion_profile = 1 - self._emotion_profile
+        self._emotion_profile = self.emotion_profile.mutate()
         # strategy
         self._strategy: Strategy = rand.choice(list(set(Strategy) - {self.strategy}))
         self._gamma += rand.choice((-gamma_delta, gamma_delta))
@@ -59,7 +43,8 @@ class Agent:
     def strategy(self) -> Strategy:
         return self._strategy
 
-    def emotion_profile(self):
+    @property
+    def emotion_profile(self) -> EmotionProfile:
         return self._emotion_profile
 
     def get_trait(self):
@@ -68,7 +53,7 @@ class Agent:
     def set_strategy(self, strat):
         self._strategy = strat
 
-    def set_emotion_profile(self, ep):
+    def set_emotion_profile(self, ep: EmotionProfile):
         self._emotion_profile = ep
 
     # Getter for agent_id

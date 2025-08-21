@@ -1,0 +1,66 @@
+norm,norm_desc,variant_id,4bit_orig,8bit_vector,DB_mean,DB_nice,DG_mean,DG_nice,CB_mean,CB_nice,CG_mean,CG_nice,Emotion_Leniency,expanded_original_B
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v1,0011,00001111,0,0,0,0,1,1,1,1,1.0,False
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v2,0011,00001101,0,0,0,0,1,1,0,1,0.5,False
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v3,0011,00000111,0,0,0,0,0,1,1,1,0.5,False
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v4,0011,00000101,0,0,0,0,0,1,0,1,0.0,False
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v5,0011,00101111,0,0,1,0,1,1,1,1,1.0,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v6,0011,00101101,0,0,1,0,1,1,0,1,0.5,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v7,0011,00100111,0,0,1,0,0,1,1,1,0.5,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v8,0011,00100101,0,0,1,0,0,1,0,1,0.0,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v9,0011,10001111,1,0,0,0,1,1,1,1,1.0,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v10,0011,10001101,1,0,0,0,1,1,0,1,0.5,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v11,0011,10000111,1,0,0,0,0,1,1,1,0.5,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v12,0011,10000101,1,0,0,0,0,1,0,1,0.0,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v13,0011,10101111,1,0,1,0,1,1,1,1,1.0,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v14,0011,10101101,1,0,1,0,1,1,0,1,0.5,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v15,0011,10100111,1,0,1,0,0,1,1,1,0.5,True
+ImageScoring,"Cooperation always good, defection always bad (action-only).",ImageScoring_v16,0011,10100101,1,0,1,0,0,1,0,1,0.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v1,0001,00000011,0,0,0,0,0,0,1,1,1.0,False
+Shunning,Only cooperating with good people is good.,Shunning_v2,0001,00000001,0,0,0,0,0,0,0,1,0.0,False
+Shunning,Only cooperating with good people is good.,Shunning_v3,0001,00001011,0,0,0,0,1,0,1,1,1.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v4,0001,00001001,0,0,0,0,1,0,0,1,0.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v5,0001,00100011,0,0,1,0,0,0,1,1,1.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v6,0001,00100001,0,0,1,0,0,0,0,1,0.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v7,0001,00101011,0,0,1,0,1,0,1,1,1.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v8,0001,00101001,0,0,1,0,1,0,0,1,0.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v9,0001,10000011,1,0,0,0,0,0,1,1,1.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v10,0001,10000001,1,0,0,0,0,0,0,1,0.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v11,0001,10001011,1,0,0,0,1,0,1,1,1.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v12,0001,10001001,1,0,0,0,1,0,0,1,0.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v13,0001,10100011,1,0,1,0,0,0,1,1,1.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v14,0001,10100001,1,0,1,0,0,0,0,1,0.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v15,0001,10101011,1,0,1,0,1,0,1,1,1.0,True
+Shunning,Only cooperating with good people is good.,Shunning_v16,0001,10101001,1,0,1,0,1,0,0,1,0.0,True
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v1,1011,11001111,1,1,0,0,1,1,1,1,1.0,False
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v2,1011,11001101,1,1,0,0,1,1,0,1,0.666667,False
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v3,1011,11000111,1,1,0,0,0,1,1,1,0.666667,False
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v4,1011,11000101,1,1,0,0,0,1,0,1,0.333333,False
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v5,1011,11101111,1,1,1,0,1,1,1,1,1.0,True
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v6,1011,11101101,1,1,1,0,1,1,0,1,0.666667,True
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v7,1011,11100111,1,1,1,0,0,1,1,1,0.666667,True
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v8,1011,11100101,1,1,1,0,0,1,0,1,0.333333,True
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v9,1011,01001111,0,1,0,0,1,1,1,1,0.666667,False
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v10,1011,01001101,0,1,0,0,1,1,0,1,0.333333,False
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v11,1011,01000111,0,1,0,0,0,1,1,1,0.333333,False
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v12,1011,01000101,0,1,0,0,0,1,0,1,0.0,False
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v13,1011,01101111,0,1,1,0,1,1,1,1,0.666667,True
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v14,1011,01101101,0,1,1,0,1,1,0,1,0.333333,True
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v15,1011,01100111,0,1,1,0,0,1,1,1,0.333333,True
+SimpleStanding,Defecting towards good people is bad; defecting against bad is good; cooperating mostly good.,SimpleStanding_v16,1011,01100101,0,1,1,0,0,1,0,1,0.0,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v1,1001,11000011,1,1,0,0,0,0,1,1,1.0,False
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v2,1001,11000001,1,1,0,0,0,0,0,1,0.5,False
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v3,1001,11001011,1,1,0,0,1,0,1,1,1.0,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v4,1001,11001001,1,1,0,0,1,0,0,1,0.5,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v5,1001,11100011,1,1,1,0,0,0,1,1,1.0,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v6,1001,11100001,1,1,1,0,0,0,0,1,0.5,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v7,1001,11101011,1,1,1,0,1,0,1,1,1.0,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v8,1001,11101001,1,1,1,0,1,0,0,1,0.5,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v9,1001,01000011,0,1,0,0,0,0,1,1,0.5,False
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v10,1001,01000001,0,1,0,0,0,0,0,1,0.0,False
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v11,1001,01001011,0,1,0,0,1,0,1,1,0.5,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v12,1001,01001001,0,1,0,0,1,0,0,1,0.0,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v13,1001,01100011,0,1,1,0,0,0,1,1,0.5,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v14,1001,01100001,0,1,1,0,0,0,0,1,0.0,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v15,1001,01101011,0,1,1,0,1,0,1,1,0.5,True
+SternJudging,Cooperating with good people and defecting against bad people yield good reputations.,SternJudging_v16,1001,01101001,0,1,1,0,1,0,0,1,0.0,True
+,,,,,,,,,,
