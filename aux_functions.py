@@ -266,3 +266,13 @@ def consume_random(r, idx):
     val = r[idx]
     idx += 1
     return val, idx
+
+
+def ebsn_to_GB(ebsn):
+    # Flatten two levels: outer list and tuple
+    seq = list(chain.from_iterable(chain.from_iterable(ebsn)))
+    return ''.join('G' if int(b) == 1 else 'B' for b in seq)
+
+
+def is_single_value(param):
+    return not isinstance(param, (list, tuple))

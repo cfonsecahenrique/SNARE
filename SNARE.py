@@ -11,6 +11,7 @@ from time import time
 from copy import deepcopy
 from itertools import chain
 from constants import *
+import pandas as pd
 
 
 def run_simulations_for_model(model, n_runs, n_cores):
@@ -297,14 +298,8 @@ def run_experiments(n_runs, n_cores, base_model_params):
     return param_values, avg_cooperations
 
 
-def ebsn_to_GB(ebsn):
-    # Flatten two levels: outer list and tuple
-    seq = list(chain.from_iterable(chain.from_iterable(ebsn)))
-    return ''.join('G' if int(b) == 1 else 'B' for b in seq)
-
-
 def plot_parameter_sweep(param_values, avg_cooperations, ebsn, param_name='gamma_gaussian_n'):
-    title = ebsn_to_GB(ebsn)
+    title = aux.ebsn_to_GB(ebsn)
     plt.figure(figsize=(8, 5))
     plt.plot(param_values, avg_cooperations, marker='o')
     plt.title(f'Average Cooperation Rate vs {param_name}\nEB Social Norm: {title}')
@@ -313,10 +308,6 @@ def plot_parameter_sweep(param_values, avg_cooperations, ebsn, param_name='gamma
     plt.ylim(0, 1)
     plt.grid(True)
     plt.show()
-
-
-def is_single_value(param):
-    return not isinstance(param, (list, tuple))
 
 
 def run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=True):
@@ -349,23 +340,82 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=True):
         plot_parameter_sweep(param_values, avg_cooperations, model.ebsn)
 
 
+def load_norm_variants(csv_path, norm_name):
+    df = pd.read_csv(csv_path)
+    return df[df["norm"] == norm_name]
+
+
+def parse_vector_string(vec_str):
+    """Turn a string like '00000101' into list of ints."""
+    return [int(b) for b in vec_str]
+
+
+def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, plots=True):
+    # 1. Load base params from yaml
+    params = read_yaml(yaml_file)
+    base_sim_params = params["simulation"]
+
+    # 2. Load all variants for the given norm
+    variants = load_norm_variants(csv_file, norm_name)
+
+    # 3. Loop over variants
+    for _, row in variants.iterrows():
+        variant_id = row["variant_id"]
+        sn = parse_vector_string(row["4bit_orig"])
+        ebsn = parse_vector_string(row["8bit_vector"])
+
+        # 4. Update sim params
+        sim_params = deepcopy(base_sim_params)
+        sim_params["sn"] = sn
+        sim_params["ebsn"] = ebsn
+
+        print(f"\n--- Running {variant_id} ---")
+        if aux.is_single_value(sim_params["gamma_gaussian_n"]):
+            run_single_value_experiment(n_runs, n_cores, sim_params, plots=plots)
+        else:
+            run_sweep_experiment(n_runs, n_cores, sim_params, plots=plots)
+
+
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        raise ValueError("Please provide the experiment YAML configuration file as argument!")
+        raise ValueError("Usage: python SNARE.py <experiment.yaml>")
 
     config_file = sys.argv[1]
+
+    # Hard-coded path to the master CSV with all norms
+    NORM_CSV_PATH = "data/all_norms_emotion_variants.csv"
+
+    # Load config
     data = read_yaml(config_file)
 
     n_runs = data["running"]["runs"]
     n_cores = data["running"]["cores"]
     with_logging = data["running"]["plotting"]
+
+    # Base sim params (used as template)
     base_sim_params = data["simulation"]
 
-    gamma_param = base_sim_params.get('gamma_gaussian_n', 0)
+    # Detect mode
+    norm_name = base_sim_params.get("norm", "").strip()
 
     start_time = time()
-    if is_single_value(gamma_param):
-        run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=with_logging)
-    else:
-        run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=with_logging)
+
+    if norm_name:  # --- Meta-norm mode ---
+        print(f"Running all variants of meta-norm: {norm_name}")
+        run_all_variants(
+            norm_name=norm_name,
+            yaml_file=config_file,
+            csv_file=NORM_CSV_PATH,
+            n_runs=n_runs,
+            n_cores=n_cores,
+            plots=with_logging
+        )
+    else:  # --- Manual mode (use ebsn + sn from YAML) ---
+        gamma_param = base_sim_params.get('gamma_gaussian_n', 0)
+        if aux.is_single_value(gamma_param):
+            run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=with_logging)
+        else:
+            run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=with_logging)
+
     print(f"Finished all experiments in {time() - start_time:.2f} seconds.")
+
