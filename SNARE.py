@@ -9,7 +9,6 @@ from model import Model
 import multiprocessing
 from time import time
 from copy import deepcopy
-from itertools import chain
 from constants import *
 import pandas as pd
 
@@ -341,8 +340,17 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=True):
 
 
 def load_norm_variants(csv_path, norm_name):
-    df = pd.read_csv(csv_path)
-    return df[df["norm"] == norm_name]
+    df = pd.read_csv(csv_path, dtype={
+        "4bit_orig": str,
+        "8bit_vector": str
+    })
+
+    variants = df[df["norm"] == norm_name]
+
+    if variants.empty:
+        raise ValueError(f"No variants found for social norm '{norm_name}' in {csv_path}")
+
+    return variants
 
 
 def parse_vector_string(vec_str):
@@ -383,20 +391,20 @@ if __name__ == '__main__':
     config_file = sys.argv[1]
 
     # Hard-coded path to the master CSV with all norms
-    NORM_CSV_PATH = "data/all_norms_emotion_variants.csv"
+    NORM_CSV_PATH = "data/all_norms_16variants_L.csv"
 
     # Load config
     data = read_yaml(config_file)
 
     n_runs = data["running"]["runs"]
-    n_cores = data["running"]["cores"]
+    n_cores = multiprocessing.cpu_count() - 1 if data["running"]["cores"] == "all" else data["running"]["cores"]
     with_logging = data["running"]["plotting"]
 
     # Base sim params (used as template)
     base_sim_params = data["simulation"]
 
     # Detect mode
-    norm_name = base_sim_params.get("norm", "").strip()
+    norm_name = base_sim_params.get("norm", "")
 
     start_time = time()
 

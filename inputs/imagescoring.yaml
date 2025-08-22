@@ -1,9 +1,9 @@
 running:
-  runs: 5
-  cores: 5
+  runs: 50
+  cores: all
   plotting: false
 simulation:
-  norm: Shunning
+  norm: ImageScoring
   ebsn:
   sn:
   z: 50
@@ -17,6 +17,6 @@ simulation:
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
-  gamma_gaussian_n: [0, 0.5, 1]
-  generations: 40
+  gamma_gaussian_n: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+  generations: 2000
   convergence period: 0.05

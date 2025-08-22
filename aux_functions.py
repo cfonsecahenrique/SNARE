@@ -6,7 +6,7 @@ import os
 import csv
 from colorama import Fore, Style, init
 from constants import *
-from numba import njit
+from itertools import chain
 # Initialize colorama (needed for Windows)
 init()
 
@@ -16,7 +16,6 @@ def write_to_file(filename: str, data: str):
         f.write(data + "\n")
 
 
-@njit
 def invert_binary(action: int):
     return 1 - action
 
@@ -38,8 +37,8 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     result_data: dict = {
-        "base_social_norm": model.social_norm_str,
-        "eb_social_norm": model.ebsn_str,
+        "base_social_norm": model.social_norm,
+        "eb_social_norm": model.ebsn,
         "Z": model.population_size,
         "gens": model.generations,
         "mu": model.mutation_rate,
@@ -64,11 +63,18 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
         result_data[strat.name] = round(frequencies.get(strat, 0), 4)
 
     ep_frequencies = calculate_ep_frequencies(population)
-    for ep in ["Competitive", "Cooperative"]:
+    for ep in list(EmotionProfile):
         result_data[ep] = round(ep_frequencies.get(ep, 0), 2)
 
     # Write to CSV
     write_dict_to_csv(result_data, filename)
+
+
+def calculate_ep_frequencies(population: list[Agent]) -> dict:
+    total = len(population)
+    counts = Counter(agent.emotion_profile for agent in population)
+    eps = list(EmotionProfile)
+    return {ep: counts.get(ep, 0) / total for ep in eps}
 
 
 def write_dict_to_csv(row: dict, filepath: str):
@@ -134,14 +140,6 @@ def calculate_strategy_frequency(population: list[Agent]) -> dict:
     return {strat: counts.get(strat, 0) / total for strat in strats}
 
 
-def calculate_ep_frequencies(population: list[Agent]) -> dict:
-    total = len(population)
-    counts = Counter(agent.emotion_profile for agent in population)
-    eps = list(EmotionProfile)
-    return {ep: counts.get(ep, 0) / total for ep in eps}
-
-
-@njit
 def calculate_average_consensus(image_matrix: np.ndarray) -> float:
     z = image_matrix.shape[0]
     # Count number of 1s in each column (opinions about each focal agent)
@@ -259,13 +257,6 @@ def calculate_reputation_frequencies(population: list[Agent]) -> dict:
     total = len(population)
     counts = Counter(agent.reputation() for agent in population)
     return {rep: counts.get(rep, 0) / total for rep in (0, 1)}
-
-
-@njit
-def consume_random(r, idx):
-    val = r[idx]
-    idx += 1
-    return val, idx
 
 
 def ebsn_to_GB(ebsn):
