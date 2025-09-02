@@ -17,6 +17,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\data\all_norms_16variants_L_with_dnf.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\data\all_norms_emotion_variants.csv">
           <value>
             <Attribute>
