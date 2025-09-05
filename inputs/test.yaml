@@ -1,11 +1,11 @@
 running:
-  runs: 5
-  cores: 5
-  plotting: false
+  runs: 10
+  cores: 10
+  plotting: true
 simulation:
-  norm: Shunning
-  ebsn:
-  sn:
+  norm:
+  ebsn: [0,1,0,1,0,1,0,1]
+  sn: [0,0,1,1]
   z: 50
   mu: 1 # mu/Z
   chi: 0.01
@@ -17,6 +17,6 @@ simulation:
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
-  gamma_gaussian_n: [0, 0.5, 1]
-  generations: 40
+  gamma_gaussian_n: [0, 0.2, 0.4, 0.6, 0.8, 1]
+  generations: 2000
   convergence period: 0.05
