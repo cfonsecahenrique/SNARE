@@ -1,0 +1,20 @@
+# environment.yml
+name: snare
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - numpy>=2.0,<3.0
+  - pandas>=2.0,<3.0
+  - matplotlib
+  - altair>=5
+  - tqdm
+  - pyyaml
+  - sympy
+  - numba           # optional, if you use it
+  - vegafusion      # optional, for large Altair charts
+  - vegafusion-python-embed   # optional, JIT engine for vegafusion
+  - pip
+  - pip:
+      - vegafusion-jupyter    # optional, only if you use Jupyter + vegafusion

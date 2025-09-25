@@ -11,6 +11,7 @@ from time import time
 from copy import deepcopy
 from constants import *
 import pandas as pd
+from datetime import timedelta
 
 
 def run_simulations_for_model(model, n_runs, n_cores):
@@ -391,7 +392,7 @@ if __name__ == '__main__':
     config_file = sys.argv[1]
 
     # Hard-coded path to the master CSV with all norms
-    NORM_CSV_PATH = "data/all_norms_16variants_L.csv"
+    NORM_CSV_PATH = "data/new_norms.csv"
 
     # Load config
     data = read_yaml(config_file)
@@ -425,5 +426,6 @@ if __name__ == '__main__':
         else:
             run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=with_logging)
 
-    print(f"Finished all experiments in {time() - start_time:.2f} seconds.")
+    elapsed = time() - start_time
+    print(f"Finished all experiments in {str(timedelta(seconds=int(elapsed)))} (hh:mm:ss)")
 
