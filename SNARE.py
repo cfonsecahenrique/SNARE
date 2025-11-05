@@ -1,3 +1,4 @@
+import random
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -50,46 +51,53 @@ def simulation(model: Model):
 
     for current_gen in tqdm(range(gens)):
         past_convergence = current_gen > model.converge
+        aux_population: list[Agent] = agents.copy()
+        random.shuffle(aux_population)
         random_values = rng.random(size=max_randoms_per_gen)
         ri = 0
-        for i in range(z):
+        a1: Agent
+        for a1 in aux_population:
             if random_values[ri] < mu:
-                rnd_agent_idx = rng.integers(len(agents))
-                a1 = agents[rnd_agent_idx]
                 a1.trait_mutation(model.min_gamma, model.max_gamma, model.gamma_delta)
             else:
-                rnd_agent_idxs = rng.integers(len(agents), size=2)
-                a1: Agent = agents[rnd_agent_idxs[0]]
-                a2: Agent = agents[rnd_agent_idxs[1]]
+                a2: Agent = agents[rng.integers(len(agents)-1)]
 
                 a1.set_fitness(0)
                 a2.set_fitness(0)
 
-                excluded_ids = {a1.get_agent_id(), a2.get_agent_id()}
                 n_agents = len(agents)
 
-                # Pre-generate opponent indices for this round (z pairs of opponents)
+                # --- Generate opponent indices once ---
                 opponent_idxs = rng.integers(n_agents, size=(z, 2))
 
+                # --- First cycle: a1 plays with az agents ---
                 for j in range(z):
-                    # resample if opponent index is invalid
-                    while opponent_idxs[j, 0] in excluded_ids:
+                    # ensure valid opponent
+                    while opponent_idxs[j, 0] == a1.get_agent_id():
                         opponent_idxs[j, 0] = rng.integers(n_agents)
-                    while opponent_idxs[j, 1] in excluded_ids:
-                        opponent_idxs[j, 1] = rng.integers(n_agents)
 
                     az = agents[opponent_idxs[j, 0]]
                     res_z, n_z, ri = model.prisoners_dilemma(a1, az, random_values, ri)
+
                     if past_convergence:
                         cooperative_acts += n_z
                         games_played += 2
+
                     a1.add_fitness(res_z[0])
+
+                # --- Second cycle: a2 plays with ax agents ---
+                for j in range(z):
+                    # ensure valid opponent
+                    while opponent_idxs[j, 1] == a2.get_agent_id():
+                        opponent_idxs[j, 1] = rng.integers(n_agents)
 
                     ax = agents[opponent_idxs[j, 1]]
                     res_x, n_x, ri = model.prisoners_dilemma(a2, ax, random_values, ri)
+
                     if past_convergence:
                         cooperative_acts += n_x
                         games_played += 2
+
                     a2.add_fitness(res_x[0])
 
                 # Normalize fitness
@@ -116,8 +124,8 @@ def simulation(model: Model):
         allC[current_gen] = strat_freq.get(Strategy.ALWAYS_COOPERATE, 0)
 
         ep_freq = aux.calculate_ep_frequencies(agents)
-        mean[current_gen] = ep_freq.get(0, 0)
-        nice[current_gen] = ep_freq.get(1, 0)
+        mean[current_gen] = ep_freq.get(EmotionProfile.COMPETITIVE, 0)
+        nice[current_gen] = ep_freq.get(EmotionProfile.COOPERATIVE, 0)
 
         rep_freq = aux.calculate_reputation_frequencies(agents)
         bad[current_gen] = rep_freq.get(BAD, 0)
@@ -217,7 +225,7 @@ def plot_time_series(all_results, model):
     axes[1].legend()
     axes[1].grid(True)
 
-    ep_labels = ["mean", "nice"]
+    ep_labels = ["Competitive", "Cooperative"]
     ep_colors = ['tab:brown', 'tab:cyan']
     for i in range(2):
         axes[2].plot(x, ep_mean[i], color=ep_colors[i], label=ep_labels[i])
@@ -428,4 +436,3 @@ if __name__ == '__main__':
 
     elapsed = time() - start_time
     print(f"Finished all experiments in {str(timedelta(seconds=int(elapsed)))} (hh:mm:ss)")
-

@@ -32,7 +32,7 @@ def rep_char(rep: int):
     return "G" if rep == 1 else "B"
 
 
-def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/results.csv"):
+def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/updated_model_results.csv"):
     # Ensure the directory exists
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 

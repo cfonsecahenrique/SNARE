@@ -104,7 +104,7 @@ class Model:
         return self._gens
 
     @property
-    def chi(self):
+    def reputation_assessment_error(self):
         return self._chi
 
     @property
@@ -116,7 +116,7 @@ class Model:
         return self._converge
 
     @property
-    def alpha(self):
+    def reputation_assignment_error(self):
         return self._alpha
 
     @property
@@ -150,10 +150,10 @@ class Model:
 
         # Rep assessment error
         a1_action = agent1.strategy.value[aux.invert_binary(a2_rep)] \
-            if random_vals[ri] < self.chi else agent1.strategy.value[a2_rep]
+            if random_vals[ri] < self.reputation_assessment_error else agent1.strategy.value[a2_rep]
         ri += 1
         a2_action = agent2.strategy.value[aux.invert_binary(a1_rep)] \
-            if random_vals[ri] < self.chi else agent2.strategy.value[a1_rep]
+            if random_vals[ri] < self.reputation_assessment_error else agent2.strategy.value[a1_rep]
         ri += 1
 
         # Execution errors
@@ -173,10 +173,10 @@ class Model:
         ri += 1
 
         # Assignment errors
-        if random_vals[ri] < self.alpha:
+        if random_vals[ri] < self.reputation_assignment_error:
             new_rep_1 = aux.invert_binary(new_rep_1)
         ri += 1
-        if random_vals[ri] < self.alpha:
+        if random_vals[ri] < self.reputation_assignment_error:
             new_rep_2 = aux.invert_binary(new_rep_2)
         ri += 1
 
