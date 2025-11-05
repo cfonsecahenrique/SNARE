@@ -27,23 +27,64 @@ class Model:
         self._beta: float = beta
 
     def __str__(self) -> str:
-        s = (
-            "\nModel Parameters:\n"
-            "---------------------------------------------\n"
-            f"{'Population size (Z):':<30} {self._z:<20} {'Generations (G):':<30} {self._gens}\n"
-            f"{'Convergence time: (gens)':<30} {self._converge:<20} {'Strategy exploration (μ):':<30} {self._mu:.6f}\n"
-            f"{'Reputation error (χ):':<30} {self._chi:.6f} {'Execution error (ε):':<30} {self._eps:.6f}\n"
-            f"{'Judge assignment error (α):':<30} {self._alpha:.6f} {'Selection strength (β):':<30} {self._beta:.6f}\n"
-            f"{'Benefit (b):':<30} {self._b:<20} {'Cost (c):':<30} {self._c}\n"
-            f"{'Gamma range:':<30} [{self._min_gamma:.3f}, {self._max_gamma:.3f}]  {'':<30} \n"
-            f"{'Social Norm (string):':<30} {self.social_norm_str:<20} {'EB Social Norm (string):':<30} {self.ebsn_str}"
-        )
-        print(s)
-        print("\nSocial Norm Details:")
-        aux.print_sn(self._social_norm)
-        print("\nEB Social Norm Details:")
-        aux.print_ebnorm(self._eb_social_norm)
-        return ""
+        # Box drawing characters
+        top_left = "╔"
+        top_right = "╗"
+        bottom_left = "╚"
+        bottom_right = "╝"
+        horizontal = "═"
+        vertical = "║"
+        
+        width = 80
+
+        def center(text, width):
+            return text.center(width)
+
+        s = f"{top_left}{horizontal * (width - 2)}{top_right}\n"
+        s += f"{vertical}{center(f'Model Parameters', width - 2)}{vertical}\n"
+        s += f"{vertical}{horizontal * (width - 2)}{vertical}\n"
+        
+        # Parameters
+        params = {
+            "Population size (Z)": self._z,
+            "Generations (G)": self._gens,
+            "Convergence time (gens)": self._converge,
+            "Strategy exploration (μ)": f"{self._mu:.6f}",
+            "Reputation error (χ)": f"{self._chi:.6f}",
+            "Execution error (ε)": f"{self._eps:.6f}",
+            "Judge assignment error (α)": f"{self._alpha:.6f}",
+            "Selection strength (β)": f"{self._beta:.6f}",
+            "Benefit (b)": self._b,
+            "Cost (c)": self._c,
+            "Gamma range": f"[{self._min_gamma:.3f}, {self._max_gamma:.3f}]",
+        }
+
+        for name, value in params.items():
+            s += f"{vertical} {name:<30} {str(value):<45} {vertical}\n"
+
+        s += f"{vertical}{horizontal * (width - 2)}{vertical}\n"
+
+        # Social Norms
+        sn_str = aux.format_sn(self._social_norm)
+        ebsn_str = aux.format_ebnorm(self._eb_social_norm)
+
+        sn_lines = sn_str.split('\n')
+        ebsn_lines = ebsn_str.split('\n')
+
+        max_lines = max(len(sn_lines), len(ebsn_lines))
+
+        # Define column widths
+        sn_width = 38
+        ebsn_width = 38
+
+        for i in range(max_lines):
+            sn_line = sn_lines[i] if i < len(sn_lines) else ''
+            ebsn_line = ebsn_lines[i] if i < len(ebsn_lines) else ''
+            s += f"{vertical} {sn_line.ljust(sn_width)} {ebsn_line.ljust(ebsn_width)} {vertical}\n"
+
+        s += f"{bottom_left}{horizontal * (width - 2)}{bottom_right}"
+        
+        return s
 
     @property
     def social_norm_str(self):
@@ -187,5 +228,3 @@ class Model:
         cooperative_acts += a2_action
 
         return pd[a1_action, a2_action], cooperative_acts, ri
-
-

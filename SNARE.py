@@ -319,10 +319,8 @@ def plot_parameter_sweep(param_values, avg_cooperations, ebsn, param_name='gamma
 
 
 def run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=True):
-    print(f"Running single gamma experiment for gamma_gaussian_n = {base_sim_params['gamma_gaussian_n']}")
-
     model = make_model_from_params(base_sim_params)
-    print(model.__str__())
+    print(model)
     all_results = run_simulations_for_model(model, n_runs, n_cores)
     if plots:
         plot_time_series(all_results, model)
@@ -337,7 +335,7 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=True):
         print(f"Running simulations for gamma_gaussian_n = {param_values[i]}")
 
         model = make_model_from_params(sim_params)
-        print(model.__str__())
+        print(model)
         all_results = run_simulations_for_model(model, n_runs, n_cores)
 
         cooperation_runs = [r[0][-1] for r in all_results]  # final cooperation for each run
@@ -393,6 +391,28 @@ def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, plots=True
             run_sweep_experiment(n_runs, n_cores, sim_params, plots=plots)
 
 
+def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
+    """
+    Runs simulations for all 256 possible 8-bit ebsn variants.
+    """
+    print("--- Running a sweep over all 256 ebsn variants ---")
+
+    for i in range(256):
+        ebsn_variant = [int(bit) for bit in format(i, '08b')]
+
+        # Create a copy of sim_params and update ebsn
+        sim_params = deepcopy(base_sim_params)
+        sim_params["ebsn"] = ebsn_variant
+
+        print(f"\n--- Running ebsn variant {i}/255: {ebsn_variant} ---")
+
+        # Check if it's a single run or a gamma sweep
+        if aux.is_single_value(sim_params.get("gamma_gaussian_n", 0)):
+            run_single_value_experiment(n_runs, n_cores, sim_params, plots=plots)
+        else:
+            run_sweep_experiment(n_runs, n_cores, sim_params, plots=plots)
+
+
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         raise ValueError("Usage: python SNARE.py <experiment.yaml>")
@@ -414,10 +434,19 @@ if __name__ == '__main__':
 
     # Detect mode
     norm_name = base_sim_params.get("norm", "")
+    ebsn_mode = base_sim_params.get("ebsn", [])
 
     start_time = time()
 
-    if norm_name:  # --- Meta-norm mode ---
+    if ebsn_mode == "all":  # --- EBSN sweep mode ---
+        print("Running all ebsn variants.")
+        run_all_ebsn_variants(
+            base_sim_params=base_sim_params,
+            n_runs=n_runs,
+            n_cores=n_cores,
+            plots=with_logging
+        )
+    elif norm_name:  # --- Meta-norm mode ---
         print(f"Running all variants of meta-norm: {norm_name}")
         run_all_variants(
             norm_name=norm_name,

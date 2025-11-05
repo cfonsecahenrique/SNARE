@@ -177,14 +177,7 @@ def make_sn_from_list(l: list):
     return sn
 
 
-def print_ebnorm(sn):
-    """
-    Prints the social norm as a colored table.
-    Rows: Cooperate, Defect
-    Columns: Good, Bad
-    Cell entries: (nice, mean)
-    Each 'G' is green, each 'B' is red.
-    """
+def format_ebnorm(sn) -> str:
     def rep_char(val):
         return "G" if val == 1 else "B"
 
@@ -196,7 +189,6 @@ def print_ebnorm(sn):
         else:
             return ch
 
-    # Build readable table values
     readable = [["", ""], ["", ""]]
     for i in range(len(sn)):
         for j in range(len(sn[i])):
@@ -204,36 +196,38 @@ def print_ebnorm(sn):
             mean = rep_char(sn[i][j][0])
             readable[i][j] = f"({color_char(nice)},{color_char(mean)})"
 
-    # Header
-    print(Fore.CYAN + "2nd Order Emotion-Based Social Norm:" + Style.RESET_ALL)
-    header = f"{'':<12}{Fore.YELLOW}Good{Style.RESET_ALL:<8}{Fore.YELLOW}Bad{Style.RESET_ALL}"
-    print(header)
-    print("-" * 28)
+    lines = [
+        Fore.CYAN + "2nd Order Emotion-Based Social Norm:" + Style.RESET_ALL,
+        f"{'':<12}{Fore.YELLOW}Good{Style.RESET_ALL:<8}{Fore.YELLOW}Bad{Style.RESET_ALL}",
+        "-" * 28
+    ]
 
-    # Rows: i=1 -> Cooperate, i=0 -> Defect
     row_labels = {1: "Cooperate", 0: "Defect"}
     for i in [1, 0]:
         row_str = f"{row_labels[i]:<12}"
-        for j in [1, 0]:  # Good, Bad
+        for j in [1, 0]:
             row_str += f"{readable[i][j]:<8}"
-        print(row_str)
+        lines.append(row_str)
+    return "\n".join(lines)
 
 
-def print_sn(sn):
+def format_sn(sn) -> str:
     def colored_rep_char(c):
-        # Example coloring based on char (adjust as needed)
-        if c == 1:  # Good
+        if c == 1:
             return Fore.GREEN + "G" + Style.RESET_ALL
-        elif c == 0:  # Bad
+        elif c == 0:
             return Fore.RED + "B" + Style.RESET_ALL
         else:
-            return c  # default no color
+            return c
 
-    print(Fore.CYAN + "2nd Order Social norm:" + Style.RESET_ALL)
-    print(Fore.YELLOW + "   G B" + Style.RESET_ALL)
-    print(Fore.YELLOW + "----------" + Style.RESET_ALL)
-    print(f"{Fore.GREEN}C{Style.RESET_ALL}|", colored_rep_char(sn[1][1]), colored_rep_char(sn[1][0]))
-    print(f"{Fore.RED}D{Style.RESET_ALL}|", colored_rep_char(sn[0][1]), colored_rep_char(sn[0][0]))
+    lines = [
+        Fore.CYAN + "2nd Order Social norm:" + Style.RESET_ALL,
+        Fore.YELLOW + "   G B" + Style.RESET_ALL,
+        Fore.YELLOW + "----------" + Style.RESET_ALL,
+        f"{Fore.GREEN}C{Style.RESET_ALL}| {colored_rep_char(sn[1][1])} {colored_rep_char(sn[1][0])}",
+        f"{Fore.RED}D{Style.RESET_ALL}| {colored_rep_char(sn[0][1])} {colored_rep_char(sn[0][0])}"
+    ]
+    return "\n".join(lines)
 
 
 def strat_name(strat):
