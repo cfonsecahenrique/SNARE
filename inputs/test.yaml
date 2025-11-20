@@ -1,11 +1,11 @@
 running:
-  runs: 1
-  cores: 1
+  runs: 10
+  cores: 10
   plotting: false
 simulation:
   norm:
   ebsn: all
-  sn: [1,0,1,1]
+  sn: [0,0,0,1]
   z: 50
   mu: 1 # mu/Z
   chi: 0.01

@@ -19,6 +19,8 @@ def run_simulations_for_model(model, n_runs, n_cores):
     all_models = [deepcopy(model) for _ in range(n_runs)]
     with multiprocessing.Pool(processes=n_cores) as pool:
         all_results = list(tqdm(pool.imap_unordered(simulation, all_models), total=n_runs))
+    pool.close()
+    pool.join()
     return all_results
 
 
