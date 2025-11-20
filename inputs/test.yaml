@@ -5,7 +5,7 @@ running:
 simulation:
   norm:
   ebsn: all
-  sn: [0,0,0,1]
+  sn: [1,0,0,1]
   z: 50
   mu: 1 # mu/Z
   chi: 0.01
