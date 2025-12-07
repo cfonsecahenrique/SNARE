@@ -8,7 +8,7 @@ class Model:
 
     def __init__(self, sn_list: list, ebsn_list: list, z: int,
                  mu: float, chi: float, eps: float, alpha: float, min_gamma: float, max_gamma: float,
-                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float):
+                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float):
         self._social_norm: list = sn_list
         self._eb_social_norm: list = ebsn_list
         self._mu: float = mu
@@ -25,6 +25,16 @@ class Model:
         self._gamma_delta: float = gamma_delta
         self._gamma_normal_center: float = gamma_normal_center
         self._beta: float = beta
+        self._q: float = q
+        
+        # Initialize image_matrix as requested
+        # 1. Every agent is assigned a random reputation
+        assigned_reputations = np.random.randint(0, 2, size=z)
+        # 2. The image matrix is filled in a perfectly consensual manner:
+        #    a column of the matrix is filled with only the assigned reputation
+        self._image_matrix = np.zeros((z, z), dtype=int)
+        for j in range(z):
+            self._image_matrix[:, j] = assigned_reputations[j]
 
     def __str__(self) -> str:
         # Box drawing characters
@@ -53,6 +63,7 @@ class Model:
             "Reputation error (χ)": f"{self._chi:.6f}",
             "Execution error (ε)": f"{self._eps:.6f}",
             "Judge assignment error (α)": f"{self._alpha:.6f}",
+            "Private-Public assessment (q)": f"{self._q:.6f}",
             "Selection strength (β)": f"{self._beta:.6f}",
             "Benefit (b)": self._b,
             "Cost (c)": self._c,
@@ -115,7 +126,7 @@ class Model:
         builder: str = self._ebsn_str.replace("[", "(").replace("]", ")").replace(" ", "") + "\t" + \
                        self._social_norm_str.replace("[", "(").replace("]", ")").replace(" ", "") + "\t" + \
                        str(self._z) + "\t" + str(self._gens) + "\t" + str(self._mu) + "\t" + str(self._chi) \
-                       + "\t" + str(self._eps) + "\t" + str(self._alpha) + "\t" + str(self._b) + "\t" \
+                       + "\t" + str(self._eps) + "\t" + str(self._alpha) + "\t" + str(self._q) + "\t" + str(self._b) + "\t" \
                        + str(self._c) + "\t" + str(self._beta)
         return builder
 
@@ -171,6 +182,14 @@ class Model:
     @property
     def selection_strength(self):
         return self._beta
+    
+    @property
+    def observability(self):
+        return self._q
+
+    @property
+    def image_matrix(self):
+        return self._image_matrix
 
     def prisoners_dilemma(self, agent1: Agent, agent2: Agent, random_vals, ri: int):
         """
@@ -186,15 +205,18 @@ class Model:
 
         cooperative_acts = 0
 
-        a1_rep = agent1.reputation()
-        a2_rep = agent2.reputation()
+        # Reputations are now derived from the image matrix.
+        # a1 perceives a2's reputation as:
+        a2_rep_by_a1 = self.image_matrix[agent1.get_agent_id(), agent2.get_agent_id()]
+        # a2 perceives a1's reputation as:
+        a1_rep_by_a2 = self.image_matrix[agent2.get_agent_id(), agent1.get_agent_id()]
 
         # Rep assessment error
-        a1_action = agent1.strategy.value[aux.invert_binary(a2_rep)] \
-            if random_vals[ri] < self.reputation_assessment_error else agent1.strategy.value[a2_rep]
+        a1_action = agent1.strategy.value[aux.invert_binary(a2_rep_by_a1)] \
+            if random_vals[ri] < self.reputation_assessment_error else agent1.strategy.value[a2_rep_by_a1]
         ri += 1
-        a2_action = agent2.strategy.value[aux.invert_binary(a1_rep)] \
-            if random_vals[ri] < self.reputation_assessment_error else agent2.strategy.value[a1_rep]
+        a2_action = agent2.strategy.value[aux.invert_binary(a1_rep_by_a2)] \
+            if random_vals[ri] < self.reputation_assessment_error else agent2.strategy.value[a1_rep_by_a2]
         ri += 1
 
         # Execution errors
@@ -205,26 +227,43 @@ class Model:
             a2_action = aux.invert_binary(a2_action)
         ri += 1
 
-        # Social norm updates
-        new_rep_1 = self.ebsn[a1_action][a2_rep][agent1.emotion_profile.value] \
-            if random_vals[ri] < agent1.gamma() else self.social_norm[a1_action][a2_rep]
-        ri += 1
-        new_rep_2 = self.ebsn[a2_action][a1_rep][agent2.emotion_profile.value] \
-            if random_vals[ri] < agent2.gamma() else self.social_norm[a2_action][a1_rep]
-        ri += 1
+        # Sample subsection of population to observe and update image matrix
+        num_observers = int(self.observability * self.population_size)
+        # Ensure num_observers is within valid range [0, population_size]
+        num_observers = max(0, min(num_observers, self.population_size))
+        if num_observers > 0:
+            observer_ids = np.random.choice(self.population_size, num_observers, replace=False)
 
-        # Assignment errors
-        if random_vals[ri] < self.reputation_assignment_error:
-            new_rep_1 = aux.invert_binary(new_rep_1)
-        ri += 1
-        if random_vals[ri] < self.reputation_assignment_error:
-            new_rep_2 = aux.invert_binary(new_rep_2)
-        ri += 1
+            for observer_id in observer_ids:
+                observer_opinion_on_a1 = self.image_matrix[observer_id, agent1.get_agent_id()]
+                observer_opinion_on_a2 = self.image_matrix[observer_id, agent2.get_agent_id()]
 
-        agent1.set_reputation(new_rep_1)
-        agent2.set_reputation(new_rep_2)
+                # EB Social norm: reputation after a1 action, observer opinion on recipient and emotion profile
+                new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value] \
+                    if random_vals[ri] < agent1.gamma() else self.social_norm[a1_action][observer_opinion_on_a2]
+                ri += 1
+                new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value] \
+                    if random_vals[ri] < agent2.gamma() else self.social_norm[a2_action][observer_opinion_on_a1]
+                ri += 1
+
+                # Apply assignment errors for this specific observer's perception
+                if random_vals[ri] < self.reputation_assignment_error:
+                    new_rep_1 = 1 - new_rep_1
+                ri += 1
+
+                if random_vals[ri] < self.reputation_assignment_error:
+                    new_rep_2 = 1 - new_rep_2
+                ri += 1
+
+                self.image_matrix[observer_id, agent1.get_agent_id()] = new_rep_1
+                self.image_matrix[observer_id, agent2.get_agent_id()] = new_rep_2
+        # If num_observers is 0, no updates to image_matrix or consumption of random_vals for assignment errors.
+
+        # Remove the direct setting of agent reputations, as they are now distributed in the image matrix.
+        # The agent's internal _reputation field is no longer the source of truth for interactions.
+        # agent1.set_reputation(new_rep_1)
+        # agent2.set_reputation(new_rep_2)
 
         cooperative_acts += a1_action
         cooperative_acts += a2_action
-
         return pd[a1_action, a2_action], cooperative_acts, ri

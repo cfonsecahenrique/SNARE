@@ -8,7 +8,7 @@ class Agent:
         self._fitness_score: int = 0
         self._strategy: Strategy = None
         self._emotion_profile: EmotionProfile = None
-        self._reputation: int = rand.randint(0, 1)
+        #self._reputation: int = rand.randint(0, 1)
         self._gamma: float = -1
         self.initialise_traits(min_gamma, max_gamma, gamma_normal_center, gamma_delta)
 

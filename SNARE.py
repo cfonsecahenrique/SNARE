@@ -63,6 +63,8 @@ def simulation(model: Model):
                 a1.trait_mutation(model.min_gamma, model.max_gamma, model.gamma_delta)
             else:
                 a2: Agent = agents[rng.integers(len(agents)-1)]
+                while a2.get_agent_id() == a1.get_agent_id():
+                    a2 = agents[rng.integers(len(agents)-1)]
 
                 a1.set_fitness(0)
                 a2.set_fitness(0)
@@ -75,10 +77,12 @@ def simulation(model: Model):
                 # --- First cycle: a1 plays with az agents ---
                 for j in range(z):
                     # ensure valid opponent
-                    while opponent_idxs[j, 0] == a1.get_agent_id():
-                        opponent_idxs[j, 0] = rng.integers(n_agents)
+                    az_idx = opponent_idxs[j, 0]
+                    while az_idx == a1.get_agent_id():
+                        az_idx = rng.integers(n_agents)
 
-                    az = agents[opponent_idxs[j, 0]]
+                    az = agents[az_idx]
+
                     res_z, n_z, ri = model.prisoners_dilemma(a1, az, random_values, ri)
 
                     if past_convergence:
@@ -90,10 +94,12 @@ def simulation(model: Model):
                 # --- Second cycle: a2 plays with ax agents ---
                 for j in range(z):
                     # ensure valid opponent
-                    while opponent_idxs[j, 1] == a2.get_agent_id():
-                        opponent_idxs[j, 1] = rng.integers(n_agents)
+                    ax_idx = opponent_idxs[j, 1]
+                    while ax_idx == a2.get_agent_id():
+                        ax_idx = rng.integers(n_agents)
 
-                    ax = agents[opponent_idxs[j, 1]]
+                    ax = agents[ax_idx]
+
                     res_x, n_x, ri = model.prisoners_dilemma(a2, ax, random_values, ri)
 
                     if past_convergence:
@@ -129,7 +135,7 @@ def simulation(model: Model):
         mean[current_gen] = ep_freq.get(EmotionProfile.COMPETITIVE, 0)
         nice[current_gen] = ep_freq.get(EmotionProfile.COOPERATIVE, 0)
 
-        rep_freq = aux.calculate_reputation_frequencies(agents)
+        rep_freq = aux.calculate_reputation_frequencies(model.image_matrix)
         bad[current_gen] = rep_freq.get(BAD, 0)
         good[current_gen] = rep_freq.get(GOOD, 0)
 
@@ -157,6 +163,7 @@ def make_model_from_params(simulation_parameters):
     chi = float(simulation_parameters["chi"])
     eps = float(simulation_parameters["eps"])
     alpha = float(simulation_parameters["alpha"])
+    q = float(simulation_parameters["observability"])
     benefit = int(simulation_parameters["benefit"])
     cost = int(simulation_parameters["cost"])
     beta = float(simulation_parameters["beta"])
@@ -169,7 +176,7 @@ def make_model_from_params(simulation_parameters):
 
     model_parameters = Model(
         sn, eb_sn, z, mu, chi, eps, alpha,
-        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence
+        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence, q
     )
     return model_parameters
 

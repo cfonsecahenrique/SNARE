@@ -32,7 +32,7 @@ def rep_char(rep: int):
     return "G" if rep == 1 else "B"
 
 
-def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/updated_model_results.csv"):
+def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/observability_results.csv"):
     # Ensure the directory exists
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
@@ -45,6 +45,7 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
         "chi": model._chi,
         "eps": model.execution_error,
         "alpha": model._alpha,
+        "q": model.observability,
         "b": model.benefit,
         "c": model.cost,
         "beta": model.beta,
@@ -54,7 +55,8 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
         "gamma_max": model.max_gamma,
         "gamma_delta": model.gamma_delta,
         "gamma_center": model.gamma_normal_center,
-        "average_cooperation": round(acr, 3)
+        "average_cooperation": round(acr, 3),
+        "average_consensus": round(calculate_average_consensus(model.image_matrix), 3)
     }
 
     # Add strategy frequencies
@@ -75,6 +77,15 @@ def calculate_ep_frequencies(population: list[Agent]) -> dict:
     counts = Counter(agent.emotion_profile for agent in population)
     eps = list(EmotionProfile)
     return {ep: counts.get(ep, 0) / total for ep in eps}
+
+
+def calculate_average_consensus(image_matrix: np.ndarray) -> float:
+    z = image_matrix.shape[0]
+    # Count number of 1s in each column (opinions about each focal agent)
+    total_good = np.sum(image_matrix == 1, axis=0)
+    total_bad = np.sum(image_matrix == 0, axis=0)  # Since only 0 or 1, and it's a square matrix
+    consensus_per_agent = np.abs(total_good - total_bad) / z
+    return float(np.mean(consensus_per_agent))
 
 
 def write_dict_to_csv(row: dict, filepath: str):
@@ -247,10 +258,29 @@ def emotion(e: int):
     return "Coop" if e else "Comp"
 
 
-def calculate_reputation_frequencies(population: list[Agent]) -> dict:
-    total = len(population)
-    counts = Counter(agent.reputation() for agent in population)
-    return {rep: counts.get(rep, 0) / total for rep in (0, 1)}
+def calculate_reputation_frequencies(image_matrix: np.ndarray) -> dict:
+    """
+    Calculates the frequency of GOOD and BAD reputations from the image matrix.
+    The overall reputation of an agent is the mode of the column in the image matrix.
+    This implementation uses vectorized NumPy operations for performance.
+    """
+    z = image_matrix.shape[0]
+    if z == 0:
+        return {GOOD: 0, BAD: 0}
+
+    # Count the number of GOOD (1) opinions for each agent (column-wise sum)
+    good_counts = np.sum(image_matrix == GOOD, axis=0)
+    # bad_counts = z - good_counts
+
+    # An agent's reputation is GOOD if more than half the opinions are GOOD.
+    # In case of a tie (z/2), this logic counts it as BAD, matching the original.
+    good_reps = np.sum(good_counts > z / 2)
+    bad_reps = z - good_reps
+
+    return {
+        GOOD: good_reps / z,
+        BAD: bad_reps / z
+    }
 
 
 def ebsn_to_GB(ebsn):
