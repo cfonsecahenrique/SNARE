@@ -1,9 +1,7 @@
-import random
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml
-from agent import Agent
 from tqdm import tqdm
 import aux_functions as aux
 from model import Model
@@ -25,19 +23,7 @@ def run_simulations_for_model(model, n_runs, n_cores):
 
 
 def simulation(model: Model):
-    z = model.population_size
-    mu = model.mutation_rate / model.population_size
     gens = model.generations
-    selection_strength = model.selection_strength
-
-    games_played = 0
-    cooperative_acts = 0
-
-    agents = [
-        Agent(i, model.min_gamma, model.max_gamma,
-              model.gamma_normal_center, model.gamma_delta)
-        for i in range(z)
-    ]
 
     cooperation_per_gen = np.zeros(gens)
     allD, Disc, pDisc, allC = np.zeros(gens), np.zeros(gens), np.zeros(gens), np.zeros(gens)
@@ -45,103 +31,29 @@ def simulation(model: Model):
     bad, good = np.zeros(gens), np.zeros(gens)
     avg_gammas = np.zeros(gens)
 
-    # Preallocate RNG for efficiency
-    # Estimate an upper bound on the number of random numbers needed per generation
-    # (mutation + PD plays + strategy imitation + errors)
-    max_randoms_per_gen = z * (1 + z * 16) * 50 # rough conservative estimate, oversized by 50
     rng = np.random.default_rng()
 
     for current_gen in tqdm(range(gens)):
-        past_convergence = current_gen > model.converge
-        aux_population: list[Agent] = agents.copy()
-        random.shuffle(aux_population)
-        random_values = rng.random(size=max_randoms_per_gen)
-        ri = 0
-        a1: Agent
-        for a1 in aux_population:
-            if random_values[ri] < mu:
-                a1.trait_mutation(model.min_gamma, model.max_gamma, model.gamma_delta)
-            else:
-                a2: Agent = agents[rng.integers(len(agents)-1)]
-                while a2.get_agent_id() == a1.get_agent_id():
-                    a2 = agents[rng.integers(len(agents)-1)]
+        cooperative_acts, games_played = model.run_generation(rng)
+        cooperation_per_gen[current_gen] = cooperative_acts / games_played if games_played > 0 else 0
 
-                a1.set_fitness(0)
-                a2.set_fitness(0)
-
-                n_agents = len(agents)
-
-                # --- Generate opponent indices once ---
-                opponent_idxs = rng.integers(n_agents, size=(z, 2))
-
-                # --- First cycle: a1 plays with az agents ---
-                for j in range(z):
-                    # ensure valid opponent
-                    az_idx = opponent_idxs[j, 0]
-                    while az_idx == a1.get_agent_id():
-                        az_idx = rng.integers(n_agents)
-
-                    az = agents[az_idx]
-
-                    res_z, n_z, ri = model.prisoners_dilemma(a1, az, random_values, ri)
-
-                    if past_convergence:
-                        cooperative_acts += n_z
-                        games_played += 2
-
-                    a1.add_fitness(res_z[0])
-
-                # --- Second cycle: a2 plays with ax agents ---
-                for j in range(z):
-                    # ensure valid opponent
-                    ax_idx = opponent_idxs[j, 1]
-                    while ax_idx == a2.get_agent_id():
-                        ax_idx = rng.integers(n_agents)
-
-                    ax = agents[ax_idx]
-
-                    res_x, n_x, ri = model.prisoners_dilemma(a2, ax, random_values, ri)
-
-                    if past_convergence:
-                        cooperative_acts += n_x
-                        games_played += 2
-
-                    a2.add_fitness(res_x[0])
-
-                # Normalize fitness
-                a1.set_fitness(a1.get_fitness() / z)
-                a2.set_fitness(a2.get_fitness() / z)
-
-                # Strategy imitation
-                pi = (1 + np.exp(selection_strength * (a1.get_fitness() - a2.get_fitness()))) ** (-1)
-                if random_values[ri] < pi:
-                    a1.set_strategy(a2.strategy)
-                    a1.set_emotion_profile(a2.emotion_profile)
-                    if model.gamma_delta != 0:
-                        a1.set_gamma(a2.gamma())
-                ri += 1
-            ri += 1
-
-        if past_convergence:
-            cooperation_per_gen[current_gen] = cooperative_acts/games_played if games_played > 0 else 0
-
-        strat_freq = aux.calculate_strategy_frequency(agents)
+        strat_freq = aux.calculate_strategy_frequency(model)
         allD[current_gen] = strat_freq.get(Strategy.ALWAYS_DEFECT, 0)
         Disc[current_gen] = strat_freq.get(Strategy.DISCRIMINATE, 0)
         pDisc[current_gen] = strat_freq.get(Strategy.PARADOXICALLY_DISC, 0)
         allC[current_gen] = strat_freq.get(Strategy.ALWAYS_COOPERATE, 0)
 
-        ep_freq = aux.calculate_ep_frequencies(agents)
+        ep_freq = aux.calculate_ep_frequencies(model)
         mean[current_gen] = ep_freq.get(EmotionProfile.COMPETITIVE, 0)
         nice[current_gen] = ep_freq.get(EmotionProfile.COOPERATIVE, 0)
 
         rep_freq = aux.calculate_reputation_frequencies(model.image_matrix)
-        bad[current_gen] = rep_freq.get(BAD, 0)
-        good[current_gen] = rep_freq.get(GOOD, 0)
+        bad[current_gen] = rep_freq.get(BAD)
+        good[current_gen] = rep_freq.get(GOOD)
 
-        avg_gammas[current_gen] = aux.calculate_average_gamma(agents)
+        avg_gammas[current_gen] = aux.calculate_average_gamma(model)
 
-    aux.export_results(100 * cooperation_per_gen[gens-1], model, agents)
+    aux.export_results(cooperation_per_gen[gens - 1], model)
     return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas
 
 
