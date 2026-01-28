@@ -172,7 +172,7 @@ def make_strat_str(frequencies: dict):
 
 
 def make_ebsn_from_list(l: list):
-    # ((bdm, bdn), (bcm, bcn), (gdm, gdn), (gcm, gcn))
+    # [[(DBM,DBN), (DGM,DGN)], [(CBM,CBN), (CGM,CGN)]]
     sn = []
     entry = []
     for i in np.arange(0, len(l) - 1, 2):
@@ -180,6 +180,7 @@ def make_ebsn_from_list(l: list):
         if len(entry) == 2:
             sn.append(entry)
             entry = []
+    print(sn)
     return sn
 
 

@@ -211,8 +211,13 @@ def plot_time_series(all_results, model):
     gammas_mean = gammas_matrix.mean(axis=0)
     gammas_std = gammas_matrix.std(axis=0)
 
-    fig, axes = plt.subplots(5, 1, figsize=(12, 8), sharex=True)
-    plt.suptitle(model.ebsn_str)
+    # Determine number of subplots based on gamma_delta
+    if model.gamma_delta == 0:
+        fig, axes = plt.subplots(4, 1, figsize=(12, 8), sharex=True)
+    else:
+        fig, axes = plt.subplots(5, 1, figsize=(12, 8), sharex=True)
+
+    plt.suptitle("d = " + aux.ebsn_to_GB(model.ebsn))
 
     axes[0].plot(x, coop_mean, color='blue', label='Mean Cooperation Rate')
     axes[0].fill_between(x, coop_mean - coop_std, coop_mean + coop_std,
@@ -256,14 +261,15 @@ def plot_time_series(all_results, model):
     axes[3].legend()
     axes[3].grid(True)
 
-    axes[4].plot(x, gammas_mean, color='blue', label='Average Gamma')
-    axes[4].fill_between(x, gammas_mean - gammas_std, gammas_mean + gammas_std,
-                         color='blue', alpha=0.3, label='±1 Std Dev')
-    axes[4].set_title("Average Gammas Across Simulations")
-    axes[4].set_ylabel("Gamma Frequency")
-    axes[4].set_xlabel("Generation")
-    axes[4].legend()
-    axes[4].grid(True)
+    if model.gamma_delta != 0:
+        axes[4].plot(x, gammas_mean, color='blue', label='Average Gamma')
+        axes[4].fill_between(x, gammas_mean - gammas_std, gammas_mean + gammas_std,
+                             color='blue', alpha=0.3, label='±1 Std Dev')
+        axes[4].set_title("Average Gammas Across Simulations")
+        axes[4].set_ylabel("Gamma Frequency")
+        axes[4].set_xlabel("Generation")
+        axes[4].legend()
+        axes[4].grid(True)
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
