@@ -1,7 +1,7 @@
 from enum import Enum
 
-BAD, DEFECT, MEAN = 0, 0, 0
-GOOD, COOPERATE, NICE = 1, 1, 1
+BAD, DEFECT, MEAN, REGRET = 0, 0, 0, 0
+GOOD, COOPERATE, NICE, JOY = 1, 1, 1, 1
 
 
 class Strategy(Enum):
@@ -14,13 +14,34 @@ class Strategy(Enum):
         return self.name.replace("_", " ").title()
 
 
+class EmotionExpression(Enum):
+    NEUTRAL = 0
+    ANGER = 1
+    JOY = 2
+    REGRET = 3
+
+    def __str__(self):
+        return self.name.title()
+
+
 class EmotionProfile(Enum):
-    COMPETITIVE = 0
-    COOPERATIVE = 1
+
+    COMPETITIVE = ((EmotionExpression.NEUTRAL, EmotionExpression.JOY),
+                   (EmotionExpression.ANGER, EmotionExpression.REGRET))
+    COOPERATIVE = ((EmotionExpression.NEUTRAL, EmotionExpression.REGRET),
+                   (EmotionExpression.ANGER, EmotionExpression.JOY))
 
     def ep_name(self):
         return self.name.title()
 
     def mutate(self):
         # Since there are only two, flip
-        return EmotionProfile(1 - self.value)
+        if self == EmotionProfile.COMPETITIVE:
+            return EmotionProfile.COOPERATIVE
+        else:
+            return EmotionProfile.COMPETITIVE
+
+
+
+
+

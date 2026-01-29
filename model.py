@@ -207,9 +207,9 @@ class Model:
 
         # Reputations are now derived from the image matrix.
         # a1 perceives a2's reputation as:
-        a2_rep_by_a1 = self.image_matrix[agent1.get_agent_id(), agent2.get_agent_id()]
+        a2_rep_by_a1 = int(self.image_matrix[agent1.get_agent_id(), agent2.get_agent_id()])
         # a2 perceives a1's reputation as:
-        a1_rep_by_a2 = self.image_matrix[agent2.get_agent_id(), agent1.get_agent_id()]
+        a1_rep_by_a2 = int(self.image_matrix[agent2.get_agent_id(), agent1.get_agent_id()])
 
         # Rep assessment error
         a1_action = agent1.strategy.value[aux.invert_binary(a2_rep_by_a1)] \
@@ -227,6 +227,8 @@ class Model:
             a2_action = aux.invert_binary(a2_action)
         ri += 1
 
+        a1_emotion_expressed: EmotionExpression = agent1.emotion_profile.value[a1_action][a2_action]
+        a2_emotion_expressed: EmotionExpression = agent2.emotion_profile.value[a2_action][a1_action]
         # Sample subsection of population to observe and update image matrix
         num_observers = int(self.observability * self.population_size)
         # Ensure num_observers is within valid range [0, population_size]
@@ -239,9 +241,16 @@ class Model:
                 observer_opinion_on_a2 = self.image_matrix[observer_id, agent2.get_agent_id()]
 
                 # EB Social norm: reputation after a1 action, observer opinion on recipient and emotion profile
-                new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value] \
-                    if random_vals[ri] < agent1.gamma() else self.social_norm[a1_action][observer_opinion_on_a2]
+                if random_vals[ri] < agent1.gamma():
+                    if (a1_action == COOPERATE and
+                            (a1_emotion_expressed == EmotionExpression.JOY or
+                             a1_emotion_expressed == EmotionExpression.NEUTRAL)):
+                        new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][0]
+                    elif (a1_action == DEFECT and )
+                else:
+                    new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
                 ri += 1
+
                 new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value] \
                     if random_vals[ri] < agent2.gamma() else self.social_norm[a2_action][observer_opinion_on_a1]
                 ri += 1
