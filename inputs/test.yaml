@@ -4,7 +4,7 @@ running:
   plotting: true
 simulation:
   norm:
-  ebsn: [1,1,0,0,1,1,1,1]
+  ebsn: [0,0,0,1,1,0,0,0]
   sn: [1,0,1,1]
   z: 50
   mu: 1 # mu/Z
@@ -19,5 +19,5 @@ simulation:
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
-  generations: 500
-  convergence period: 0
+  generations: 100
+  convergence period: 0.2

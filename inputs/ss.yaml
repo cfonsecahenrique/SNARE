@@ -1,0 +1,23 @@
+running:
+  runs: 40
+  cores: all
+  plotting: false
+simulation:
+  norm: SimpleStanding
+  ebsn:
+  sn:
+  z: 50
+  mu: 1 # mu/Z
+  chi: 0.01
+  eps: 0.01
+  alpha: 0
+  benefit: 5
+  cost: 1
+  beta: 1
+  observability: 1
+  gamma_min: 0
+  gamma_max: 1
+  gamma_delta: 0 # use 0 for homogeneous population
+  gamma_gaussian_n: 1
+  generations: 600
+  convergence period: 0.2

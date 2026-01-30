@@ -32,9 +32,12 @@ def rep_char(rep: int):
     return "G" if rep == 1 else "B"
 
 
-def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/observability_results.csv"):
+def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/results.csv"):
     # Ensure the directory exists
     os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    # Calculate reputation frequencies
+    rep_frequencies = calculate_reputation_frequencies(model.image_matrix)
 
     result_data: dict = {
         "base_social_norm": model.social_norm,
@@ -56,7 +59,8 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
         "gamma_delta": model.gamma_delta,
         "gamma_center": model.gamma_normal_center,
         "average_cooperation": round(acr, 3),
-        "average_consensus": round(calculate_average_consensus(model.image_matrix), 3)
+        "average_consensus": round(calculate_average_consensus(model.image_matrix), 3),
+        "G": round(rep_frequencies.get(GOOD, 0), 3)
     }
 
     # Add strategy frequencies

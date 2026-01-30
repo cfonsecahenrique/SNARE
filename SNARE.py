@@ -44,6 +44,7 @@ def simulation(model: Model):
     mean, nice = np.zeros(gens), np.zeros(gens)
     bad, good = np.zeros(gens), np.zeros(gens)
     avg_gammas = np.zeros(gens)
+    avg_consensus = np.zeros(gens)
 
     # Preallocate RNG for efficiency
     # Estimate an upper bound on the number of random numbers needed per generation
@@ -140,9 +141,10 @@ def simulation(model: Model):
         good[current_gen] = rep_freq.get(GOOD, 0)
 
         avg_gammas[current_gen] = aux.calculate_average_gamma(agents)
+        avg_consensus[current_gen] = aux.calculate_average_consensus(model.image_matrix)
 
     aux.export_results(100 * cooperation_per_gen[gens-1], model, agents)
-    return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas
+    return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas, avg_consensus
 
 
 def read_yaml(filename):
@@ -187,6 +189,7 @@ def plot_time_series(all_results, model):
     ep_results = [r[2] for r in all_results]
     rep_results = [r[3] for r in all_results]
     gammas = [r[4] for r in all_results]
+    consensus = [r[5] for r in all_results]
 
     gens = cooperation_results[0].shape[0]
     x = np.arange(gens)
@@ -211,14 +214,21 @@ def plot_time_series(all_results, model):
     gammas_mean = gammas_matrix.mean(axis=0)
     gammas_std = gammas_matrix.std(axis=0)
 
-    # Determine number of subplots based on gamma_delta
-    if model.gamma_delta == 0:
-        fig, axes = plt.subplots(4, 1, figsize=(12, 8), sharex=True)
-    else:
-        fig, axes = plt.subplots(5, 1, figsize=(12, 8), sharex=True)
+    consensus_matrix = np.stack(consensus)
+    consensus_mean = consensus_matrix.mean(axis=0)
+    consensus_std = consensus_matrix.std(axis=0)
 
+    # Determine number of subplots based on gamma_delta and observability
+    num_plots = 4
+    if model.gamma_delta != 0:
+        num_plots += 1
+    if model.observability != 1:
+        num_plots += 1
+
+    fig, axes = plt.subplots(num_plots, 1, figsize=(12, 2 * num_plots), sharex=True)
     plt.suptitle("d = " + aux.ebsn_to_GB(model.ebsn))
 
+    # Plot 1: Cooperation
     axes[0].plot(x, coop_mean, color='blue', label='Mean Cooperation Rate')
     axes[0].fill_between(x, coop_mean - coop_std, coop_mean + coop_std,
                          color='blue', alpha=0.3, label='±1 Std Dev')
@@ -228,6 +238,7 @@ def plot_time_series(all_results, model):
     axes[0].legend()
     axes[0].grid(True)
 
+    # Plot 2: Strategies
     strategy_labels = ["AllD", "Disc", "pDisc", "AllC"]
     colors = ['tab:red', 'tab:blue', 'tab:orange', 'tab:green']
     for i in range(4):
@@ -239,6 +250,7 @@ def plot_time_series(all_results, model):
     axes[1].legend()
     axes[1].grid(True)
 
+    # Plot 3: Emotion Profiles
     ep_labels = ["Competitive", "Cooperative"]
     ep_colors = ['tab:brown', 'tab:cyan']
     for i in range(2):
@@ -250,6 +262,7 @@ def plot_time_series(all_results, model):
     axes[2].legend()
     axes[2].grid(True)
 
+    # Plot 4: Reputations
     rep_labels = ["bad", "good"]
     rep_colors = ['tab:red', 'tab:cyan']
     for i in range(2):
@@ -261,16 +274,32 @@ def plot_time_series(all_results, model):
     axes[3].legend()
     axes[3].grid(True)
 
-    if model.gamma_delta != 0:
-        axes[4].plot(x, gammas_mean, color='blue', label='Average Gamma')
-        axes[4].fill_between(x, gammas_mean - gammas_std, gammas_mean + gammas_std,
-                             color='blue', alpha=0.3, label='±1 Std Dev')
-        axes[4].set_title("Average Gammas Across Simulations")
-        axes[4].set_ylabel("Gamma Frequency")
-        axes[4].set_xlabel("Generation")
-        axes[4].legend()
-        axes[4].grid(True)
+    current_plot_idx = 4
 
+    # Plot 5 (Optional): Gamma
+    if model.gamma_delta != 0:
+        axes[current_plot_idx].plot(x, gammas_mean, color='blue', label='Average Gamma')
+        axes[current_plot_idx].fill_between(x, gammas_mean - gammas_std, gammas_mean + gammas_std,
+                             color='blue', alpha=0.3, label='±1 Std Dev')
+        axes[current_plot_idx].set_title("Average Gammas Across Simulations")
+        axes[current_plot_idx].set_ylabel("Gamma Frequency")
+        axes[current_plot_idx].legend()
+        axes[current_plot_idx].grid(True)
+        current_plot_idx += 1
+
+    # Plot 6 (Optional): Consensus
+    if model.observability != 1:
+        axes[current_plot_idx].plot(x, consensus_mean, color='purple', label='Average Consensus')
+        axes[current_plot_idx].fill_between(x, consensus_mean - consensus_std, consensus_mean + consensus_std,
+                             color='purple', alpha=0.3, label='±1 Std Dev')
+        axes[current_plot_idx].set_title("Average Consensus Across Simulations")
+        axes[current_plot_idx].set_ylabel("Consensus")
+        axes[current_plot_idx].set_ylim(0, 1)
+        axes[current_plot_idx].legend()
+        axes[current_plot_idx].grid(True)
+        current_plot_idx += 1
+
+    axes[num_plots - 1].set_xlabel("Generation")
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
 

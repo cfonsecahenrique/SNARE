@@ -238,13 +238,21 @@ class Model:
                 observer_opinion_on_a1 = self.image_matrix[observer_id, agent1.get_agent_id()]
                 observer_opinion_on_a2 = self.image_matrix[observer_id, agent2.get_agent_id()]
 
-                # EB Social norm: reputation after a1 action, observer opinion on recipient and emotion profile
-                new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value] \
-                    if random_vals[ri] < agent1.gamma() else self.social_norm[a1_action][observer_opinion_on_a2]
-                ri += 1
-                new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value] \
-                    if random_vals[ri] < agent2.gamma() else self.social_norm[a2_action][observer_opinion_on_a1]
-                ri += 1
+                if a2_action == COOPERATE:
+                    # EB Social norm: reputation after a1 action, observer opinion on recipient and emotion profile
+                    new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value] \
+                        if random_vals[ri] < agent1.gamma() else self.social_norm[a1_action][observer_opinion_on_a2]
+                    ri += 1
+                else:
+                    new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
+
+                if a1_action == COOPERATE:
+                    new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value] \
+                        if random_vals[ri] < agent2.gamma() else self.social_norm[a2_action][observer_opinion_on_a1]
+                    ri += 1
+                else:
+                    new_rep_2 = self.social_norm[a2_action][observer_opinion_on_a1]
+
 
                 # Apply assignment errors for this specific observer's perception
                 if random_vals[ri] < self.reputation_assignment_error:
