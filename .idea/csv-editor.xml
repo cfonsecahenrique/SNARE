@@ -59,21 +59,7 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\outputs\observability_results.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="\outputs\results.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\outputs\updated_model_results.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
