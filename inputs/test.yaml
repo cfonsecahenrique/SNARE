@@ -5,7 +5,7 @@ running:
 simulation:
   norm:
   ebsn: all
-  sn: [0,0,0,1]
+  sn: [0,0,1,1]
   z: 40
   mu: 1 # mu/Z
   chi: 0.01
@@ -18,7 +18,7 @@ simulation:
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
-  gamma_gaussian_n: 0.5
+  gamma_gaussian_n: 1
   generations: 400
   convergence period: 0.2
  
