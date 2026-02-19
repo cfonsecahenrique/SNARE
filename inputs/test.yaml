@@ -1,12 +1,12 @@
 running:
-  runs: 10
-  cores: 5
-  plotting: true
+  runs: 50
+  cores: all
+  plotting: false
 simulation:
   norm:
   ebsn: all
   sn: [1,0,0,1]
-  z: 40
+  z: 50
   mu: 1 # mu/Z
   chi: 0.1
   eps: 0.1
@@ -19,6 +19,6 @@ simulation:
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
-  generations: 500
+  generations: 1000
   convergence period: 0.2
  
