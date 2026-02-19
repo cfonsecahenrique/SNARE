@@ -1,15 +1,15 @@
 running:
-  runs: 25
-  cores: all
-  plotting: false
+  runs: 10
+  cores: 5
+  plotting: true
 simulation:
   norm:
-  ebsn: [0,0,0,0,1,1,1,1]
-  sn: [0,0,1,1]
+  ebsn: all
+  sn: [1,0,0,1]
   z: 40
   mu: 1 # mu/Z
-  chi: 0.01
-  eps: 0.01
+  chi: 0.1
+  eps: 0.1
   alpha: 0
   benefit: 5
   cost: 1
@@ -18,7 +18,7 @@ simulation:
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
-  gamma_gaussian_n: 0
-  generations: 400
+  gamma_gaussian_n: 1
+  generations: 500
   convergence period: 0.2
  
