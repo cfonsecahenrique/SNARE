@@ -1,5 +1,6 @@
 import random
 import sys
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml
@@ -301,7 +302,14 @@ def plot_time_series(all_results, model):
 
     axes[num_plots - 1].set_xlabel("Generation")
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.show()
+
+    os.makedirs("simulations", exist_ok=True)
+    ebsn_str = aux.ebsn_to_GB(model.ebsn)
+    sn_flat = [item for sublist in model.social_norm for item in sublist]
+    sn_str = "".join(map(str, sn_flat))
+    filename = f"simulations/sim_{ebsn_str}_{sn_str}_Z{model.population_size}_mu{model.mutation_rate}_q{model.observability}_g{model.gamma_normal_center}.png"
+    plt.savefig(filename)
+    plt.close()
 
 
 def expand_parameter(param):
@@ -359,7 +367,12 @@ def plot_parameter_sweep(param_values, avg_cooperations, ebsn, param_name='gamma
     plt.ylabel('Average Cooperation Rate')
     plt.ylim(0, 1)
     plt.grid(True)
-    plt.show()
+
+    os.makedirs("simulations", exist_ok=True)
+    ebsn_str = aux.ebsn_to_GB(ebsn)
+    filename = f"simulations/sweep_{ebsn_str}_{param_name}.png"
+    plt.savefig(filename)
+    plt.close()
 
 
 def run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=True):

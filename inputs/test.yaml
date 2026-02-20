@@ -1,7 +1,7 @@
 running:
   runs: 50
   cores: all
-  plotting: false
+  plotting: true
 simulation:
   norm:
   ebsn: all
