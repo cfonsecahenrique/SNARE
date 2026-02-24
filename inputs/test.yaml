@@ -1,6 +1,6 @@
 running:
   runs: 50
-  cores: all
+  cores: 10
   plotting: true
 simulation:
   norm:
@@ -19,6 +19,6 @@ simulation:
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
-  generations: 1000
+  generations: 800
   convergence period: 0.2
  
