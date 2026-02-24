@@ -1,6 +1,6 @@
 running:
   runs: 50
-  cores: 10
+  cores: all
   plotting: true
 simulation:
   norm:
