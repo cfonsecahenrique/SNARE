@@ -465,7 +465,7 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
         [0, 1, 1, 0, 0, 0, 1, 1],
         [0, 1, 0, 0, 0, 1, 1, 1],
         [1, 1, 0, 0, 0, 0, 0, 1],
-        [0, 1, 1, 1, 0, 0, 0, 1], 
+        [0, 1, 1, 1, 0, 0, 0, 1],
         [1, 1, 1, 1, 0, 1, 0, 1],
         [0, 1, 1, 0, 0, 0, 0, 1]
     ]
@@ -475,7 +475,8 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
         sim_params = deepcopy(base_sim_params)
         sim_params["ebsn"] = norm
 
-        print(f"\n--- Running ebsn variant {i}/{len(elite_norms)}: {norm} ---")
+
+        print(f"\n--- Running ebsn variant {i}/{len(sh_elite_norms)}: {norm} ---")
 
         # Check if it's a single run or a gamma sweep
         if aux.is_single_value(sim_params.get("gamma_gaussian_n", 0)):
