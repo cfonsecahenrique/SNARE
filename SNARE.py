@@ -493,7 +493,7 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
         [0, 1, 0, 0, 0, 1, 1, 1]
     ]
 
-    chosen_elites = ss_elite_norms
+    chosen_elites = is_elite_norms
     for i, norm in enumerate(chosen_elites):
 
         # Create a copy of sim_params and update ebsn
