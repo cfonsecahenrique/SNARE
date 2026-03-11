@@ -32,7 +32,7 @@ def rep_char(rep: int):
     return "G" if rep == 1 else "B"
 
 
-def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/results.csv"):
+def export_results(acr: float, model: Model, population: list[Agent], filename="outputs/imperfect_results.csv"):
     # Ensure the directory exists
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
@@ -296,3 +296,15 @@ def ebsn_to_GB(ebsn):
 
 def is_single_value(param):
     return not isinstance(param, (list, tuple))
+
+
+def is_consensual(self, agent_id: int, threshold: float) -> bool:
+    """
+    Checks if the reputation information regarding a given agent is consensual or not, through a threshold.
+    """
+    col = self.image_matrix[:, agent_id]
+    good = np.sum(col)
+    # Consensus is defined as the absolute difference between good and bad opinions divided by total population
+    # |good - bad| / z = |good - (z - good)| / z = |2*good - z| / z
+    consensus = abs(2 * good - self.population_size) / self.population_size
+    return consensus >= threshold

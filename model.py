@@ -227,32 +227,112 @@ class Model:
             a2_action = aux.invert_binary(a2_action)
         ri += 1
 
+        cooperative_acts += a1_action
+        cooperative_acts += a2_action
+
+        # Optimization for q=1 (Full Observability)
+        if self.observability == 1:
+            z = self.population_size
+            
+            # --- Update Agent 1 Reputation ---
+            opinions_on_a2 = self.image_matrix[:, agent2.get_agent_id()]
+            
+            if a2_action == COOPERATE:
+                # Gamma check
+                gamma_rands = random_vals[ri:ri+z]
+                ri += z
+                use_ebsn = gamma_rands < agent1.gamma()
+                
+                # Lookup tables
+                sn_vals = np.array(self.social_norm[a1_action])[opinions_on_a2]
+                ebsn_vals = np.array([self.ebsn[a1_action][0][agent1.emotion_profile.value], 
+                                      self.ebsn[a1_action][1][agent1.emotion_profile.value]])[opinions_on_a2]
+                
+                new_rep_1 = np.where(use_ebsn, ebsn_vals, sn_vals)
+            else:
+                new_rep_1 = np.array(self.social_norm[a1_action])[opinions_on_a2]
+            
+            # Assignment error
+            err_rands = random_vals[ri:ri+z]
+            ri += z
+            flips = err_rands < self.reputation_assignment_error
+            new_rep_1 = np.where(flips, 1 - new_rep_1, new_rep_1)
+            
+            self.image_matrix[:, agent1.get_agent_id()] = new_rep_1
+
+            # --- Update Agent 2 Reputation ---
+            opinions_on_a1 = self.image_matrix[:, agent1.get_agent_id()]
+            
+            if a1_action == COOPERATE:
+                # Gamma check
+                gamma_rands = random_vals[ri:ri+z]
+                ri += z
+                use_ebsn = gamma_rands < agent2.gamma()
+                
+                # Lookup tables
+                sn_vals = np.array(self.social_norm[a2_action])[opinions_on_a1]
+                ebsn_vals = np.array([self.ebsn[a2_action][0][agent2.emotion_profile.value], 
+                                      self.ebsn[a2_action][1][agent2.emotion_profile.value]])[opinions_on_a1]
+                
+                new_rep_2 = np.where(use_ebsn, ebsn_vals, sn_vals)
+            else:
+                new_rep_2 = np.array(self.social_norm[a2_action])[opinions_on_a1]
+            
+            # Assignment error
+            err_rands = random_vals[ri:ri+z]
+            ri += z
+            flips = err_rands < self.reputation_assignment_error
+            new_rep_2 = np.where(flips, 1 - new_rep_2, new_rep_2)
+            
+            self.image_matrix[:, agent2.get_agent_id()] = new_rep_2
+            
+            return pd[a1_action, a2_action], cooperative_acts, ri
+
         # Sample subsection of population to observe and update image matrix
         num_observers = int(self.observability * self.population_size)
         # Ensure num_observers is within valid range [0, population_size]
         num_observers = max(0, min(num_observers, self.population_size))
         if num_observers > 0:
             observer_ids = np.random.choice(self.population_size, num_observers, replace=False)
-
+            consensus_thresh: float = 1
+            is_a1_rep_consensual = self.is_consensual(agent1.get_agent_id(), consensus_thresh)
+            is_a2_rep_consensual = self.is_consensual(agent2.get_agent_id(), consensus_thresh)
+            
             for observer_id in observer_ids:
                 observer_opinion_on_a1 = self.image_matrix[observer_id, agent1.get_agent_id()]
                 observer_opinion_on_a2 = self.image_matrix[observer_id, agent2.get_agent_id()]
 
-                if a2_action == COOPERATE:
-                    # EB Social norm: reputation after a1 action, observer opinion on recipient and emotion profile
-                    new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value] \
-                        if random_vals[ri] < agent1.gamma() else self.social_norm[a1_action][observer_opinion_on_a2]
-                    ri += 1
+                # --- Update Agent 1 Reputation ---
+                if random_vals[ri] < agent1.gamma():
+                    # Use EB Social Norm if opponent cooperated
+                    if a2_action == COOPERATE:
+                        if is_a1_rep_consensual:
+                            new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value]
+                        else:
+                            new_rep_1 = agent1.emotion_profile.value
+                    else:
+                        # Fallback to base social norm if opponent defected
+                        new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
                 else:
+                    # Use Base Social Norm
                     new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
+                ri += 1
 
-                if a1_action == COOPERATE:
-                    new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value] \
-                        if random_vals[ri] < agent2.gamma() else self.social_norm[a2_action][observer_opinion_on_a1]
-                    ri += 1
+                # --- Update Agent 2 Reputation ---
+                if random_vals[ri] < agent2.gamma():
+                    # Use EB Social Norm if opponent cooperated
+                    if a1_action == COOPERATE:
+                        if is_a2_rep_consensual:
+                            new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value]
+                        else:
+                            new_rep_2 = agent2.emotion_profile.value
+                    else:
+                        # Fallback to base social norm if opponent defected
+                        new_rep_2 = self.social_norm[a2_action][observer_opinion_on_a1]
                 else:
+                    # Use Base Social Norm
                     new_rep_2 = self.social_norm[a2_action][observer_opinion_on_a1]
-
+                ri += 1
 
                 # Apply assignment errors for this specific observer's perception
                 if random_vals[ri] < self.reputation_assignment_error:
@@ -272,6 +352,15 @@ class Model:
         # agent1.set_reputation(new_rep_1)
         # agent2.set_reputation(new_rep_2)
 
-        cooperative_acts += a1_action
-        cooperative_acts += a2_action
         return pd[a1_action, a2_action], cooperative_acts, ri
+
+    def is_consensual(self, agent_id: int, threshold: float) -> bool:
+        """
+        Checks if the reputation information regarding a given agent is consensual or not, through a threshold.
+        """
+        col = self.image_matrix[:, agent_id]
+        good = np.sum(col)
+        # Consensus is defined as the absolute difference between good and bad opinions divided by total population
+        # |good - bad| / z = |good - (z - good)| / z = |2*good - z| / z
+        consensus = abs(2 * good - self.population_size) / self.population_size
+        return consensus >= threshold

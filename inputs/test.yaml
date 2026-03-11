@@ -1,12 +1,12 @@
 running:
-  runs: 50
+  runs: 25
   cores: all
-  plotting: true
+  plotting: false
 simulation:
   norm:
   ebsn: all
-  sn: [0,0,1,1]
-  z: 50
+  sn: [0,0,0,1]
+  z: 40
   mu: 1 # mu/Z
   chi: 0.1
   eps: 0.1
@@ -14,7 +14,7 @@ simulation:
   benefit: 5
   cost: 1
   beta: 1
-  observability: 1
+  observability: 0.8
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
