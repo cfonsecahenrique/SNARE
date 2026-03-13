@@ -5,11 +5,11 @@ running:
 simulation:
   norm:
   ebsn: all
-  sn: [0,0,0,1]
+  sn: [0,0,1,1]
   z: 40
   mu: 1 # mu/Z
-  chi: 0.1
-  eps: 0.1
+  chi: 0.01
+  eps: 0.01
   alpha: 0
   benefit: 5
   cost: 1
