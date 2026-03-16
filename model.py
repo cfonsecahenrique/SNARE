@@ -306,7 +306,7 @@ class Model:
                 if random_vals[ri] < agent1.gamma():
                     # Use EB Social Norm if opponent cooperated
                     if a2_action == COOPERATE:
-                        if is_a1_rep_consensual:
+                        if is_a2_rep_consensual:
                             new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value]
                         else:
                             new_rep_1 = agent1.emotion_profile.value
@@ -322,7 +322,7 @@ class Model:
                 if random_vals[ri] < agent2.gamma():
                     # Use EB Social Norm if opponent cooperated
                     if a1_action == COOPERATE:
-                        if is_a2_rep_consensual:
+                        if is_a1_rep_consensual:
                             new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value]
                         else:
                             new_rep_2 = agent2.emotion_profile.value
