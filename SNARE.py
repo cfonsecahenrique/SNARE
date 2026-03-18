@@ -14,7 +14,7 @@ from copy import deepcopy
 from constants import *
 import pandas as pd
 from datetime import timedelta
-
+import itertools
 
 def run_simulations_for_model(model, n_runs, n_cores):
     all_models = [deepcopy(model) for _ in range(n_runs)]
@@ -144,7 +144,7 @@ def simulation(model: Model):
         avg_gammas[current_gen] = aux.calculate_average_gamma(agents)
         avg_consensus[current_gen] = aux.calculate_average_consensus(model.image_matrix)
 
-    aux.export_results(100 * cooperation_per_gen[gens-1], model, agents, filename="outputs/imperfect_results.csv")
+    aux.export_results(100 * cooperation_per_gen[gens-1], model, agents, filename="outputs/consensus_sweep_results.csv")
     return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas, avg_consensus
 
 
@@ -166,7 +166,15 @@ def make_model_from_params(simulation_parameters):
     chi = float(simulation_parameters["chi"])
     eps = float(simulation_parameters["eps"])
     alpha = float(simulation_parameters["alpha"])
-    q = float(simulation_parameters["observability"])
+    
+    # Extract scalar observability if it was generated from a list
+    q_param = simulation_parameters.get("observability", 1.0)
+    q = float(q_param) if not isinstance(q_param, list) else float(q_param[0])
+    
+    # Extract scalar consensus_thresh if it was generated from a list
+    ct_param = simulation_parameters.get("consensus_thresh", 1.0)
+    consensus_thresh = float(ct_param) if not isinstance(ct_param, list) else float(ct_param[0])
+
     benefit = int(simulation_parameters["benefit"])
     cost = int(simulation_parameters["cost"])
     beta = float(simulation_parameters["beta"])
@@ -179,7 +187,7 @@ def make_model_from_params(simulation_parameters):
 
     model_parameters = Model(
         sn, eb_sn, z, mu, chi, eps, alpha,
-        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence, q
+        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence, q, consensus_thresh
     )
     return model_parameters
 
@@ -307,7 +315,7 @@ def plot_time_series(all_results, model):
     ebsn_str = aux.ebsn_to_GB(model.ebsn)
     sn_flat = [item for sublist in model.social_norm for item in sublist]
     sn_str = "".join(map(str, sn_flat))
-    filename = f"simulations/sim_{ebsn_str}_{sn_str}_Z{model.population_size}_mu{model.mutation_rate}_q{model.observability}_g{model.gamma_normal_center}.png"
+    filename = f"simulations/sim_{ebsn_str}_{sn_str}_G{model.generations}_CT{model.consensus_thresh}_Z{model.population_size}_mu{model.mutation_rate}_q{model.observability}_g{model.gamma_normal_center}.png"
     plt.savefig(filename)
     plt.close()
 
@@ -327,50 +335,63 @@ def expand_parameter(param):
     return [param]
 
 
-def generate_parameter_sets(base_simulation_params):
-    # For now, only sweep gamma_gaussian_n
-    gamma_param = base_simulation_params.get('gamma_gaussian_n', 0)
-    gamma_values = expand_parameter(gamma_param)
+def generate_parameter_sets(base_simulation_params, sweep_params=['consensus_thresh']):
+    """
+    Generate all combinations of parameters for sweeping.
+    """
+    param_values_list = []
+    for param in sweep_params:
+        param_val = base_simulation_params.get(param, 1.0)
+        param_values = expand_parameter(param_val)
+        param_values_list.append(param_values)
 
     param_sets = []
-    for gamma in gamma_values:
+    # Cartesian product of all sweep parameters
+    combinations = list(itertools.product(*param_values_list))
+    
+    for combo in combinations:
         params_copy = deepcopy(base_simulation_params)
-        params_copy['gamma_gaussian_n'] = gamma
+        for i, param in enumerate(sweep_params):
+            params_copy[param] = combo[i]
         param_sets.append(params_copy)
-    return param_sets, gamma_values
+        
+    return param_sets, combinations
 
 
-def run_experiments(n_runs, n_cores, base_model_params):
-    param_sets, param_values = generate_parameter_sets(base_model_params)
-
-    avg_cooperations = []
-
-    for i, sim_params in enumerate(param_sets):
-        print(f"Running simulations for gamma_gaussian_n = {param_values[i]}")
-
-        model = make_model_from_params(sim_params)
-        all_results = run_simulations_for_model(model, n_runs, n_cores)
-
-        cooperation_runs = [r[0][-1] for r in all_results]  # final cooperation for each run
-        avg_coop = np.mean(cooperation_runs)
-        avg_cooperations.append(avg_coop)
-
-    return param_values, avg_cooperations
-
-
-def plot_parameter_sweep(param_values, avg_cooperations, ebsn, param_name='gamma_gaussian_n'):
+def plot_parameter_sweep(combinations, avg_cooperations, ebsn, sweep_params):
     title = aux.ebsn_to_GB(ebsn)
     plt.figure(figsize=(8, 5))
-    plt.plot(param_values, avg_cooperations, marker='o')
-    plt.title(f'Average Cooperation Rate vs {param_name}\nEB Social Norm: {title}')
-    plt.xlabel(param_name)
+    
+    if len(sweep_params) == 1:
+        param_values = [combo[0] for combo in combinations]
+        plt.plot(param_values, avg_cooperations, marker='o')
+        plt.title(f'Average Cooperation Rate vs {sweep_params[0]}\nEB Social Norm: {title}')
+        plt.xlabel(sweep_params[0])
+    elif len(sweep_params) == 2:
+        param1_values = sorted(list(set(combo[0] for combo in combinations)))
+        param2_values = sorted(list(set(combo[1] for combo in combinations)))
+        
+        for p2_val in param2_values:
+            p1_subset = [combo[0] for combo, coop in zip(combinations, avg_cooperations) if combo[1] == p2_val]
+            coop_subset = [coop for combo, coop in zip(combinations, avg_cooperations) if combo[1] == p2_val]
+            plt.plot(p1_subset, coop_subset, marker='o', label=f'{sweep_params[1]}={p2_val}')
+            
+        plt.title(f'Average Cooperation Rate vs {sweep_params[0]} and {sweep_params[1]}\nEB Social Norm: {title}')
+        plt.xlabel(sweep_params[0])
+        plt.legend()
+    else:
+        # Just plot flat against index if more than 2 parameters
+        plt.plot(range(len(combinations)), avg_cooperations, marker='o')
+        plt.title(f'Average Cooperation Rate vs combinations\nEB Social Norm: {title}')
+        plt.xlabel('Combination Index')
+
     plt.ylabel('Average Cooperation Rate')
     plt.ylim(0, 1)
     plt.grid(True)
 
     os.makedirs("simulations", exist_ok=True)
     ebsn_str = aux.ebsn_to_GB(ebsn)
-    filename = f"simulations/sweep_{ebsn_str}_{param_name}.png"
+    filename = f"simulations/sweep_{ebsn_str}_{'_'.join(sweep_params)}.png"
     plt.savefig(filename)
     plt.close()
 
@@ -383,13 +404,14 @@ def run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=True):
         plot_time_series(all_results, model)
 
 
-def run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=True):
-    param_sets, param_values = generate_parameter_sets(base_sim_params)
+def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consensus_thresh'], plots=True):
+    param_sets, combinations = generate_parameter_sets(base_sim_params, sweep_params=sweep_params)
 
     avg_cooperations = []
 
     for i, sim_params in enumerate(param_sets):
-        print(f"Running simulations for gamma_gaussian_n = {param_values[i]}")
+        combo_str = ", ".join(f"{param}={val}" for param, val in zip(sweep_params, combinations[i]))
+        print(f"Running simulations for {combo_str}")
 
         model = make_model_from_params(sim_params)
         print(model)
@@ -400,7 +422,7 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=True):
         avg_cooperations.append(avg_coop)
 
     if plots:
-        plot_parameter_sweep(param_values, avg_cooperations, model.ebsn)
+        plot_parameter_sweep(combinations, avg_cooperations, model.ebsn, sweep_params=sweep_params)
 
 
 def load_norm_variants(csv_path, norm_name):
@@ -442,10 +464,17 @@ def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, plots=True
         sim_params["ebsn"] = ebsn
 
         print(f"\n--- Running {variant_id} ---")
-        if aux.is_single_value(sim_params["gamma_gaussian_n"]):
+        
+        sweep_params = []
+        if not aux.is_single_value(sim_params.get("consensus_thresh", 1.0)):
+            sweep_params.append("consensus_thresh")
+        if not aux.is_single_value(sim_params.get("observability", 1.0)):
+            sweep_params.append("observability")
+            
+        if len(sweep_params) == 0:
             run_single_value_experiment(n_runs, n_cores, sim_params, plots=plots)
         else:
-            run_sweep_experiment(n_runs, n_cores, sim_params, plots=plots)
+            run_sweep_experiment(n_runs, n_cores, sim_params, sweep_params=sweep_params, plots=plots)
 
 
 def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
@@ -511,11 +540,17 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
 
         print(f"\n--- Running ebsn variant {i}/{len(chosen_elites)-1}: {norm} ---")
 
-        # Check if it's a single run or a gamma sweep
-        if aux.is_single_value(sim_params.get("gamma_gaussian_n", 0)):
+        # Determine which parameters to sweep
+        sweep_params = []
+        if not aux.is_single_value(sim_params.get("consensus_thresh", 1.0)):
+            sweep_params.append("consensus_thresh")
+        if not aux.is_single_value(sim_params.get("observability", 1.0)):
+            sweep_params.append("observability")
+
+        if len(sweep_params) == 0:
             run_single_value_experiment(n_runs, n_cores, sim_params, plots=plots)
         else:
-            run_sweep_experiment(n_runs, n_cores, sim_params, plots=plots)
+            run_sweep_experiment(n_runs, n_cores, sim_params, sweep_params=sweep_params, plots=plots)
 
 
 if __name__ == '__main__':
@@ -562,11 +597,16 @@ if __name__ == '__main__':
             plots=with_logging
         )
     else:  # --- Manual mode (use ebsn + sn from YAML) ---
-        gamma_param = base_sim_params.get('gamma_gaussian_n', 0)
-        if aux.is_single_value(gamma_param):
+        sweep_params = []
+        if not aux.is_single_value(base_sim_params.get("consensus_thresh", 1.0)):
+            sweep_params.append("consensus_thresh")
+        if not aux.is_single_value(base_sim_params.get("observability", 1.0)):
+            sweep_params.append("observability")
+
+        if len(sweep_params) == 0:
             run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=with_logging)
         else:
-            run_sweep_experiment(n_runs, n_cores, base_sim_params, plots=with_logging)
+            run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=sweep_params, plots=with_logging)
 
     elapsed = time() - start_time
     print(f"Finished all experiments in {str(timedelta(seconds=int(elapsed)))} (hh:mm:ss)")

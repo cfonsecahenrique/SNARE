@@ -49,6 +49,7 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
         "eps": model.execution_error,
         "alpha": model._alpha,
         "q": model.observability,
+        "consensus_thresh": model.consensus_thresh,
         "b": model.benefit,
         "c": model.cost,
         "beta": model.beta,
@@ -153,15 +154,6 @@ def calculate_strategy_frequency(population: list[Agent]) -> dict:
     # Ensure all 4 strategies are present in the output
     strats = list(Strategy)
     return {strat: counts.get(strat, 0) / total for strat in strats}
-
-
-def calculate_average_consensus(image_matrix: np.ndarray) -> float:
-    z = image_matrix.shape[0]
-    # Count number of 1s in each column (opinions about each focal agent)
-    total_good = np.sum(image_matrix == 1, axis=0)
-    total_bad = z - total_good  # Since only 0 or 1, and it's a square matrix
-    consensus_per_agent = np.abs(total_good - total_bad) / z
-    return float(np.mean(consensus_per_agent))
 
 
 def calculate_average_gamma(population: list[Agent]) -> float:

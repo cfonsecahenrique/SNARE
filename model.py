@@ -8,7 +8,7 @@ class Model:
 
     def __init__(self, sn_list: list, ebsn_list: list, z: int,
                  mu: float, chi: float, eps: float, alpha: float, min_gamma: float, max_gamma: float,
-                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float):
+                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float, consensus_thresh: float):
         self._social_norm: list = sn_list
         self._eb_social_norm: list = ebsn_list
         self._mu: float = mu
@@ -26,6 +26,7 @@ class Model:
         self._gamma_normal_center: float = gamma_normal_center
         self._beta: float = beta
         self._q: float = q
+        self._consensus_thresh: float = consensus_thresh
         
         # Initialize image_matrix as requested
         # 1. Every agent is assigned a random reputation
@@ -64,6 +65,7 @@ class Model:
             "Execution error (ε)": f"{self._eps:.6f}",
             "Judge assignment error (α)": f"{self._alpha:.6f}",
             "Private-Public assessment (q)": f"{self._q:.6f}",
+            "Consensus threshold": f"{self._consensus_thresh:.6f}",
             "Selection strength (β)": f"{self._beta:.6f}",
             "Benefit (b)": self._b,
             "Cost (c)": self._c,
@@ -127,7 +129,7 @@ class Model:
                        self._social_norm_str.replace("[", "(").replace("]", ")").replace(" ", "") + "\t" + \
                        str(self._z) + "\t" + str(self._gens) + "\t" + str(self._mu) + "\t" + str(self._chi) \
                        + "\t" + str(self._eps) + "\t" + str(self._alpha) + "\t" + str(self._q) + "\t" + str(self._b) + "\t" \
-                       + str(self._c) + "\t" + str(self._beta)
+                       + str(self._c) + "\t" + str(self._beta) + "\t" + str(self._consensus_thresh)
         return builder
 
     @property
@@ -186,6 +188,10 @@ class Model:
     @property
     def observability(self):
         return self._q
+        
+    @property
+    def consensus_thresh(self):
+        return self._consensus_thresh
 
     @property
     def image_matrix(self):
@@ -294,9 +300,8 @@ class Model:
         num_observers = max(0, min(num_observers, self.population_size))
         if num_observers > 0:
             observer_ids = np.random.choice(self.population_size, num_observers, replace=False)
-            consensus_thresh: float = 1
-            is_a1_rep_consensual = self.is_consensual(agent1.get_agent_id(), consensus_thresh)
-            is_a2_rep_consensual = self.is_consensual(agent2.get_agent_id(), consensus_thresh)
+            is_a1_rep_consensual = self.is_consensual(agent1.get_agent_id(), self.consensus_thresh)
+            is_a2_rep_consensual = self.is_consensual(agent2.get_agent_id(), self.consensus_thresh)
             
             for observer_id in observer_ids:
                 observer_opinion_on_a1 = self.image_matrix[observer_id, agent1.get_agent_id()]

@@ -59,6 +59,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\outputs\consensus_sweep_results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\outputs\old_outputs\observability_results.csv">
           <value>
             <Attribute>
