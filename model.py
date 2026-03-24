@@ -8,7 +8,7 @@ class Model:
 
     def __init__(self, sn_list: list, ebsn_list: list, z: int,
                  mu: float, chi: float, eps: float, alpha: float, min_gamma: float, max_gamma: float,
-                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float, consensus_thresh: float):
+                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float, consensus_thresh: float, non_consensus_strategy: str = "emotion"):
         self._social_norm: list = sn_list
         self._eb_social_norm: list = ebsn_list
         self._mu: float = mu
@@ -27,6 +27,7 @@ class Model:
         self._beta: float = beta
         self._q: float = q
         self._consensus_thresh: float = consensus_thresh
+        self._non_consensus_strategy: str = non_consensus_strategy
         
         # Initialize image_matrix as requested
         # 1. Every agent is assigned a random reputation
@@ -66,6 +67,7 @@ class Model:
             "Judge assignment error (α)": f"{self._alpha:.6f}",
             "Private-Public assessment (q)": f"{self._q:.6f}",
             "Consensus threshold": f"{self._consensus_thresh:.6f}",
+            "Non-consensus strategy": self._non_consensus_strategy,
             "Selection strength (β)": f"{self._beta:.6f}",
             "Benefit (b)": self._b,
             "Cost (c)": self._c,
@@ -129,7 +131,7 @@ class Model:
                        self._social_norm_str.replace("[", "(").replace("]", ")").replace(" ", "") + "\t" + \
                        str(self._z) + "\t" + str(self._gens) + "\t" + str(self._mu) + "\t" + str(self._chi) \
                        + "\t" + str(self._eps) + "\t" + str(self._alpha) + "\t" + str(self._q) + "\t" + str(self._b) + "\t" \
-                       + str(self._c) + "\t" + str(self._beta) + "\t" + str(self._consensus_thresh)
+                       + str(self._c) + "\t" + str(self._beta) + "\t" + str(self._consensus_thresh) + "\t" + str(self._non_consensus_strategy)
         return builder
 
     @property
@@ -192,6 +194,10 @@ class Model:
     @property
     def consensus_thresh(self):
         return self._consensus_thresh
+
+    @property
+    def non_consensus_strategy(self):
+        return self._non_consensus_strategy
 
     @property
     def image_matrix(self):
@@ -314,7 +320,11 @@ class Model:
                         if is_a2_rep_consensual:
                             new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value]
                         else:
-                            new_rep_1 = agent1.emotion_profile.value
+                            # Non-consensual fallback
+                            if self.non_consensus_strategy == "action":
+                                new_rep_1 = a1_action  # Image Scoring: cooperate->GOOD, defect->BAD
+                            else:  # "emotion" (default)
+                                new_rep_1 = agent1.emotion_profile.value
                     else:
                         # Fallback to base social norm if opponent defected
                         new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
@@ -330,7 +340,11 @@ class Model:
                         if is_a1_rep_consensual:
                             new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value]
                         else:
-                            new_rep_2 = agent2.emotion_profile.value
+                            # Non-consensual fallback
+                            if self.non_consensus_strategy == "action":
+                                new_rep_2 = a2_action  # Image Scoring: cooperate->GOOD, defect->BAD
+                            else:  # "emotion" (default)
+                                new_rep_2 = agent2.emotion_profile.value
                     else:
                         # Fallback to base social norm if opponent defected
                         new_rep_2 = self.social_norm[a2_action][observer_opinion_on_a1]

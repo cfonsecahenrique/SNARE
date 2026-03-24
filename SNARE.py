@@ -25,7 +25,7 @@ def run_simulations_for_model(model, n_runs, n_cores):
     return all_results
 
 
-def simulation(model: Model):
+def simulation(model: Model, output_file: str = "results.csv"):
     z = model.population_size
     mu = model.mutation_rate / model.population_size
     gens = model.generations
@@ -144,8 +144,14 @@ def simulation(model: Model):
         avg_gammas[current_gen] = aux.calculate_average_gamma(agents)
         avg_consensus[current_gen] = aux.calculate_average_consensus(model.image_matrix)
 
-    aux.export_results(100 * cooperation_per_gen[gens-1], model, agents, filename="outputs/consensus_sweep_results.csv")
+    aux.export_results(100 * cooperation_per_gen[gens-1], model, agents, filename=f"outputs/{output_file}")
     return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas, avg_consensus
+
+
+def simulation_wrapper(args):
+    """Wrapper to unpack arguments for multiprocessing."""
+    model, output_file = args
+    return simulation(model, output_file)
 
 
 def read_yaml(filename):
@@ -184,10 +190,11 @@ def make_model_from_params(simulation_parameters):
     gamma_delta = float(simulation_parameters["gamma_delta"])
     gamma_gaussian_center = float(simulation_parameters["gamma_gaussian_n"])
     convergence = float(simulation_parameters.get("convergence period", 0))
+    non_consensus_strategy = str(simulation_parameters.get("non_consensus_strategy", "emotion"))
 
     model_parameters = Model(
         sn, eb_sn, z, mu, chi, eps, alpha,
-        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence, q, consensus_thresh
+        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence, q, consensus_thresh, non_consensus_strategy
     )
     return model_parameters
 
@@ -396,15 +403,21 @@ def plot_parameter_sweep(combinations, avg_cooperations, ebsn, sweep_params):
     plt.close()
 
 
-def run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=True):
+def run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file="results.csv", plots=True):
     model = make_model_from_params(base_sim_params)
     print(model)
-    all_results = run_simulations_for_model(model, n_runs, n_cores)
+    
+    all_models_args = [(deepcopy(model), output_file) for _ in range(n_runs)]
+    with multiprocessing.Pool(processes=n_cores) as pool:
+        all_results = list(tqdm(pool.imap_unordered(simulation_wrapper, all_models_args), total=n_runs))
+    pool.close()
+    pool.join()
+    
     if plots:
         plot_time_series(all_results, model)
 
 
-def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consensus_thresh'], plots=True):
+def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consensus_thresh'], output_file="results.csv", plots=True):
     param_sets, combinations = generate_parameter_sets(base_sim_params, sweep_params=sweep_params)
 
     avg_cooperations = []
@@ -415,7 +428,12 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consen
 
         model = make_model_from_params(sim_params)
         print(model)
-        all_results = run_simulations_for_model(model, n_runs, n_cores)
+        
+        all_models_args = [(deepcopy(model), output_file) for _ in range(n_runs)]
+        with multiprocessing.Pool(processes=n_cores) as pool:
+            all_results = list(tqdm(pool.imap_unordered(simulation_wrapper, all_models_args), total=n_runs))
+        pool.close()
+        pool.join()
 
         cooperation_runs = [r[0][-1] for r in all_results]  # final cooperation for each run
         avg_coop = np.mean(cooperation_runs)
@@ -444,7 +462,7 @@ def parse_vector_string(vec_str):
     return [int(b) for b in vec_str]
 
 
-def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, plots=True):
+def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, output_file="results.csv", plots=True):
     # 1. Load base params from yaml
     params = read_yaml(yaml_file)
     base_sim_params = params["simulation"]
@@ -472,12 +490,12 @@ def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, plots=True
             sweep_params.append("observability")
             
         if len(sweep_params) == 0:
-            run_single_value_experiment(n_runs, n_cores, sim_params, plots=plots)
+            run_single_value_experiment(n_runs, n_cores, sim_params, output_file=output_file, plots=plots)
         else:
-            run_sweep_experiment(n_runs, n_cores, sim_params, sweep_params=sweep_params, plots=plots)
+            run_sweep_experiment(n_runs, n_cores, sim_params, sweep_params=sweep_params, output_file=output_file, plots=plots)
 
 
-def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
+def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, output_file="results.csv", plots=True):
     """
     Runs simulations for all 256 possible 8-bit ebsn variants.
     """
@@ -514,7 +532,8 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
         [1, 0, 0, 0, 0, 0, 0, 1],
         [0, 1, 0, 1, 0, 1, 0, 1],
         [1, 1, 0, 0, 0, 0, 0, 1],
-        [0, 1, 0, 0, 1, 0, 1, 1]
+        [0, 1, 0, 0, 1, 0, 1, 1],
+        [1, 1, 0, 0, 1, 1, 1, 1]
     ]
     is_elite_norms = [
         [0, 0, 0, 0, 0, 0, 1, 1],
@@ -548,9 +567,9 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, plots=True):
             sweep_params.append("observability")
 
         if len(sweep_params) == 0:
-            run_single_value_experiment(n_runs, n_cores, sim_params, plots=plots)
+            run_single_value_experiment(n_runs, n_cores, sim_params, output_file=output_file, plots=plots)
         else:
-            run_sweep_experiment(n_runs, n_cores, sim_params, sweep_params=sweep_params, plots=plots)
+            run_sweep_experiment(n_runs, n_cores, sim_params, sweep_params=sweep_params, output_file=output_file, plots=plots)
 
 
 if __name__ == '__main__':
@@ -568,6 +587,7 @@ if __name__ == '__main__':
     n_runs = data["running"]["runs"]
     n_cores = multiprocessing.cpu_count() - 1 if data["running"]["cores"] == "all" else data["running"]["cores"]
     with_logging = data["running"]["plotting"]
+    output_file = data["running"].get("output_file", "results.csv")
 
     # Base sim params (used as template)
     base_sim_params = data["simulation"]
@@ -584,6 +604,7 @@ if __name__ == '__main__':
             base_sim_params=base_sim_params,
             n_runs=n_runs,
             n_cores=n_cores,
+            output_file=output_file,
             plots=with_logging
         )
     elif norm_name:  # --- Meta-norm mode ---
@@ -594,6 +615,7 @@ if __name__ == '__main__':
             csv_file=NORM_CSV_PATH,
             n_runs=n_runs,
             n_cores=n_cores,
+            output_file=output_file,
             plots=with_logging
         )
     else:  # --- Manual mode (use ebsn + sn from YAML) ---
@@ -604,9 +626,9 @@ if __name__ == '__main__':
             sweep_params.append("observability")
 
         if len(sweep_params) == 0:
-            run_single_value_experiment(n_runs, n_cores, base_sim_params, plots=with_logging)
+            run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file=output_file, plots=with_logging)
         else:
-            run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=sweep_params, plots=with_logging)
+            run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=sweep_params, output_file=output_file, plots=with_logging)
 
     elapsed = time() - start_time
     print(f"Finished all experiments in {str(timedelta(seconds=int(elapsed)))} (hh:mm:ss)")
