@@ -1,5 +1,5 @@
 running:
-  runs: 25
+  runs: 10
   cores: all
   plotting: true
   output_file: "consensus_sweep_action_results.csv"
@@ -9,18 +9,18 @@ simulation:
   sn: [1, 0, 0, 1]
   z: 40
   mu: 1 # mu/Z
-  chi: 0.01
-  eps: 0.01
+  chi: 0.0
+  eps: 0.0
   alpha: 0
   benefit: 5
   cost: 1
   beta: 1
-  observability: [0, 0.25, 0.5, 0.75, 1.0]
-  consensus_thresh: [0, 0.25, 0.5, 0.75, 1.0]
+  observability: 0.75
+  consensus_thresh: 0.75
   non_consensus_strategy: action
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
-  gamma_gaussian_n: 1
-  generations: 2000
+  gamma_gaussian_n: 0.5
+  generations: 600
   convergence period: 0.2
