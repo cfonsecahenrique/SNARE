@@ -246,6 +246,10 @@ class Model:
         if self.observability == 1:
             z = self.population_size
             
+            # Consensus checks (a1 consensus for a2's rep update, a2 consensus for a1's rep update)
+            is_a2_rep_consensual = self.is_consensual(agent2.get_agent_id(), self.consensus_thresh)
+            is_a1_rep_consensual = self.is_consensual(agent1.get_agent_id(), self.consensus_thresh)
+            
             # --- Update Agent 1 Reputation ---
             opinions_on_a2 = self.image_matrix[:, agent2.get_agent_id()]
             
@@ -255,12 +259,21 @@ class Model:
                 ri += z
                 use_ebsn = gamma_rands < agent1.gamma()
                 
-                # Lookup tables
-                sn_vals = np.array(self.social_norm[a1_action])[opinions_on_a2]
-                ebsn_vals = np.array([self.ebsn[a1_action][0][agent1.emotion_profile.value], 
-                                      self.ebsn[a1_action][1][agent1.emotion_profile.value]])[opinions_on_a2]
-                
-                new_rep_1 = np.where(use_ebsn, ebsn_vals, sn_vals)
+                if is_a2_rep_consensual:
+                    # Lookup tables
+                    sn_vals = np.array(self.social_norm[a1_action])[opinions_on_a2]
+                    ebsn_vals = np.array([self.ebsn[a1_action][0][agent1.emotion_profile.value], 
+                                          self.ebsn[a1_action][1][agent1.emotion_profile.value]])[opinions_on_a2]
+                    
+                    new_rep_1 = np.where(use_ebsn, ebsn_vals, sn_vals)
+                else:
+                    # Non-consensual fallback
+                    sn_vals = np.array(self.social_norm[a1_action])[opinions_on_a2]
+                    if self.non_consensus_strategy == "action":
+                        fallback_val = a1_action  # Image Scoring: cooperate->GOOD, defect->BAD
+                    else:  # "emotion" (default)
+                        fallback_val = agent1.emotion_profile.value
+                    new_rep_1 = np.where(use_ebsn, fallback_val, sn_vals)
             else:
                 new_rep_1 = np.array(self.social_norm[a1_action])[opinions_on_a2]
             
@@ -281,12 +294,21 @@ class Model:
                 ri += z
                 use_ebsn = gamma_rands < agent2.gamma()
                 
-                # Lookup tables
-                sn_vals = np.array(self.social_norm[a2_action])[opinions_on_a1]
-                ebsn_vals = np.array([self.ebsn[a2_action][0][agent2.emotion_profile.value], 
-                                      self.ebsn[a2_action][1][agent2.emotion_profile.value]])[opinions_on_a1]
-                
-                new_rep_2 = np.where(use_ebsn, ebsn_vals, sn_vals)
+                if is_a1_rep_consensual:
+                    # Lookup tables
+                    sn_vals = np.array(self.social_norm[a2_action])[opinions_on_a1]
+                    ebsn_vals = np.array([self.ebsn[a2_action][0][agent2.emotion_profile.value], 
+                                          self.ebsn[a2_action][1][agent2.emotion_profile.value]])[opinions_on_a1]
+                    
+                    new_rep_2 = np.where(use_ebsn, ebsn_vals, sn_vals)
+                else:
+                    # Non-consensual fallback
+                    sn_vals = np.array(self.social_norm[a2_action])[opinions_on_a1]
+                    if self.non_consensus_strategy == "action":
+                        fallback_val = a2_action  # Image Scoring: cooperate->GOOD, defect->BAD
+                    else:  # "emotion" (default)
+                        fallback_val = agent2.emotion_profile.value
+                    new_rep_2 = np.where(use_ebsn, fallback_val, sn_vals)
             else:
                 new_rep_2 = np.array(self.social_norm[a2_action])[opinions_on_a1]
             

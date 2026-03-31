@@ -1,24 +1,24 @@
 running:
-  runs: 40
+  runs: 50
   cores: all
   plotting: true
 simulation:
   norm:
   ebsn: all
   sn: [1,0,0,1]
-  z: 40
+  z: 50
   mu: 1 # mu/Z
-  chi: 0.05
-  eps: 0.05
-  alpha: 0
+  chi: 0.01
+  eps: 0.01
+  alpha: 0.01
   benefit: 5
   cost: 1
   beta: 1
-  observability: [0.5, 0.75, 1.0]
-  consensus_thresh: [0.6, 0.8, 1.0]
+  observability: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  consensus_thresh: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1.0
-  generations: 1000
+  generations: 2000
   convergence period: 0.2

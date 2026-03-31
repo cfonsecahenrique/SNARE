@@ -365,7 +365,7 @@ def generate_parameter_sets(base_simulation_params, sweep_params=['consensus_thr
     return param_sets, combinations
 
 
-def plot_parameter_sweep(combinations, avg_cooperations, ebsn, sweep_params):
+def plot_parameter_sweep(combinations, avg_cooperations, ebsn, sweep_params, non_consensus_strategy):
     title = aux.ebsn_to_GB(ebsn)
     plt.figure(figsize=(8, 5))
     
@@ -398,7 +398,8 @@ def plot_parameter_sweep(combinations, avg_cooperations, ebsn, sweep_params):
 
     os.makedirs("simulations", exist_ok=True)
     ebsn_str = aux.ebsn_to_GB(ebsn)
-    filename = f"simulations/sweep_{ebsn_str}_{'_'.join(sweep_params)}.png"
+    timestamp = int(time())
+    filename = f"simulations/sweep_{ebsn_str}_{'_'.join(sweep_params)}_{non_consensus_strategy}_{timestamp}.png"
     plt.savefig(filename)
     plt.close()
 
@@ -440,7 +441,7 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consen
         avg_cooperations.append(avg_coop)
 
     if plots:
-        plot_parameter_sweep(combinations, avg_cooperations, model.ebsn, sweep_params=sweep_params)
+        plot_parameter_sweep(combinations, avg_cooperations, model.ebsn, sweep_params=sweep_params, non_consensus_strategy=model.non_consensus_strategy)
 
 
 def load_norm_variants(csv_path, norm_name):

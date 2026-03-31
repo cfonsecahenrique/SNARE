@@ -1,13 +1,13 @@
 running:
-  runs: 15
+  runs: 25
   cores: all
   plotting: true
-  output_file: "consensus_sweep_action_results.csv"
+  output_file: "consensus_sweep_results.csv"
 simulation:
   norm:
-  ebsn: [1, 1, 0, 0, 0, 0, 1, 1]  # GGBBBBGG
+  ebsn: [1, 1, 0, 0, 0, 0, 1, 1]  # GGBBBBGG=SJ
   sn: [1, 0, 0, 1]
-  z: 40
+  z: 50
   mu: 1 # mu/Z
   chi: 0.01
   eps: 0.01
@@ -15,8 +15,8 @@ simulation:
   benefit: 5
   cost: 1
   beta: 1
-  observability: 0.75
-  consensus_thresh: 1.0
+  observability: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  consensus_thresh: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
   non_consensus_strategy: emotion
   gamma_min: 0
   gamma_max: 1
