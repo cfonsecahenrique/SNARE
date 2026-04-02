@@ -1,4 +1,4 @@
-base_social_norm,eb_social_norm,Z,gens,mu,chi,eps,alpha,q,consensus_thresh,b,c,beta,generations,convergence_period,gamma_min,gamma_max,gamma_delta,gamma_center,average_cooperation,average_consensus,G,ALWAYS_COOPERATE,DISCRIMINATE,PARADOXICALLY_DISC,ALWAYS_DEFECT,EmotionProfile.COMPETITIVE,EmotionProfile.COOPERATIVE
+base_social_norm,eb_social_norm,Z,gens,mu,chi,eps,alpha,q,consensus_thresh,fallback,b,c,beta,generations,convergence_period,gamma_min,gamma_max,gamma_delta,gamma_center,average_cooperation,average_consensus,G,ALWAYS_COOPERATE,DISCRIMINATE,PARADOXICALLY_DISC,ALWAYS_DEFECT,EmotionProfile.COMPETITIVE,EmotionProfile.COOPERATIVE
 "[[1, 0], [0, 1]]","[[(1, 1), (0, 0)], [(0, 0), (1, 1)]]",50,2000,1.0,0.01,0.01,0.01,0.0,0.0,emotion,5,1,1.0,2000,400,0.0,1.0,0.0,1.0,5.093,1.0,0.46,0.0,0.0,0.02,0.98,0.02,0.98
 "[[1, 0], [0, 1]]","[[(1, 1), (0, 0)], [(0, 0), (1, 1)]]",50,2000,1.0,0.01,0.01,0.01,0.0,0.0,emotion,5,1,1.0,2000,400,0.0,1.0,0.0,1.0,4.739,1.0,0.46,0.0,0.06,0.02,0.92,0.08,0.92
 "[[1, 0], [0, 1]]","[[(1, 1), (0, 0)], [(0, 0), (1, 1)]]",50,2000,1.0,0.01,0.01,0.01,0.0,0.0,emotion,5,1,1.0,2000,400,0.0,1.0,0.0,1.0,4.887,1.0,0.46,0.12,0.06,0.02,0.8,0.8,0.2
