@@ -190,11 +190,12 @@ def make_model_from_params(simulation_parameters):
     gamma_delta = float(simulation_parameters["gamma_delta"])
     gamma_gaussian_center = float(simulation_parameters["gamma_gaussian_n"])
     convergence = float(simulation_parameters.get("convergence period", 0))
+    xi = float(simulation_parameters.get("xi", 0.0))
     non_consensus_strategy = str(simulation_parameters.get("non_consensus_strategy", "emotion"))
 
     model_parameters = Model(
         sn, eb_sn, z, mu, chi, eps, alpha,
-        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence, q, consensus_thresh, non_consensus_strategy
+        min_gamma, max_gamma, gamma_delta, gamma_gaussian_center, generations, benefit, cost, beta, convergence, q, consensus_thresh, xi, non_consensus_strategy
     )
     return model_parameters
 

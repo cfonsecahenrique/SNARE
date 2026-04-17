@@ -8,7 +8,7 @@ class Model:
 
     def __init__(self, sn_list: list, ebsn_list: list, z: int,
                  mu: float, chi: float, eps: float, alpha: float, min_gamma: float, max_gamma: float,
-                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float, consensus_thresh: float, non_consensus_strategy: str = "emotion"):
+                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float, consensus_thresh: float, xi: float = 0.0, non_consensus_strategy: str = "emotion"):
         self._social_norm: list = sn_list
         self._eb_social_norm: list = ebsn_list
         self._mu: float = mu
@@ -27,6 +27,7 @@ class Model:
         self._beta: float = beta
         self._q: float = q
         self._consensus_thresh: float = consensus_thresh
+        self._xi: float = xi
         self._non_consensus_strategy: str = non_consensus_strategy
         
         # Initialize image_matrix as requested
@@ -65,6 +66,7 @@ class Model:
             "Reputation error (χ)": f"{self._chi:.6f}",
             "Execution error (ε)": f"{self._eps:.6f}",
             "Judge assignment error (α)": f"{self._alpha:.6f}",
+            "Emotion misread error (ξ)": f"{self._xi:.6f}",
             "Private-Public assessment (q)": f"{self._q:.6f}",
             "Consensus threshold": f"{self._consensus_thresh:.6f}",
             "Non-consensus strategy": self._non_consensus_strategy,
@@ -131,7 +133,7 @@ class Model:
                        self._social_norm_str.replace("[", "(").replace("]", ")").replace(" ", "") + "\t" + \
                        str(self._z) + "\t" + str(self._gens) + "\t" + str(self._mu) + "\t" + str(self._chi) \
                        + "\t" + str(self._eps) + "\t" + str(self._alpha) + "\t" + str(self._q) + "\t" + str(self._b) + "\t" \
-                       + str(self._c) + "\t" + str(self._beta) + "\t" + str(self._consensus_thresh) + "\t" + str(self._non_consensus_strategy)
+                       + str(self._c) + "\t" + str(self._beta) + "\t" + str(self._consensus_thresh) + "\t" + str(self._xi) + "\t" + str(self._non_consensus_strategy)
         return builder
 
     @property
@@ -194,6 +196,10 @@ class Model:
     @property
     def consensus_thresh(self):
         return self._consensus_thresh
+
+    @property
+    def xi(self):
+        return self._xi
 
     @property
     def non_consensus_strategy(self):
@@ -270,9 +276,11 @@ class Model:
                     # Non-consensual fallback
                     sn_vals = np.array(self.social_norm[a1_action])[opinions_on_a2]
                     if self.non_consensus_strategy == "action":
-                        fallback_val = a1_action  # Image Scoring: cooperate->GOOD, defect->BAD
+                        fallback_val = a1_action
                     else:  # "emotion" (default)
-                        fallback_val = agent1.emotion_profile.value
+                        xi_rands = random_vals[ri:ri+z]
+                        ri += z
+                        fallback_val = np.where(xi_rands < self.xi, 1 - agent1.emotion_profile.value, agent1.emotion_profile.value)
                     new_rep_1 = np.where(use_ebsn, fallback_val, sn_vals)
             else:
                 new_rep_1 = np.array(self.social_norm[a1_action])[opinions_on_a2]
@@ -305,9 +313,11 @@ class Model:
                     # Non-consensual fallback
                     sn_vals = np.array(self.social_norm[a2_action])[opinions_on_a1]
                     if self.non_consensus_strategy == "action":
-                        fallback_val = a2_action  # Image Scoring: cooperate->GOOD, defect->BAD
+                        fallback_val = a2_action
                     else:  # "emotion" (default)
-                        fallback_val = agent2.emotion_profile.value
+                        xi_rands = random_vals[ri:ri+z]
+                        ri += z
+                        fallback_val = np.where(xi_rands < self.xi, 1 - agent2.emotion_profile.value, agent2.emotion_profile.value)
                     new_rep_2 = np.where(use_ebsn, fallback_val, sn_vals)
             else:
                 new_rep_2 = np.array(self.social_norm[a2_action])[opinions_on_a1]
@@ -336,7 +346,9 @@ class Model:
                 observer_opinion_on_a2 = self.image_matrix[observer_id, agent2.get_agent_id()]
 
                 # --- Update Agent 1 Reputation ---
-                if random_vals[ri] < agent1.gamma():
+                uses_ebsn_1 = random_vals[ri] < agent1.gamma()
+                ri += 1
+                if uses_ebsn_1:
                     # Use EB Social Norm if opponent cooperated
                     if a2_action == COOPERATE:
                         if is_a2_rep_consensual:
@@ -344,19 +356,24 @@ class Model:
                         else:
                             # Non-consensual fallback
                             if self.non_consensus_strategy == "action":
-                                new_rep_1 = a1_action  # Image Scoring: cooperate->GOOD, defect->BAD
+                                new_rep_1 = a1_action
                             else:  # "emotion" (default)
-                                new_rep_1 = agent1.emotion_profile.value
+                                ep_val = agent1.emotion_profile.value
+                                if random_vals[ri] < self.xi:
+                                    ep_val = 1 - ep_val
+                                ri += 1
+                                new_rep_1 = ep_val
                     else:
                         # Fallback to base social norm if opponent defected
                         new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
                 else:
                     # Use Base Social Norm
                     new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
-                ri += 1
 
                 # --- Update Agent 2 Reputation ---
-                if random_vals[ri] < agent2.gamma():
+                uses_ebsn_2 = random_vals[ri] < agent2.gamma()
+                ri += 1
+                if uses_ebsn_2:
                     # Use EB Social Norm if opponent cooperated
                     if a1_action == COOPERATE:
                         if is_a1_rep_consensual:
@@ -364,16 +381,19 @@ class Model:
                         else:
                             # Non-consensual fallback
                             if self.non_consensus_strategy == "action":
-                                new_rep_2 = a2_action  # Image Scoring: cooperate->GOOD, defect->BAD
+                                new_rep_2 = a2_action
                             else:  # "emotion" (default)
-                                new_rep_2 = agent2.emotion_profile.value
+                                ep_val = agent2.emotion_profile.value
+                                if random_vals[ri] < self.xi:
+                                    ep_val = 1 - ep_val
+                                ri += 1
+                                new_rep_2 = ep_val
                     else:
                         # Fallback to base social norm if opponent defected
                         new_rep_2 = self.social_norm[a2_action][observer_opinion_on_a1]
                 else:
                     # Use Base Social Norm
                     new_rep_2 = self.social_norm[a2_action][observer_opinion_on_a1]
-                ri += 1
 
                 # Apply assignment errors for this specific observer's perception
                 if random_vals[ri] < self.reputation_assignment_error:

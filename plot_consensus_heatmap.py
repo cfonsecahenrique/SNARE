@@ -6,7 +6,7 @@ csv_path = "outputs/consensus_sweep_results.csv"
 df = pd.read_csv(csv_path)
 
 # Filter: Z >= 40, alpha == 0.01
-df = df[(df["Z"] >= 40) & (df["alpha"] == 0.01)]
+df = df[(df["Z"] == 50) & (df["alpha"] == 0)]
 df = df[df["eps"] == 0.01]
 df = df[df["gamma_center"] == 1]
 
@@ -19,6 +19,8 @@ heatmap_df = (
     .mean()
     .reset_index()
 )
+
+heatmap_df.average_cooperation = round(heatmap_df.average_cooperation, 1)
 
 chart = (
     alt.Chart(heatmap_df)
@@ -43,7 +45,7 @@ chart = (
 
 # Add text labels inside each cell
 text = chart.mark_text(baseline="middle", fontSize=13).encode(
-    text=alt.Text("average_cooperation:Q", format=".2f"),
+    text=alt.Text("average_cooperation:Q", format=".1f"),
     color=alt.condition(
         alt.datum.average_cooperation > heatmap_df["average_cooperation"].median(),
         alt.value("black"),

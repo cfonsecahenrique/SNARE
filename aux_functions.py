@@ -50,6 +50,7 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
         "alpha": model._alpha,
         "q": model.observability,
         "consensus_thresh": model.consensus_thresh,
+        "xi": model.xi,
         "non_consensus_strategy": model.non_consensus_strategy,
         "b": model.benefit,
         "c": model.cost,

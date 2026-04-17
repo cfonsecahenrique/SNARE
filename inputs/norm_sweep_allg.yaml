@@ -11,6 +11,7 @@ simulation:
   chi: 0.01
   eps: 0.01
   alpha: 0.01
+  xi: 0.01
   benefit: 5
   cost: 1
   beta: 1
