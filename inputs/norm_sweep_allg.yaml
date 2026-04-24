@@ -10,7 +10,7 @@ simulation:
   mu: 1 # mu/Z
   chi: 0.01
   eps: 0.01
-  alpha: 0.01
+  alpha: 0
   xi: 0.01
   benefit: 5
   cost: 1

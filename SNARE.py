@@ -46,6 +46,7 @@ def simulation(model: Model, output_file: str = "results.csv"):
     bad, good = np.zeros(gens), np.zeros(gens)
     avg_gammas = np.zeros(gens)
     avg_consensus = np.zeros(gens)
+    fallback_ratio_per_gen = np.zeros(gens)
 
     # Preallocate RNG for efficiency.
     # Worst-case random consumption per prisoners_dilemma call (partial-obs path):
@@ -64,6 +65,8 @@ def simulation(model: Model, output_file: str = "results.csv"):
         random.shuffle(aux_population)
         random_values = rng.random(size=max_randoms_per_gen)
         ri = 0
+        gen_fallback = 0
+        gen_norm = 0
         a1: Agent
         for a1 in aux_population:
             if random_values[ri] < mu:
@@ -96,7 +99,9 @@ def simulation(model: Model, output_file: str = "results.csv"):
                         random_values = np.concatenate((random_values[ri:], extra))
                         ri = 0
 
-                    res_z, n_z, ri = model.prisoners_dilemma(a1, az, random_values, ri)
+                    res_z, n_z, ri, fb_z, nm_z = model.prisoners_dilemma(a1, az, random_values, ri)
+                    gen_fallback += fb_z
+                    gen_norm += nm_z
 
                     if past_convergence:
                         cooperative_acts += n_z
@@ -119,7 +124,9 @@ def simulation(model: Model, output_file: str = "results.csv"):
                         random_values = np.concatenate((random_values[ri:], extra))
                         ri = 0
 
-                    res_x, n_x, ri = model.prisoners_dilemma(a2, ax, random_values, ri)
+                    res_x, n_x, ri, fb_x, nm_x = model.prisoners_dilemma(a2, ax, random_values, ri)
+                    gen_fallback += fb_x
+                    gen_norm += nm_x
 
                     if past_convergence:
                         cooperative_acts += n_x
@@ -161,8 +168,11 @@ def simulation(model: Model, output_file: str = "results.csv"):
         avg_gammas[current_gen] = aux.calculate_average_gamma(agents)
         avg_consensus[current_gen] = aux.calculate_average_consensus(model.image_matrix)
 
+        total_judgements = gen_fallback + gen_norm
+        fallback_ratio_per_gen[current_gen] = gen_fallback / total_judgements if total_judgements > 0 else 0
+
     aux.export_results(100 * cooperation_per_gen[gens-1], model, agents, filename=f"outputs/{output_file}")
-    return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas, avg_consensus
+    return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas, avg_consensus, fallback_ratio_per_gen
 
 
 def simulation_wrapper(args):
@@ -224,6 +234,7 @@ def plot_time_series(all_results, model):
     rep_results = [r[3] for r in all_results]
     gammas = [r[4] for r in all_results]
     consensus = [r[5] for r in all_results]
+    fallback_ratios = [r[6] for r in all_results]
 
     gens = cooperation_results[0].shape[0]
     x = np.arange(gens)
@@ -252,8 +263,12 @@ def plot_time_series(all_results, model):
     consensus_mean = consensus_matrix.mean(axis=0)
     consensus_std = consensus_matrix.std(axis=0)
 
+    fb_matrix = np.stack(fallback_ratios)
+    fb_mean = fb_matrix.mean(axis=0)
+    fb_std = fb_matrix.std(axis=0)
+
     # Determine number of subplots based on gamma_delta and observability
-    num_plots = 4
+    num_plots = 5
     if model.gamma_delta != 0:
         num_plots += 1
     if model.observability != 1:
@@ -310,7 +325,18 @@ def plot_time_series(all_results, model):
 
     current_plot_idx = 4
 
-    # Plot 5 (Optional): Gamma
+    # Plot 5: Fallback/Norm Ratio
+    axes[current_plot_idx].plot(x, fb_mean, color='tab:orange', label='Fallback Ratio')
+    axes[current_plot_idx].fill_between(x, fb_mean - fb_std, fb_mean + fb_std,
+                         color='tab:orange', alpha=0.3, label='±1 Std Dev')
+    axes[current_plot_idx].set_title("Fallback/Norm Ratio per Generation")
+    axes[current_plot_idx].set_ylabel("Fallback / Total Judgements")
+    axes[current_plot_idx].set_ylim(0, 1)
+    axes[current_plot_idx].legend()
+    axes[current_plot_idx].grid(True)
+    current_plot_idx += 1
+
+    # Plot (Optional): Gamma
     if model.gamma_delta != 0:
         axes[current_plot_idx].plot(x, gammas_mean, color='blue', label='Average Gamma')
         axes[current_plot_idx].fill_between(x, gammas_mean - gammas_std, gammas_mean + gammas_std,

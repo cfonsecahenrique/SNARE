@@ -14,9 +14,9 @@ Sweeps covered
 --------------
   sweep_benefit  : b   ∈ {1, 3, 5, 7, 10}  (fixed: chi, eps, alpha, beta, Z, mu, xi)
   sweep_beta     : beta∈ {0.1, 0.5, 1, 5, 10}
-  sweep_chi      : chi ∈ {0, 0.01, 0.05, 0.1}
-  sweep_eps      : eps ∈ {0, 0.01, 0.05, 0.1}
-  sweep_z        : Z   ∈ {50, 100}          (only values present in the CSV)
+  sweep_chi      : chi ∈ {0, 0.001, 0.01, 0.05, 0.1}
+  sweep_eps      : eps ∈ {0, 0.001, 0.01, 0.05, 0.1}
+  sweep_z        : Z   ∈ {50, 100, 200}          (only values present in the CSV)
 """
 
 import os
@@ -70,8 +70,8 @@ SWEEPS = [
     dict(
         csv="outputs/sweep_chi_results.csv",
         x_col="chi",
-        x_label=r"$\chi$ (Cheating Rate)",
-        title=r"Average Cooperation vs. Cheating Rate ($\chi$)",
+        x_label=r"$\chi$ (Reputation Assessment Error)",
+        title=r"Average Cooperation vs. Reputation Assessment Error ($\chi$)",
         group_col=None,
         group_label=None,
         x_dtype="float",
@@ -110,6 +110,16 @@ def plot_sweep(cfg: dict) -> None:
         df[cfg["x_col"]] = df[cfg["x_col"]].astype(float)
 
     df["average_cooperation"] = df["average_cooperation"].astype(float)
+
+    # ── Filter for requested xi and alpha ────────────────────────────────────
+    if "xi" in df.columns and cfg["x_col"] != "xi":
+        df = df[df["xi"] == 0.01]
+    if "alpha" in df.columns and cfg["x_col"] != "alpha":
+        df = df[df["alpha"] == 0]
+    
+    if df.empty:
+        print(f"Warning: No data found for xi=0.01 and alpha=0 in {cfg['csv']}")
+        return
 
     # ── Aggregate ────────────────────────────────────────────────────────────
     if cfg["group_col"] is not None:
@@ -170,8 +180,8 @@ def plot_sweep(cfg: dict) -> None:
 
     # Annotate fixed params from YAML in a small text box
     fixed_info = (
-        r"Fixed: $q=0.8$, $\kappa_c=0.8$, $\xi=0.05$, "
-        r"$Z=50$, $\mu/Z=1$"
+        r"Fixed: $q=0.8$, $\kappa_c=0.8$, $\xi=0.01$, "
+        r"$\alpha=0$, $\mu/Z=1$"
     )
     ax.text(
         0.02, 0.02, fixed_info,

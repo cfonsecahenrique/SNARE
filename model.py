@@ -222,6 +222,8 @@ class Model:
                        [(S, T), (R, R)]], dtype=np.int32)
 
         cooperative_acts = 0
+        fallback_count = 0
+        norm_count = 0
 
         # Reputations are now derived from the image matrix.
         # a1 perceives a2's reputation as:
@@ -268,10 +270,11 @@ class Model:
                 if is_a2_rep_consensual:
                     # Lookup tables
                     sn_vals = np.array(self.social_norm[a1_action])[opinions_on_a2]
-                    ebsn_vals = np.array([self.ebsn[a1_action][0][agent1.emotion_profile.value], 
+                    ebsn_vals = np.array([self.ebsn[a1_action][0][agent1.emotion_profile.value],
                                           self.ebsn[a1_action][1][agent1.emotion_profile.value]])[opinions_on_a2]
-                    
+
                     new_rep_1 = np.where(use_ebsn, ebsn_vals, sn_vals)
+                    norm_count += z
                 else:
                     # Non-consensual fallback
                     sn_vals = np.array(self.social_norm[a1_action])[opinions_on_a2]
@@ -282,8 +285,12 @@ class Model:
                         ri += z
                         fallback_val = np.where(xi_rands < self.xi, 1 - agent1.emotion_profile.value, agent1.emotion_profile.value)
                     new_rep_1 = np.where(use_ebsn, fallback_val, sn_vals)
+                    ebsn_used = int(np.sum(use_ebsn))
+                    fallback_count += ebsn_used
+                    norm_count += z - ebsn_used
             else:
                 new_rep_1 = np.array(self.social_norm[a1_action])[opinions_on_a2]
+                norm_count += z
             
             # Assignment error
             err_rands = random_vals[ri:ri+z]
@@ -305,10 +312,11 @@ class Model:
                 if is_a1_rep_consensual:
                     # Lookup tables
                     sn_vals = np.array(self.social_norm[a2_action])[opinions_on_a1]
-                    ebsn_vals = np.array([self.ebsn[a2_action][0][agent2.emotion_profile.value], 
+                    ebsn_vals = np.array([self.ebsn[a2_action][0][agent2.emotion_profile.value],
                                           self.ebsn[a2_action][1][agent2.emotion_profile.value]])[opinions_on_a1]
-                    
+
                     new_rep_2 = np.where(use_ebsn, ebsn_vals, sn_vals)
+                    norm_count += z
                 else:
                     # Non-consensual fallback
                     sn_vals = np.array(self.social_norm[a2_action])[opinions_on_a1]
@@ -319,8 +327,12 @@ class Model:
                         ri += z
                         fallback_val = np.where(xi_rands < self.xi, 1 - agent2.emotion_profile.value, agent2.emotion_profile.value)
                     new_rep_2 = np.where(use_ebsn, fallback_val, sn_vals)
+                    ebsn_used = int(np.sum(use_ebsn))
+                    fallback_count += ebsn_used
+                    norm_count += z - ebsn_used
             else:
                 new_rep_2 = np.array(self.social_norm[a2_action])[opinions_on_a1]
+                norm_count += z
             
             # Assignment error
             err_rands = random_vals[ri:ri+z]
@@ -329,8 +341,8 @@ class Model:
             new_rep_2 = np.where(flips, 1 - new_rep_2, new_rep_2)
             
             self.image_matrix[:, agent2.get_agent_id()] = new_rep_2
-            
-            return pd[a1_action, a2_action], cooperative_acts, ri
+
+            return pd[a1_action, a2_action], cooperative_acts, ri, fallback_count, norm_count
 
         # Sample subsection of population to observe and update image matrix
         num_observers = int(self.observability * self.population_size)
@@ -353,6 +365,7 @@ class Model:
                     if a2_action == COOPERATE:
                         if is_a2_rep_consensual:
                             new_rep_1 = self.ebsn[a1_action][observer_opinion_on_a2][agent1.emotion_profile.value]
+                            norm_count += 1
                         else:
                             # Non-consensual fallback
                             if self.non_consensus_strategy == "action":
@@ -363,12 +376,15 @@ class Model:
                                     ep_val = 1 - ep_val
                                 ri += 1
                                 new_rep_1 = ep_val
+                            fallback_count += 1
                     else:
                         # Fallback to base social norm if opponent defected
                         new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
+                        norm_count += 1
                 else:
                     # Use Base Social Norm
                     new_rep_1 = self.social_norm[a1_action][observer_opinion_on_a2]
+                    norm_count += 1
 
                 # --- Update Agent 2 Reputation ---
                 uses_ebsn_2 = random_vals[ri] < agent2.gamma()
@@ -378,6 +394,7 @@ class Model:
                     if a1_action == COOPERATE:
                         if is_a1_rep_consensual:
                             new_rep_2 = self.ebsn[a2_action][observer_opinion_on_a1][agent2.emotion_profile.value]
+                            norm_count += 1
                         else:
                             # Non-consensual fallback
                             if self.non_consensus_strategy == "action":
@@ -388,12 +405,15 @@ class Model:
                                     ep_val = 1 - ep_val
                                 ri += 1
                                 new_rep_2 = ep_val
+                            fallback_count += 1
                     else:
                         # Fallback to base social norm if opponent defected
                         new_rep_2 = self.social_norm[a2_action][observer_opinion_on_a1]
+                        norm_count += 1
                 else:
                     # Use Base Social Norm
                     new_rep_2 = self.social_norm[a2_action][observer_opinion_on_a1]
+                    norm_count += 1
 
                 # Apply assignment errors for this specific observer's perception
                 if random_vals[ri] < self.reputation_assignment_error:
@@ -413,7 +433,7 @@ class Model:
         # agent1.set_reputation(new_rep_1)
         # agent2.set_reputation(new_rep_2)
 
-        return pd[a1_action, a2_action], cooperative_acts, ri
+        return pd[a1_action, a2_action], cooperative_acts, ri, fallback_count, norm_count
 
     def is_consensual(self, agent_id: int, threshold: float) -> bool:
         """
