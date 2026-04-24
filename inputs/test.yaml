@@ -18,7 +18,7 @@ simulation:
   cost: 1
   beta: 1
   observability: 0.6
-  consensus_thresh: 1
+  consensus_thresh: 0.6
   non_consensus_strategy: emotion
   gamma_min: 0
   gamma_max: 1
