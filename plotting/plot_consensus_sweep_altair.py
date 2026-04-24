@@ -14,7 +14,6 @@ REPO_ROOT  = os.path.dirname(SCRIPT_DIR)
 
 CSV_PATH      = os.path.join(REPO_ROOT, "outputs", "consensus_sweep_results.csv")
 OUT_DIR       = os.path.join(SCRIPT_DIR, "plots")
-OUT_HTML      = os.path.join(OUT_DIR, "sweep_consensus_thresh_observability_altair.html")
 OUT_PNG       = os.path.join(OUT_DIR, "sweep_consensus_thresh_observability_altair.png")
 
 # Ensure output directory exists
@@ -23,6 +22,14 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 # ── load & aggregate ─────────────────────────────────────────────────────────
 df = pd.read_csv(CSV_PATH)
+
+xi_val = 0.01
+alpha = 0
+
+df = df[
+    (df['xi'] == xi_val) & 
+    (df['alpha'] == alpha)
+]
 
 y_scale = 100.0
 # Calculate mean and standard error (sem)
@@ -50,7 +57,7 @@ grouped["observability_label"] = grouped["observability"].apply(
 )
 
 # ── colour scale matching the matplotlib version ──────────────────────────────
-obs_order = [0.0, 0.25, 0.5, 0.75, 1.0]
+obs_order = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 label_order = [f"observability={v}" for v in obs_order]
 palette     = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 
@@ -101,10 +108,6 @@ chart = (
     .configure_axis(grid=True, gridOpacity=0.7)
     .configure_view(strokeWidth=0)
 )
-
-# ── save HTML (interactive) ───────────────────────────────────────────────────
-chart.save(OUT_HTML)
-print(f"HTML saved -> {OUT_HTML}")
 
 # ── save PNG via vl-convert ───────────────────────────────────────────────────
 try:

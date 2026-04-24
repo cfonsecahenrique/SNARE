@@ -47,10 +47,15 @@ def simulation(model: Model, output_file: str = "results.csv"):
     avg_gammas = np.zeros(gens)
     avg_consensus = np.zeros(gens)
 
-    # Preallocate RNG for efficiency
-    # Estimate an upper bound on the number of random numbers needed per generation
-    # (mutation + PD plays + strategy imitation + errors)
-    max_randoms_per_gen = z * (1 + z * 16) * 50 # rough conservative estimate, oversized by 50
+    # Preallocate RNG for efficiency.
+    # Worst-case random consumption per prisoners_dilemma call (partial-obs path):
+    #   2 rep-assessment + 2 execution-error
+    #   + num_observers * (1 gamma + 1 optional_xi + 1 gamma + 1 optional_xi + 2 assignment)
+    #   = 4 + 6*Z  per call.
+    # Per generation: Z agents * Z games * 2 focal-agents * (4 + 6*Z) + Z (mutation/imitation)
+    # Add 20 % headroom.
+    max_randoms_per_pd = 4 + 6 * z          # worst-case randoms consumed by one PD call
+    max_randoms_per_gen = int((z * z * 2 * max_randoms_per_pd + z) * 1.2) + 1024
     rng = np.random.default_rng()
 
     for current_gen in tqdm(range(gens)):
@@ -85,6 +90,12 @@ def simulation(model: Model, output_file: str = "results.csv"):
 
                     az = agents[az_idx]
 
+                    # Guard: refill buffer if remaining space could be exhausted by next PD call
+                    if ri + max_randoms_per_pd >= len(random_values):
+                        extra = rng.random(size=max_randoms_per_gen)
+                        random_values = np.concatenate((random_values[ri:], extra))
+                        ri = 0
+
                     res_z, n_z, ri = model.prisoners_dilemma(a1, az, random_values, ri)
 
                     if past_convergence:
@@ -101,6 +112,12 @@ def simulation(model: Model, output_file: str = "results.csv"):
                         ax_idx = rng.integers(n_agents)
 
                     ax = agents[ax_idx]
+
+                    # Guard: refill buffer if remaining space could be exhausted by next PD call
+                    if ri + max_randoms_per_pd >= len(random_values):
+                        extra = rng.random(size=max_randoms_per_gen)
+                        random_values = np.concatenate((random_values[ri:], extra))
+                        ri = 0
 
                     res_x, n_x, ri = model.prisoners_dilemma(a2, ax, random_values, ri)
 
@@ -486,7 +503,7 @@ def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, output_fil
         print(f"\n--- Running {variant_id} ---")
         
         sweep_params = []
-        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta"]:
+        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu"]:
             if not aux.is_single_value(sim_params.get(param, 1.0)):
                 sweep_params.append(param)
             
@@ -562,7 +579,7 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, output_file="results
 
         # Determine which parameters to sweep
         sweep_params = []
-        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta"]:
+        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu"]:
             if not aux.is_single_value(sim_params.get(param, 1.0)):
                 sweep_params.append(param)
 
@@ -620,7 +637,7 @@ if __name__ == '__main__':
         )
     else:  # --- Manual mode (use ebsn + sn from YAML) ---
         sweep_params = []
-        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta"]:
+        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu"]:
             if not aux.is_single_value(base_sim_params.get(param, 1.0)):
                 sweep_params.append(param)
 

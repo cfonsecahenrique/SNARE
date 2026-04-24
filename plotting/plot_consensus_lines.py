@@ -16,9 +16,9 @@ df['q'] = df['q'].round(2)
 
 # Base filter (common across all xi)
 Q_VALS = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-
+alpha = 0.01
 df = df[
-    (df['alpha'] == 0.01) &
+    (df['alpha'] == alpha) &
     (df['gamma_center'] == 1) &
     (df['Z'] == 50) &
     (df['q'].isin(Q_VALS)) &
@@ -70,7 +70,7 @@ for xi in xi_vals:
 
     plt.tight_layout()
     xi_str = str(xi).replace('.', '')
-    out_path = f"plotting/plots/consensus_thresh_observability_xi{xi_str}_alpha001.png"
+    out_path = f"plotting/plots/consensus_thresh_observability_xi{xi_str}_alpha{alpha}.png"
     plt.savefig(out_path, dpi=200, bbox_inches='tight')
     plt.close()
     print(f"Saved: {out_path}")
