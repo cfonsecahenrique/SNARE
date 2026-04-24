@@ -8,7 +8,7 @@ class Model:
 
     def __init__(self, sn_list: list, ebsn_list: list, z: int,
                  mu: float, chi: float, eps: float, alpha: float, min_gamma: float, max_gamma: float,
-                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float, consensus_thresh: float, xi: float = 0.0, non_consensus_strategy: str = "emotion"):
+                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float, consensus_thresh: float, xi: float = 0.0, non_consensus_strategy: str = "emotion", random_image_matrix: bool = False):
         self._social_norm: list = sn_list
         self._eb_social_norm: list = ebsn_list
         self._mu: float = mu
@@ -30,14 +30,16 @@ class Model:
         self._xi: float = xi
         self._non_consensus_strategy: str = non_consensus_strategy
         
-        # Initialize image_matrix as requested
-        # 1. Every agent is assigned a random reputation
-        assigned_reputations = np.random.randint(0, 2, size=z)
-        # 2. The image matrix is filled in a perfectly consensual manner:
-        #    a column of the matrix is filled with only the assigned reputation
-        self._image_matrix = np.zeros((z, z), dtype=int)
-        for j in range(z):
-            self._image_matrix[:, j] = assigned_reputations[j]
+        # Initialize image matrix
+        if random_image_matrix:
+            # Testing flag: fully random, non-consensual initial reputations
+            self._image_matrix = np.random.randint(0, 2, size=(z, z), dtype=int)
+        else:
+            # Default: consensual — each agent gets one reputation shared by all observers
+            assigned_reputations = np.random.randint(0, 2, size=z)
+            self._image_matrix = np.zeros((z, z), dtype=int)
+            for j in range(z):
+                self._image_matrix[:, j] = assigned_reputations[j]
 
     def __str__(self) -> str:
         # Box drawing characters
