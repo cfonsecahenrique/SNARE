@@ -10,7 +10,7 @@ simulation:
   z: 50
   mu: 1 # mu/Z
   chi: 0.01
-  eps: [0.0, 0.01, 0.05, 0.1]
+  eps: [0.0, 0.001, 0.01, 0.05, 0.1]
   alpha: 0
   xi: 0.01
   benefit: 5
