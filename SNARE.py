@@ -41,8 +41,7 @@ def simulation(model: Model, output_file: str = "results.csv"):
     ]
 
     cooperation_per_gen = np.zeros(gens)
-    allD, Disc, pDisc, allC = np.zeros(gens), np.zeros(gens), np.zeros(gens), np.zeros(gens)
-    mean, nice = np.zeros(gens), np.zeros(gens)
+    combined_strats = np.zeros((8, gens))
     bad, good = np.zeros(gens), np.zeros(gens)
     avg_gammas = np.zeros(gens)
     avg_consensus = np.zeros(gens)
@@ -151,15 +150,9 @@ def simulation(model: Model, output_file: str = "results.csv"):
         if past_convergence:
             cooperation_per_gen[current_gen] = cooperative_acts/games_played if games_played > 0 else 0
 
-        strat_freq = aux.calculate_strategy_frequency(agents)
-        allD[current_gen] = strat_freq.get(Strategy.ALWAYS_DEFECT, 0)
-        Disc[current_gen] = strat_freq.get(Strategy.DISCRIMINATE, 0)
-        pDisc[current_gen] = strat_freq.get(Strategy.PARADOXICALLY_DISC, 0)
-        allC[current_gen] = strat_freq.get(Strategy.ALWAYS_COOPERATE, 0)
-
-        ep_freq = aux.calculate_ep_frequencies(agents)
-        mean[current_gen] = ep_freq.get(EmotionProfile.COMPETITIVE, 0)
-        nice[current_gen] = ep_freq.get(EmotionProfile.COOPERATIVE, 0)
+        combined_freq = aux.calculate_combined_strategy_frequency(agents)
+        for idx, key in enumerate(aux.COMBINED_STRATEGY_KEYS):
+            combined_strats[idx, current_gen] = combined_freq[key]
 
         rep_freq = aux.calculate_reputation_frequencies(model.image_matrix)
         bad[current_gen] = rep_freq.get(BAD, 0)
@@ -172,7 +165,7 @@ def simulation(model: Model, output_file: str = "results.csv"):
         fallback_ratio_per_gen[current_gen] = gen_fallback / total_judgements if total_judgements > 0 else 0
 
     aux.export_results(100 * cooperation_per_gen[gens-1], model, agents, filename=f"outputs/{output_file}")
-    return cooperation_per_gen, (allD, Disc, pDisc, allC), (mean, nice), (bad, good), avg_gammas, avg_consensus, fallback_ratio_per_gen
+    return cooperation_per_gen, combined_strats, (bad, good), avg_gammas, avg_consensus, fallback_ratio_per_gen
 
 
 def simulation_wrapper(args):
@@ -230,12 +223,11 @@ def make_model_from_params(simulation_parameters):
 
 def plot_time_series(all_results, model):
     cooperation_results = [r[0] for r in all_results]
-    strategy_results = [r[1] for r in all_results]
-    ep_results = [r[2] for r in all_results]
-    rep_results = [r[3] for r in all_results]
-    gammas = [r[4] for r in all_results]
-    consensus = [r[5] for r in all_results]
-    fallback_ratios = [r[6] for r in all_results]
+    combined_strat_results = [r[1] for r in all_results]
+    rep_results = [r[2] for r in all_results]
+    gammas = [r[3] for r in all_results]
+    consensus = [r[4] for r in all_results]
+    fallback_ratios = [r[5] for r in all_results]
 
     gens = cooperation_results[0].shape[0]
     x = np.arange(gens)
@@ -244,13 +236,10 @@ def plot_time_series(all_results, model):
     coop_mean = coop_matrix.mean(axis=0)
     coop_std = coop_matrix.std(axis=0)
 
-    strat_matrix = np.stack(strategy_results)
-    strat_mean = strat_matrix.mean(axis=0)
-    strat_std = strat_matrix.std(axis=0)
-
-    ep_matrix = np.stack(ep_results)
-    ep_mean = ep_matrix.mean(axis=0)
-    ep_std = ep_matrix.std(axis=0)
+    # combined_strat_results: list of (8, gens) arrays -> stack to (runs, 8, gens)
+    combined_matrix = np.stack(combined_strat_results)
+    combined_mean = combined_matrix.mean(axis=0)  # (8, gens)
+    combined_std = combined_matrix.std(axis=0)
 
     rep_matrix = np.stack(rep_results)
     rep_mean = rep_matrix.mean(axis=0)
@@ -268,8 +257,8 @@ def plot_time_series(all_results, model):
     fb_mean = fb_matrix.mean(axis=0)
     fb_std = fb_matrix.std(axis=0)
 
-    # Determine number of subplots based on gamma_delta and observability
-    num_plots = 5
+    # Determine number of subplots
+    num_plots = 4
     if model.gamma_delta != 0:
         num_plots += 1
     if model.observability != 1:
@@ -288,45 +277,38 @@ def plot_time_series(all_results, model):
     axes[0].legend()
     axes[0].grid(True)
 
-    # Plot 2: Strategies
-    strategy_labels = ["AllD", "Disc", "pDisc", "AllC"]
-    colors = ['tab:red', 'tab:blue', 'tab:orange', 'tab:green']
-    for i in range(4):
-        axes[1].plot(x, strat_mean[i], color=colors[i], label=f"Strategy {strategy_labels[i]}")
-        axes[1].fill_between(x, strat_mean[i] - strat_std[i], strat_mean[i] + strat_std[i],
-                             color=colors[i], alpha=0.3)
-    axes[1].set_ylabel("Strategy Frequency")
-    axes[1].set_title("Strategy Frequencies Across Simulations")
-    axes[1].legend()
+    # Plot 2: Combined strategies (8 lines: 4 strategies × 2 EPs)
+    # Solid = Competitive, dashed = Cooperative; color per strategy
+    strat_colors = ['tab:red', 'tab:red', 'tab:blue', 'tab:blue',
+                    'tab:orange', 'tab:orange', 'tab:green', 'tab:green']
+    strat_linestyles = ['-', '--', '-', '--', '-', '--', '-', '--']
+    for i, label in enumerate(aux.COMBINED_STRATEGY_LABELS):
+        axes[1].plot(x, combined_mean[i], color=strat_colors[i],
+                     linestyle=strat_linestyles[i], label=label)
+        axes[1].fill_between(x, combined_mean[i] - combined_std[i],
+                             combined_mean[i] + combined_std[i],
+                             color=strat_colors[i], alpha=0.15)
+    axes[1].set_ylabel("Frequency")
+    axes[1].set_title("Combined Strategy Frequencies Across Simulations")
+    axes[1].set_ylim(0, 1)
+    axes[1].legend(ncol=2, fontsize=8)
     axes[1].grid(True)
 
-    # Plot 3: Emotion Profiles
-    ep_labels = ["Competitive", "Cooperative"]
-    ep_colors = ['tab:brown', 'tab:cyan']
-    for i in range(2):
-        axes[2].plot(x, ep_mean[i], color=ep_colors[i], label=ep_labels[i])
-        axes[2].fill_between(x, ep_mean[i] - ep_std[i], ep_mean[i] + ep_std[i],
-                             color=ep_colors[i], alpha=0.3)
-    axes[2].set_ylabel("EP Frequency")
-    axes[2].set_title("Emotion Profile Frequencies Across Simulations")
-    axes[2].legend()
-    axes[2].grid(True)
-
-    # Plot 4: Reputations
+    # Plot 3: Reputations
     rep_labels = ["bad", "good"]
     rep_colors = ['tab:red', 'tab:cyan']
     for i in range(2):
-        axes[3].plot(x, rep_mean[i], color=rep_colors[i], label=rep_labels[i])
-        axes[3].fill_between(x, rep_mean[i] - rep_std[i], rep_mean[i] + rep_std[i],
+        axes[2].plot(x, rep_mean[i], color=rep_colors[i], label=rep_labels[i])
+        axes[2].fill_between(x, rep_mean[i] - rep_std[i], rep_mean[i] + rep_std[i],
                              color=rep_colors[i], alpha=0.3)
-    axes[3].set_ylabel("Reputation Frequency")
-    axes[3].set_title("Reputation Frequencies Across Simulations")
-    axes[3].legend()
-    axes[3].grid(True)
+    axes[2].set_ylabel("Reputation Frequency")
+    axes[2].set_title("Reputation Frequencies Across Simulations")
+    axes[2].legend()
+    axes[2].grid(True)
 
-    current_plot_idx = 4
+    current_plot_idx = 3
 
-    # Plot 5: Fallback/Norm Ratio
+    # Plot 4: Fallback/Norm Ratio
     axes[current_plot_idx].plot(x, fb_mean, color='tab:orange', label='Fallback Ratio')
     axes[current_plot_idx].fill_between(x, fb_mean - fb_std, fb_mean + fb_std,
                          color='tab:orange', alpha=0.3, label='±1 Std Dev')
@@ -348,7 +330,7 @@ def plot_time_series(all_results, model):
         axes[current_plot_idx].grid(True)
         current_plot_idx += 1
 
-    # Plot 6 (Optional): Consensus
+    # Plot (Optional): Consensus
     if model.observability != 1:
         axes[current_plot_idx].plot(x, consensus_mean, color='purple', label='Average Consensus')
         axes[current_plot_idx].fill_between(x, consensus_mean - consensus_std, consensus_mean + consensus_std,

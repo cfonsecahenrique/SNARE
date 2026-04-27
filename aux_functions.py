@@ -66,14 +66,9 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
         "G": round(rep_frequencies.get(GOOD, 0), 3)
     }
 
-    # Add strategy frequencies
-    frequencies = calculate_strategy_frequency(population)
-    for strat in Strategy:
-        result_data[strat.name] = round(frequencies.get(strat, 0), 4)
-
-    ep_frequencies = calculate_ep_frequencies(population)
-    for ep in list(EmotionProfile):
-        result_data[ep] = round(ep_frequencies.get(ep, 0), 2)
+    combined_freq = calculate_combined_strategy_frequency(population)
+    for key, label in zip(COMBINED_STRATEGY_KEYS, COMBINED_STRATEGY_LABELS):
+        result_data[label] = round(combined_freq.get(key, 0), 4)
 
     # Write to CSV
     write_dict_to_csv(result_data, filename)
@@ -153,9 +148,33 @@ def most_common_strats(population: list[Agent]):
 def calculate_strategy_frequency(population: list[Agent]) -> dict:
     total = len(population)
     counts = Counter(agent.strategy for agent in population)
-    # Ensure all 4 strategies are present in the output
     strats = list(Strategy)
     return {strat: counts.get(strat, 0) / total for strat in strats}
+
+
+COMBINED_STRATEGY_KEYS = [
+    (Strategy.ALWAYS_DEFECT,      EmotionProfile.COMPETITIVE),
+    (Strategy.ALWAYS_DEFECT,      EmotionProfile.COOPERATIVE),
+    (Strategy.DISCRIMINATE,       EmotionProfile.COMPETITIVE),
+    (Strategy.DISCRIMINATE,       EmotionProfile.COOPERATIVE),
+    (Strategy.PARADOXICALLY_DISC, EmotionProfile.COMPETITIVE),
+    (Strategy.PARADOXICALLY_DISC, EmotionProfile.COOPERATIVE),
+    (Strategy.ALWAYS_COOPERATE,   EmotionProfile.COMPETITIVE),
+    (Strategy.ALWAYS_COOPERATE,   EmotionProfile.COOPERATIVE),
+]
+
+COMBINED_STRATEGY_LABELS = [
+    "AllD_Comp", "AllD_Coop",
+    "Disc_Comp", "Disc_Coop",
+    "pDisc_Comp", "pDisc_Coop",
+    "AllC_Comp", "AllC_Coop",
+]
+
+
+def calculate_combined_strategy_frequency(population: list[Agent]) -> dict:
+    total = len(population)
+    counts = Counter((agent.strategy, agent.emotion_profile) for agent in population)
+    return {key: counts.get(key, 0) / total for key in COMBINED_STRATEGY_KEYS}
 
 
 def calculate_average_gamma(population: list[Agent]) -> float:
