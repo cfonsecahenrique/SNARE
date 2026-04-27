@@ -7,7 +7,7 @@ simulation:
   norm:
   ebsn: [1, 1, 0, 0, 0, 0, 1, 1]  # GGBBBBGG=SJ
   sn: [1, 0, 0, 1]
-  z: [50, 100, 200]
+  z: 200
   mu: 1 # mu/Z
   chi: 0.01
   eps: 0.01
