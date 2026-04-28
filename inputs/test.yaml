@@ -1,15 +1,15 @@
 running:
-  runs: 50
+  runs: 1
   cores: all
   plotting: true
-  output_file: "longer.csv"
+  output_file: "random_initial_condition.csv"
 simulation:
   random_image_matrix: true
   norm:
   ebsn: [1, 1, 0, 0, 0, 0, 1, 1]  # GGBBBBGG=SJ
   sn: [1, 0, 0, 1]
-  z: 50
-  mu: 1 # mu/Z
+  z: 40
+  mu: 0.1 # mu/Z
   chi: 0.01
   eps: 0.01
   alpha: 0
@@ -17,12 +17,12 @@ simulation:
   benefit: 5
   cost: 1
   beta: 1
-  observability: [0.2, 0.4, 0.6, 0.8]
-  consensus_thresh: [0, 0.2, 0.4, 0.6, 0.8, 1]
+  observability: 0.8
+  consensus_thresh: 0.6
   non_consensus_strategy: emotion
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
-  generations: 4000
-  convergence period: 0.25
+  generations: 2000
+  convergence period: 0
