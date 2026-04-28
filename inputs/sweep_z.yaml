@@ -7,7 +7,7 @@ simulation:
   norm:
   ebsn: [1, 1, 0, 0, 0, 0, 1, 1]  # GGBBBBGG=SJ
   sn: [1, 0, 0, 1]
-  z: 200
+  z: 100
   mu: 1 # mu/Z
   chi: 0.01
   eps: 0.01
@@ -23,5 +23,5 @@ simulation:
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
-  generations: 2000
+  generations: 4000
   convergence period: 0.2
