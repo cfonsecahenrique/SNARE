@@ -65,7 +65,7 @@ def simulation(model: Model, output_file: str = "results.csv"):
         random_values = rng.random(size=max_randoms_per_gen)
         ri = 0
         gen_fallback = 0
-        gen_norm = 0
+        gen_cooperative_acts = 0
         a1: Agent
         for a1 in aux_population:
             if random_values[ri] < mu:
@@ -98,9 +98,9 @@ def simulation(model: Model, output_file: str = "results.csv"):
                         random_values = np.concatenate((random_values[ri:], extra))
                         ri = 0
 
-                    res_z, n_z, ri, fb_z, nm_z = model.prisoners_dilemma(a1, az, random_values, ri)
+                    res_z, n_z, ri, fb_z, _ = model.prisoners_dilemma(a1, az, random_values, ri)
                     gen_fallback += fb_z
-                    gen_norm += nm_z
+                    gen_cooperative_acts += n_z
 
                     if past_convergence:
                         cooperative_acts += n_z
@@ -123,9 +123,9 @@ def simulation(model: Model, output_file: str = "results.csv"):
                         random_values = np.concatenate((random_values[ri:], extra))
                         ri = 0
 
-                    res_x, n_x, ri, fb_x, nm_x = model.prisoners_dilemma(a2, ax, random_values, ri)
+                    res_x, n_x, ri, fb_x, _ = model.prisoners_dilemma(a2, ax, random_values, ri)
                     gen_fallback += fb_x
-                    gen_norm += nm_x
+                    gen_cooperative_acts += n_x
 
                     if past_convergence:
                         cooperative_acts += n_x
@@ -161,8 +161,9 @@ def simulation(model: Model, output_file: str = "results.csv"):
         avg_gammas[current_gen] = aux.calculate_average_gamma(agents)
         avg_consensus[current_gen] = aux.calculate_average_consensus(model.image_matrix)
 
-        total_judgements = gen_fallback + gen_norm
-        fallback_ratio_per_gen[current_gen] = gen_fallback / total_judgements if total_judgements > 0 else 0
+        num_observers = int(model.observability * model.population_size)
+        denom = gen_cooperative_acts * num_observers
+        fallback_ratio_per_gen[current_gen] = gen_fallback / denom if denom > 0 else 0
 
     aux.export_results(100 * cooperation_per_gen[gens-1], model, agents, filename=f"outputs/{output_file}")
     return cooperation_per_gen, combined_strats, (bad, good), avg_gammas, avg_consensus, fallback_ratio_per_gen
@@ -313,7 +314,7 @@ def plot_time_series(all_results, model):
     axes[current_plot_idx].fill_between(x, fb_mean - fb_std, fb_mean + fb_std,
                          color='tab:orange', alpha=0.3, label='±1 Std Dev')
     axes[current_plot_idx].set_title("Fallback/Norm Ratio per Generation")
-    axes[current_plot_idx].set_ylabel("Fallback / Total Judgements")
+    axes[current_plot_idx].set_ylabel("Fallback / Observer-Judgements")
     axes[current_plot_idx].set_ylim(0, 1)
     axes[current_plot_idx].legend()
     axes[current_plot_idx].grid(True)
@@ -346,12 +347,95 @@ def plot_time_series(all_results, model):
     plt.tight_layout(rect=[0, 0, 1, 0.95])
 
     os.makedirs("simulations", exist_ok=True)
-    ebsn_str = aux.ebsn_to_GB(model.ebsn)
     sn_flat = [item for sublist in model.social_norm for item in sublist]
     sn_str = "".join(map(str, sn_flat))
-    filename = f"simulations/sim_{ebsn_str}_{sn_str}_G{model.generations}_CT{model.consensus_thresh}_Z{model.population_size}_mu{model.mutation_rate}_q{model.observability}_g{model.gamma_normal_center}.png"
-    plt.savefig(filename)
+    timestamp = int(time())
+    base_filename = f"simulations/{sn_str}_G{model.generations}_k{model.consensus_thresh}_z{model.population_size}_q{model.observability}_xi{model.xi}_{timestamp}"
+    plt.savefig(base_filename + ".png")
     plt.close()
+
+    plot_time_series_interactive(all_results, model, base_filename + ".html")
+
+
+def plot_time_series_interactive(all_results, model, filepath):
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
+    cooperation_results = [r[0] for r in all_results]
+    combined_strat_results = [r[1] for r in all_results]
+    rep_results = [r[2] for r in all_results]
+    gammas = [r[3] for r in all_results]
+    consensus = [r[4] for r in all_results]
+    fallback_ratios = [r[5] for r in all_results]
+
+    gens = cooperation_results[0].shape[0]
+    x = list(range(gens))
+
+    def stats(arrays):
+        m = np.stack(arrays)
+        return m.mean(axis=0), m.std(axis=0)
+
+    coop_mean, coop_std = stats(cooperation_results)
+    combined_matrix = np.stack(combined_strat_results)
+    combined_mean = combined_matrix.mean(axis=0)
+    combined_std = combined_matrix.std(axis=0)
+    rep_mean, rep_std = stats(rep_results)
+    gammas_mean, gammas_std = stats(gammas)
+    consensus_mean, consensus_std = stats(consensus)
+    fb_mean, fb_std = stats(fallback_ratios)
+
+    show_gamma = model.gamma_delta != 0
+    show_consensus = model.observability != 1
+    num_plots = 4 + int(show_gamma) + int(show_consensus)
+    subplot_titles = ["Cooperation Rate", "Combined Strategy Frequencies", "Reputation Frequencies", "Fallback Ratio"]
+    if show_gamma:
+        subplot_titles.append("Average Gamma")
+    if show_consensus:
+        subplot_titles.append("Average Consensus")
+
+    fig = make_subplots(rows=num_plots, cols=1, shared_xaxes=True, subplot_titles=subplot_titles,
+                        vertical_spacing=0.04)
+
+    def band(fig, row, x, mean, std, name, color, dash="solid", showlegend=True):
+        upper = (mean + std).tolist()
+        lower = (mean - std).tolist()
+        fig.add_trace(go.Scatter(x=x + x[::-1], y=upper + lower[::-1],
+                                 fill='toself', fillcolor=color, opacity=0.2,
+                                 line=dict(width=0), showlegend=False, hoverinfo='skip'), row=row, col=1)
+        fig.add_trace(go.Scatter(x=x, y=mean.tolist(), name=name,
+                                 line=dict(color=color, dash=dash), showlegend=showlegend), row=row, col=1)
+
+    # Row 1: Cooperation
+    band(fig, 1, x, coop_mean, coop_std, "Cooperation", "blue")
+
+    # Row 2: Combined strategies
+    strat_colors = ['red', 'red', 'royalblue', 'royalblue',
+                    'darkorange', 'darkorange', 'green', 'green']
+    strat_dashes = ['solid', 'dash', 'solid', 'dash', 'solid', 'dash', 'solid', 'dash']
+    for i, label in enumerate(aux.COMBINED_STRATEGY_LABELS):
+        band(fig, 2, x, combined_mean[i], combined_std[i], label, strat_colors[i], strat_dashes[i])
+
+    # Row 3: Reputations
+    band(fig, 3, x, rep_mean[0], rep_std[0], "Bad", "red")
+    band(fig, 3, x, rep_mean[1], rep_std[1], "Good", "cyan")
+
+    # Row 4: Fallback ratio
+    band(fig, 4, x, fb_mean, fb_std, "Fallback Ratio", "darkorange")
+
+    current_row = 5
+    if show_gamma:
+        band(fig, current_row, x, gammas_mean, gammas_std, "Avg Gamma", "blue")
+        current_row += 1
+    if show_consensus:
+        band(fig, current_row, x, consensus_mean, consensus_std, "Avg Consensus", "purple")
+
+    fig.update_xaxes(title_text="Generation", row=num_plots, col=1)
+    fig.update_layout(height=280 * num_plots, title_text="d = " + aux.ebsn_to_GB(model.ebsn),
+                      hovermode="x unified")
+    for row in [1, 2, 4]:
+        fig.update_yaxes(range=[0, 1], row=row, col=1)
+
+    fig.write_html(filepath)
 
 
 def expand_parameter(param):
