@@ -17,6 +17,8 @@ Sweeps covered
   sweep_chi      : chi ∈ {0, 0.001, 0.01, 0.05, 0.1}
   sweep_eps      : eps ∈ {0, 0.001, 0.01, 0.05, 0.1}
   sweep_z        : Z   ∈ {50, 100, 200}          (only values present in the CSV)
+  sweep_alpha    : alpha ∈ {0, 0.1, 0.25, 0.5}   (example values, dynamically plotted)
+  sweep_mu       : mu  ∈ {0.001, 0.01, 0.05}     (example values, dynamically plotted)
 """
 
 import os
@@ -96,6 +98,26 @@ SWEEPS = [
         group_label=None,
         x_dtype="int",
         out_name="sweep_z",
+    ),
+    dict(
+        csv="outputs/sweep_alpha_results.csv",
+        x_col="alpha",
+        x_label=r"$\alpha$ (Assortment)",
+        title=r"Average Cooperation vs. Assortment ($\alpha$)",
+        group_col=None,
+        group_label=None,
+        x_dtype="float",
+        out_name="sweep_alpha",
+    ),
+    dict(
+        csv="outputs/sweep_mu_results.csv",
+        x_col="mu",
+        x_label=r"$\mu$ (Mutation Rate)",
+        title=r"Average Cooperation vs. Mutation Rate ($\mu$)",
+        group_col=None,
+        group_label=None,
+        x_dtype="float",
+        out_name="sweep_mu",
     ),
 ]
 
