@@ -16,6 +16,16 @@ import pandas as pd
 from datetime import timedelta
 import itertools
 
+def safe_print(obj):
+    """Print an object, writing UTF-8 directly to stdout.buffer to bypass Windows cp1252 codec issues."""
+    text = str(obj) + "\n"
+    if hasattr(sys.stdout, 'buffer'):
+        sys.stdout.buffer.write(text.encode('utf-8', errors='replace'))
+        sys.stdout.buffer.flush()
+    else:
+        print(text.encode('ascii', errors='replace').decode('ascii'))
+
+
 def run_simulations_for_model(model, n_runs, n_cores):
     all_models = [deepcopy(model) for _ in range(n_runs)]
     with multiprocessing.Pool(processes=n_cores) as pool:
@@ -517,7 +527,7 @@ def plot_parameter_sweep(combinations, avg_cooperations, ebsn, sweep_params, non
 
 def run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file="results.csv", plots=True):
     model = make_model_from_params(base_sim_params)
-    print(model)
+    safe_print(model)
     
     all_models_args = [(deepcopy(model), output_file) for _ in range(n_runs)]
     with multiprocessing.Pool(processes=n_cores) as pool:
@@ -539,7 +549,7 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consen
         print(f"Running simulations for {combo_str}")
 
         model = make_model_from_params(sim_params)
-        print(model)
+        safe_print(model)
         
         all_models_args = [(deepcopy(model), output_file) for _ in range(n_runs)]
         with multiprocessing.Pool(processes=n_cores) as pool:

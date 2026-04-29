@@ -73,13 +73,6 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\outputs\imperfect_information.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="\outputs\old_outputs\observability_results.csv">
           <value>
             <Attribute>

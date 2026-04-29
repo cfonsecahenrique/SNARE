@@ -27,8 +27,12 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 
+# Get absolute path to the project root
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(SCRIPT_DIR)
+
 # ── Output directory ────────────────────────────────────────────────────────
-OUT_DIR = "plotting/plots/robustness"
+OUT_DIR = os.path.join(SCRIPT_DIR, "plots", "robustness")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # ── Style (shared with plot_consensus_lines.py) ──────────────────────────────
@@ -82,7 +86,7 @@ SWEEPS = [
     dict(
         csv="outputs/sweep_eps_results.csv",
         x_col="eps",
-        x_label=r"$\varepsilon$ (Execution Error Rate)",
+        x_label=r"$\varepsilon$ (Execution Error)",
         title=r"Average Cooperation vs. Execution Error ($\varepsilon$)",
         group_col=None,
         group_label=None,
@@ -102,8 +106,8 @@ SWEEPS = [
     dict(
         csv="outputs/sweep_alpha_results.csv",
         x_col="alpha",
-        x_label=r"$\alpha$ (Assortment)",
-        title=r"Average Cooperation vs. Assortment ($\alpha$)",
+        x_label=r"$\alpha$ (Reputation Assignment Error)",
+        title=r"Average Cooperation vs. Reputation Assignment Error ($\alpha$)",
         group_col=None,
         group_label=None,
         x_dtype="float",
@@ -123,7 +127,11 @@ SWEEPS = [
 
 
 def plot_sweep(cfg: dict) -> None:
-    df = pd.read_csv(cfg["csv"])
+    try:
+        df = pd.read_csv(cfg["csv"])
+    except pd.errors.ParserError:
+        print(f"Warning: ParserError in {cfg['csv']}, skipping bad lines.")
+        df = pd.read_csv(cfg["csv"], on_bad_lines='skip')
 
     # Cast swept column
     if cfg["x_dtype"] == "int":
@@ -221,7 +229,9 @@ def plot_sweep(cfg: dict) -> None:
 
 # ── Run all sweeps ────────────────────────────────────────────────────────────
 for sweep_cfg in SWEEPS:
-    if not os.path.exists(sweep_cfg["csv"]):
-        print(f"Skipping (file not found): {sweep_cfg['csv']}")
+    csv_path = os.path.join(ROOT_DIR, sweep_cfg["csv"])
+    if not os.path.exists(csv_path):
+        print(f"Skipping (file not found): {csv_path}")
         continue
+    sweep_cfg["csv"] = csv_path
     plot_sweep(sweep_cfg)
