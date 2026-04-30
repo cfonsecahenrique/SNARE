@@ -2,12 +2,12 @@ running:
   runs: 15
   cores: all
   plotting: true
-  output_file: "random_initial_condition.csv"
+  output_file: "ss_sweep.csv"
 simulation:
   random_image_matrix: true
   norm:
-  ebsn: [1, 1, 0, 0, 0, 0, 1, 1]  # GGBBBBGG=SJ
-  sn: [1, 0, 0, 1]
+  ebsn: [1, 1, 0, 0, 1, 1, 1, 1]  # GGBBBBGG=SJ
+  sn: [1, 0, 1, 1]
   z: 50
   mu: 2 # mu/Z
   chi: 0.01
@@ -17,7 +17,7 @@ simulation:
   benefit: 5
   cost: 1
   beta: 1
-  observability: [0.2, 0.4, 0.6, 0.8]
+  observability: [0, 0.2, 0.4, 0.6, 0.8, 1]
   consensus_thresh: [0, 0.2, 0.4, 0.6, 0.8, 1]
   non_consensus_strategy: emotion
   gamma_min: 0
