@@ -12,7 +12,7 @@ import altair as alt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT  = os.path.dirname(SCRIPT_DIR)
 
-CSV_PATH      = os.path.join(REPO_ROOT, "outputs", "consensus_sweep_results.csv")
+CSV_PATH      = os.path.join(REPO_ROOT, "outputs", "random_initial_condition.csv")
 OUT_DIR       = os.path.join(SCRIPT_DIR, "plots")
 OUT_PNG       = os.path.join(OUT_DIR, "sweep_consensus_thresh_observability_altair.png")
 

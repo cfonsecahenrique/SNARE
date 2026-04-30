@@ -55,7 +55,6 @@ def export_results(acr: float, model: Model, population: list[Agent], filename="
         "b": model.benefit,
         "c": model.cost,
         "beta": model.beta,
-        "generations": model.generations,
         "convergence_period": model.converge,
         "gamma_min": model.min_gamma,
         "gamma_max": model.max_gamma,

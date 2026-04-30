@@ -28,10 +28,12 @@ def safe_print(obj):
 
 def run_simulations_for_model(model, n_runs, n_cores):
     all_models = [deepcopy(model) for _ in range(n_runs)]
-    with multiprocessing.Pool(processes=n_cores) as pool:
+    pool = multiprocessing.Pool(processes=n_cores)
+    try:
         all_results = list(tqdm(pool.imap_unordered(simulation, all_models), total=n_runs))
-    pool.close()
-    pool.join()
+    finally:
+        pool.close()
+        pool.join()
     return all_results
 
 
@@ -528,13 +530,15 @@ def plot_parameter_sweep(combinations, avg_cooperations, ebsn, sweep_params, non
 def run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file="results.csv", plots=True):
     model = make_model_from_params(base_sim_params)
     safe_print(model)
-    
+
     all_models_args = [(deepcopy(model), output_file) for _ in range(n_runs)]
-    with multiprocessing.Pool(processes=n_cores) as pool:
+    pool = multiprocessing.Pool(processes=n_cores)
+    try:
         all_results = list(tqdm(pool.imap_unordered(simulation_wrapper, all_models_args), total=n_runs))
-    pool.close()
-    pool.join()
-    
+    finally:
+        pool.close()
+        pool.join()
+
     if plots:
         plot_time_series(all_results, model)
 
@@ -550,12 +554,14 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consen
 
         model = make_model_from_params(sim_params)
         safe_print(model)
-        
+
         all_models_args = [(deepcopy(model), output_file) for _ in range(n_runs)]
-        with multiprocessing.Pool(processes=n_cores) as pool:
+        pool = multiprocessing.Pool(processes=n_cores)
+        try:
             all_results = list(tqdm(pool.imap_unordered(simulation_wrapper, all_models_args), total=n_runs))
-        pool.close()
-        pool.join()
+        finally:
+            pool.close()
+            pool.join()
 
         cooperation_runs = [r[0][-1] for r in all_results]  # final cooperation for each run
         avg_coop = np.mean(cooperation_runs)
