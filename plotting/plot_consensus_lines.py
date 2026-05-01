@@ -22,7 +22,7 @@ elif BASE_NORM == "sj":
 col_names = [
     'base_social_norm', 'eb_social_norm', 'Z', 'gens', 'mu', 'chi', 'eps', 'alpha',
     'q', 'consensus_thresh', 'xi', 'non_consensus_strategy', 'b', 'c', 'beta',
-    'generations', 'convergence_period', 'gamma_min', 'gamma_max', 'gamma_delta',
+    'convergence_period', 'gamma_min', 'gamma_max', 'gamma_delta',
     'gamma_center', 'average_cooperation', 'average_consensus', 'G',
     'AllD_Comp', 'AllD_Coop', 'Disc_Comp', 'Disc_Coop',
     'pDisc_Comp', 'pDisc_Coop', 'AllC_Comp', 'AllC_Coop',
@@ -37,14 +37,14 @@ df['q'] = df['q'].round(2)
 
 # Base filter (common across all xi)
 Q_VALS = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-Q_VALS_Q = [0, 0.2, 0.4, 0.6, 0.8, 1]   # q=0 and q=1 were not swept in this dataset
 alpha = 0.0
 df = df[
     (df['alpha'] == alpha) &
     (df['gamma_center'] == 1) &
     (df['Z'] == 50) &
-    (df['q'].isin(Q_VALS_Q)) &
+    (df['q'].isin(Q_VALS)) &
     (df['mu'] == 2) &
+    (df['gens'] == 3000) &
     (df['consensus_thresh'].isin(Q_VALS))
 ]
 
