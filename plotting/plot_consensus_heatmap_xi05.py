@@ -37,7 +37,7 @@ chart = (
     alt.Chart(heatmap_df)
     .mark_rect()
     .encode(
-        x=alt.X("consensus_thresh:O", title="κ_c (Consensus Threshold)"),
+        x=alt.X("consensus_thresh:O", title="k̃ (Consensus Threshold)"),
         y=alt.Y("q:O", title="q (Observability)", sort="descending"),
         color=alt.Color(
             "average_cooperation:Q",
@@ -46,12 +46,12 @@ chart = (
             legend=None,
         ),
         tooltip=[
-            alt.Tooltip("consensus_thresh:O", title="κ_c"),
+            alt.Tooltip("consensus_thresh:O", title="k̃"),
             alt.Tooltip("q:O", title="q"),
             alt.Tooltip("average_cooperation:Q", title="Avg Cooperation", format=".3f"),
         ],
     )
-    .properties(width=350, height=350, title="Average Cooperation by κ_c and q (ξ=0.05)")
+    .properties(width=350, height=350, title="Average Cooperation by k̃ and q (ξ=0.05)")
 )
 
 # Add text labels inside each cell

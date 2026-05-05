@@ -37,9 +37,9 @@ plt.clabel(contour_lines, inline=True, fontsize=8, fmt="%.0f")
 cbar = plt.colorbar(contour_filled, ticks=np.linspace(0, 100, 11))
 cbar.set_label("Avg Cooperation")
 
-plt.xlabel("κ_c (Consensus Threshold)")
+plt.xlabel(r"$\tilde{k}$ (Consensus Threshold)")
 plt.ylabel("q (Observability)")
-plt.title("Average Cooperation by κ_c and q")
+plt.title(r"Average Cooperation by $\tilde{k}$ and q")
 
 suffix = "action" if "action" in csv_path else "emotion"
 contour_path = f"outputs/consensus_contour_{suffix}.png"

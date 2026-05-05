@@ -19,7 +19,7 @@ simulation:
   beta: 1
   observability: [0.2, 0.4, 0.6, 0.8]
   consensus_thresh: [0, 0.2, 0.4, 0.6, 0.8, 1]
-  non_consensus_strategy: action
+  non_consensus_strategy: emotion
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population

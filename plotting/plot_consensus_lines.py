@@ -14,7 +14,7 @@ BASE_NORM = "sj"
 if BASE_NORM != "sj":
     csv_path = os.path.join(_SNARE_ROOT, "outputs", f"{BASE_NORM}_sweep.csv")
 elif BASE_NORM == "sj":
-    csv_path = os.path.join(_SNARE_ROOT, "outputs", "random_initial_condition.csv")
+    csv_path = os.path.join(_SNARE_ROOT, "outputs", "xi_robustness.csv")
 
 # The CSV is a mix of an old 30-column schema and the current 32-column schema
 # (aux_functions now exports 8 combined strategy+EP labels instead of 4+2 separate ones).
@@ -83,9 +83,9 @@ for xi in xi_vals:
                         q_data['mean'] + q_data['sem'],
                         alpha=0.15, color=color)
 
-    ax.set_xlabel(r'$\kappa_c$ (Consensus Threshold)', fontsize=13)
+    ax.set_xlabel(r'$\tilde{k}$ (Consensus Threshold)', fontsize=13)
     ax.set_ylabel('Average Cooperation', fontsize=13)
-    ax.set_title(rf'Average Cooperation vs. $\kappa_c$  ($\xi = {xi}$)', fontsize=14)
+    ax.set_title(rf'Average Cooperation vs. $\tilde{{k}}$  ($\xi = {xi}$)', fontsize=14)
     ax.set_xticks(Q_VALS)
     ax.set_ylim(0, 100)
     ax.legend(title='Observability (q)', frameon=False, fontsize=11)

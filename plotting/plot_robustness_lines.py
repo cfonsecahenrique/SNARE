@@ -210,7 +210,7 @@ def plot_sweep(cfg: dict) -> None:
 
     # Annotate fixed params from YAML in a small text box
     fixed_info = (
-        r"Fixed: $q=0.8$, $\kappa_c=0.8$, $\xi=0.01$, "
+        r"Fixed: $q=0.8$, $\tilde{k}=0.8$, $\xi=0.01$, "
         r"$\alpha=0$, $\mu/Z=1$"
     )
     ax.text(
