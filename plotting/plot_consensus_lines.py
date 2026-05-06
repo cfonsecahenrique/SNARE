@@ -38,6 +38,7 @@ df['q'] = df['q'].round(2)
 # Base filter (common across all xi)
 Q_VALS = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 alpha = 0.0
+fallback_strategy = 'emotion'
 df = df[
     (df['alpha'] == alpha) &
     (df['gamma_center'] == 1) &
@@ -45,6 +46,7 @@ df = df[
     (df['q'].isin(Q_VALS)) &
     (df['mu'] == 2) &
     (df['gens'] == 3000) &
+    (df['non_consensus_strategy'] == fallback_strategy) &
     (df['consensus_thresh'].isin(Q_VALS))
 ]
 
@@ -93,7 +95,7 @@ for xi in xi_vals:
 
     plt.tight_layout()
     xi_str = str(xi).replace('.', '')
-    out_path = os.path.join(_HERE, "plots", f"{BASE_NORM}_consensus_thresh_observability_xi{xi_str}_alpha{alpha}.png")
+    out_path = os.path.join(_HERE, "plots", f"{BASE_NORM}_fallback_{fallback_strategy}_xi{xi_str}_alpha{alpha}.png")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     plt.savefig(out_path, dpi=200, bbox_inches='tight')
     plt.close()
