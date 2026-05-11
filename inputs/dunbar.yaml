@@ -1,0 +1,28 @@
+running:
+  runs: 10
+  cores: all
+  plotting: true
+  output_file: "sweep_z.csv"
+simulation:
+  random_image_matrix: true
+  norm:
+  ebsn: [1, 1, 0, 0, 0, 0, 1, 1]  # GGBBBBGG=SJ
+  sn: [1, 0, 0, 1]
+  z: 150
+  mu: 2 # mu/Z
+  chi: 0.01
+  eps: 0.01
+  alpha: 0
+  xi: 0.01
+  benefit: 5
+  cost: 1
+  beta: 1
+  observability: 0.8
+  consensus_thresh: 0.8
+  non_consensus_strategy: emotion
+  gamma_min: 0
+  gamma_max: 1
+  gamma_delta: 0 # use 0 for homogeneous population
+  gamma_gaussian_n: 1
+  generations: 6000
+  convergence period: 0.25
