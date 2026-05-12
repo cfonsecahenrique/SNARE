@@ -1,14 +1,14 @@
 running:
-  runs: 25
+  runs: 5
   cores: all
   plotting: true
-  output_file: "xi_robustness.csv"
+  output_file: "test.csv"
 simulation:
-  random_image_matrix: true
+  random_image_matrix: false
   norm:
   ebsn: [1, 1, 0, 0, 0, 0, 1, 1]  # GGBBBBGG=SJ
   sn: [1, 0, 0, 1]
-  z: 50
+  z: 40
   mu: 2 # mu/Z
   chi: 0.01
   eps: 0.01
@@ -17,12 +17,12 @@ simulation:
   benefit: 5
   cost: 1
   beta: 1
-  observability: [0.2, 0.4, 0.6, 0.8]
-  consensus_thresh: [0, 0.2, 0.4, 0.6, 0.8, 1]
+  observability: 1
+  consensus_thresh: 0
   non_consensus_strategy: action
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
-  generations: 3000
-  convergence period: 0.25
+  generations: 1600
+  convergence period: 0
