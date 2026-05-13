@@ -8,7 +8,9 @@ class Model:
 
     def __init__(self, sn_list: list, ebsn_list: list, z: int,
                  mu: float, chi: float, eps: float, alpha: float, min_gamma: float, max_gamma: float,
-                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float, convergence: float, q: float, consensus_thresh: float, xi: float = 0.0, non_consensus_strategy: str = "emotion", random_image_matrix: bool = False):
+                 gamma_delta: float, gamma_normal_center: float, gens: int, b: int, c: int, beta: float,
+                 convergence: float, q: float, consensus_thresh: float, xi: float = 0.0,
+                 non_consensus_strategy: str = "emotion", random_image_matrix: bool = False):
         self._social_norm: list = sn_list
         self._eb_social_norm: list = ebsn_list
         self._mu: float = mu

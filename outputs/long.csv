@@ -1,0 +1,2 @@
+base_social_norm,eb_social_norm,Z,gens,mu,chi,eps,alpha,q,consensus_thresh,xi,non_consensus_strategy,b,c,beta,convergence_period,gamma_min,gamma_max,gamma_delta,gamma_center,average_cooperation,average_consensus,G,AllD_Comp,AllD_Coop,Disc_Comp,Disc_Coop,pDisc_Comp,pDisc_Coop,AllC_Comp,AllC_Coop
+"[[1, 0], [0, 1]]","[[(1, 1), (0, 0)], [(0, 0), (1, 1)]]",100,4000,5.0,0.01,0.01,0.0,0.8,0.8,0.0,emotion,5,1,1.0,0,0.0,1.0,0.0,1.0,82.141,0.921,0.94,0.01,0.0,0.0,0.92,0.01,0.0,0.06,0.0

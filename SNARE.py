@@ -278,7 +278,7 @@ def plot_time_series(all_results, model):
         num_plots += 1
 
     fig, axes = plt.subplots(num_plots, 1, figsize=(12, 2 * num_plots), sharex=True)
-    plt.suptitle("d = " + aux.ebsn_to_GB(model.ebsn))
+    #plt.suptitle("d = " + aux.ebsn_to_GB(model.ebsn))
 
     # Plot 1: Cooperation
     axes[0].plot(x, coop_mean, color='blue', label='Mean Cooperation Rate')
