@@ -1,0 +1,55 @@
+# Canonical EBSN sweep (paper Eq.1 reduction).
+#
+# Iterates over the 66 non-trivial canonical EBSNs produced by
+# canonical_ebsns.canonical_ebsns() and runs the public-information regime
+# (q=1, gamma=1, low-noise errors) at the standard population size.
+#
+# Usage:
+#   python SNARE.py inputs/canonical_sweep.yaml
+#
+# To also produce the gamma=0 baseline rows that the slope plots draw their
+# dashed reference line from, run a second pass with gamma_min=gamma_max=0
+# and gamma_gaussian_n=0 (or duplicate this file with those values).
+#
+# Expected wall time: ~66 norms * 25 runs * 2000 generations at Z=50. Allocate
+# accordingly on a multi-core box; cores=all uses all-but-one.
+
+running:
+  runs: 25
+  cores: all
+  plotting: false           # per-norm time-series plots not needed for the sweep
+  output_file: "canonical_sweep_gamma1.csv"
+
+simulation:
+  ebsn: "canonical"          # triggers run_canonical_ebsn_sweep() in SNARE.py
+  norm:                      # leave blank (canonical mode overrides per-norm)
+  sn: [1, 0, 0, 1]          # placeholder SJ; never consulted at gamma=1
+  random_image_matrix: false
+
+  # Public-information regime
+  z: 50
+  observability: 1.0
+  consensus_thresh: 0        # no consensus-fallback mechanism at q=1
+  non_consensus_strategy: emotion   # irrelevant at q=1
+
+  # Errors (matches the analysis filter in plotting scripts)
+  chi: 0.01
+  eps: 0.01
+  alpha: 0
+  xi: 0
+
+  # Payoffs
+  benefit: 5
+  cost: 1
+
+  # Evolutionary dynamics
+  beta: 1
+  mu: 1                      # mutation rate (divided by Z internally)
+  generations: 2000
+  convergence period: 0.2
+
+  # Gamma fixed at 1.0 (full EBSN use; base norm never consulted)
+  gamma_min: 1
+  gamma_max: 1
+  gamma_delta: 0             # 0 = homogeneous gamma across the population
+  gamma_gaussian_n: 1

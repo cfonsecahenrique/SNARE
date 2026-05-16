@@ -1,24 +1,6 @@
 {
  "cells": [
   {
-   "cell_type": "markdown",
-   "id": "41443c83a8ee",
-   "metadata": {},
-   "source": [
-    "# DEPRECATED\n",
-    "\n",
-    "**This notebook is no longer the source of truth for the canonical EBSN set.**\n",
-    "\n",
-    "Its `invert(d)` operation swaps the C-action block with the D-action block (with output inversion), which corresponds to a C $\\leftrightarrow$ D action relabelling. That is **not** a dynamics-preserving symmetry of Indirect Reciprocity (cooperation costs $c$; defection does not), so the resulting orbit partition does **not** match the Ohtsuki & Iwasa / paper-Eq.1 reduction.\n",
-    "\n",
-    "Concretely, the 73 norms this notebook produces only cover 58 of the 66 dynamics-correct paper-Eq.1 canonical orbits, and only 25 of those 73 are themselves canonical representatives under the correct symmetry. See `canonical_ebsns.py` for the corrected reduction and `EBSNs/sn-article.tex` Methods $\to$ \"Symmetry orbits\" for the underlying argument.\n",
-    "\n",
-    "**Use `canonical_ebsns.py` instead.** Its `canonical_ebsns()` function returns the 66 non-trivial paper-Eq.1 canonicals (`include_trivial=True` for all 76 orbits).\n",
-    "\n",
-    "This notebook is kept for historical record only; do not import from it.\n"
-   ]
-  },
-  {
    "cell_type": "code",
    "execution_count": 1,
    "id": "4eed5a81",

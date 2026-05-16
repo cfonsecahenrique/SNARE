@@ -622,11 +622,75 @@ def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, output_fil
             run_sweep_experiment(n_runs, n_cores, sim_params, sweep_params=sweep_params, output_file=output_file, plots=plots)
 
 
+def run_canonical_ebsn_sweep(base_sim_params, n_runs, n_cores, output_file="results.csv", plots=True):
+    """
+    Run simulations for every paper-Eq.1 canonical EBSN.
+
+    Iterates over the 66 non-trivial canonical EBSNs returned by
+    ``canonical_ebsns.canonical_ebsns()`` (the dynamics-correct reduction
+    described in ``EBSNs/sn-article.tex`` Methods, "Symmetry orbits") and
+    invokes the standard single-value or sweep experiment runner on each.
+
+    Any list-valued YAML parameter (``consensus_thresh``, ``observability``,
+    ``alpha``, ``chi``, ``eps``, ``xi``, ``z``, ``benefit``, ``beta``, ``mu``)
+    is also swept, producing a Cartesian product per canonical EBSN.
+
+    Output rows land in ``outputs/<output_file>`` (one row per run), keyed
+    by the raw 8-bit EBSN string; downstream plotting code can aggregate them
+    back into canonical orbits via ``canonical_ebsns.canonical()``.
+    """
+    from canonical_ebsns import canonical_ebsns
+
+    norms = canonical_ebsns()
+    print(f"--- Running sweep over {len(norms)} canonical EBSNs (paper Eq.1) ---")
+
+    for i, ebsn in enumerate(norms):
+        sim_params = deepcopy(base_sim_params)
+        sim_params["ebsn"] = ebsn
+
+        print(f"\n--- Canonical EBSN {i + 1}/{len(norms)}: {ebsn} ---")
+
+        sweep_params = []
+        for param in ["consensus_thresh", "observability", "alpha", "chi",
+                      "eps", "xi", "z", "benefit", "beta", "mu"]:
+            if not aux.is_single_value(sim_params.get(param, 1.0)):
+                sweep_params.append(param)
+
+        if len(sweep_params) == 0:
+            run_single_value_experiment(n_runs, n_cores, sim_params,
+                                        output_file=output_file, plots=plots)
+        else:
+            run_sweep_experiment(n_runs, n_cores, sim_params,
+                                 sweep_params=sweep_params,
+                                 output_file=output_file, plots=plots)
+
+
 def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, output_file="results.csv", plots=True):
     """
-    Runs simulations for all 256 possible 8-bit ebsn variants.
+    Runs simulations for a hardcoded subset of EBSNs (the ``*_elite_norms`` lists below).
+
+    .. deprecated::
+        The hardcoded ``sj_elite_norms`` / ``sh_elite_norms`` / ``ss_elite_norms`` /
+        ``is_elite_norms`` lists below were extracted from ``generate_unique_norms.ipynb``,
+        which uses an incorrect ``invert`` operation (C<->D action swap instead of the
+        Ohtsuki--Iwasa G<->B reputation swap). The lists therefore contain non-canonical
+        orbit representatives, duplicates (``sj_elite_norms`` has 14 entries / 11 unique),
+        trivial (non-emotion-discriminating) norms in 3 of the 4 lists, and collectively
+        cover only 22 of the 66 paper-Eq.1 canonical orbits.
+
+        Replace with a derivation from ``canonical_ebsns.canonical_ebsns()`` filtered
+        to the desired base norm. See ``EBSNs/sn-article.tex`` Methods, "Symmetry
+        orbits", and ``canonical_ebsns.py`` for the corrected reduction.
     """
-    print("--- Running a sweep over all 256 ebsn variants ---")
+    import warnings
+    warnings.warn(
+        "run_all_ebsn_variants() uses hardcoded elite lists derived from "
+        "generate_unique_norms.ipynb, which implements an incorrect symmetry. "
+        "Use canonical_ebsns.canonical_ebsns() instead and filter by base norm.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    print("--- Running a sweep over the (DEPRECATED) hardcoded elite norm lists ---")
 
     #all_unique_norms = [[0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 1, 0, 1], [0, 0, 0, 0, 0, 1, 1, 1], [0, 0, 0, 0, 1, 0, 0, 1], [0, 0, 0, 0, 1, 1, 0, 1], [0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 1], [0, 0, 0, 1, 0, 0, 1, 1], [0, 0, 0, 1, 0, 1, 0, 0], [0, 0, 0, 1, 0, 1, 0, 1], [0, 0, 0, 1, 0, 1, 1, 1], [0, 0, 0, 1, 1, 0, 0, 1], [0, 0, 0, 1, 1, 0, 1, 1], [0, 0, 0, 1, 1, 1, 0, 0], [0, 0, 0, 1, 1, 1, 0, 1], [0, 0, 1, 0, 0, 0, 0, 1], [0, 0, 1, 0, 0, 0, 1, 1], [0, 0, 1, 0, 0, 1, 0, 0], [0, 0, 1, 0, 0, 1, 0, 1], [0, 0, 1, 0, 0, 1, 1, 1], [0, 0, 1, 0, 1, 0, 0, 1], [0, 0, 1, 0, 1, 1, 0, 0], [0, 0, 1, 1, 0, 0, 0, 1], [0, 0, 1, 1, 0, 1, 0, 0], [0, 0, 1, 1, 0, 1, 0, 1], [0, 0, 1, 1, 0, 1, 1, 1], [0, 0, 1, 1, 1, 0, 0, 1], [0, 1, 0, 0, 0, 0, 0, 1], [0, 1, 0, 0, 0, 0, 1, 1], [0, 1, 0, 0, 0, 1, 0, 0], [0, 1, 0, 0, 0, 1, 0, 1], [0, 1, 0, 0, 0, 1, 1, 0], [0, 1, 0, 0, 0, 1, 1, 1], [0, 1, 0, 0, 1, 0, 0, 1], [0, 1, 0, 1, 0, 0, 0, 0], [0, 1, 0, 1, 0, 0, 0, 1], [0, 1, 0, 1, 0, 0, 1, 1], [0, 1, 0, 1, 0, 1, 0, 0], [0, 1, 0, 1, 0, 1, 0, 1], [0, 1, 0, 1, 0, 1, 1, 0], [0, 1, 0, 1, 0, 1, 1, 1], [0, 1, 0, 1, 1, 0, 0, 1], [0, 1, 1, 0, 0, 0, 0, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 1, 0, 0], [0, 1, 1, 0, 0, 1, 0, 1], [0, 1, 1, 0, 0, 1, 1, 0], [0, 1, 1, 0, 0, 1, 1, 1], [0, 1, 1, 1, 0, 0, 0, 0], [0, 1, 1, 1, 0, 0, 0, 1], [0, 1, 1, 1, 0, 0, 1, 1], [0, 1, 1, 1, 0, 1, 0, 0], [0, 1, 1, 1, 0, 1, 0, 1], [0, 1, 1, 1, 0, 1, 1, 0], [0, 1, 1, 1, 0, 1, 1, 1], [1, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 1, 1], [1, 0, 0, 0, 0, 1, 0, 0], [1, 0, 0, 0, 0, 1, 0, 1], [1, 0, 0, 1, 0, 0, 0, 0], [1, 0, 0, 1, 0, 0, 0, 1], [1, 0, 0, 1, 0, 0, 1, 1], [1, 0, 0, 1, 0, 1, 0, 0], [1, 0, 0, 1, 0, 1, 0, 1], [1, 0, 1, 0, 0, 0, 0, 1], [1, 0, 1, 0, 0, 0, 1, 1], [1, 0, 1, 0, 0, 1, 0, 0], [1, 0, 1, 1, 0, 0, 0, 0], [1, 0, 1, 1, 0, 0, 0, 1], [1, 0, 1, 1, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 1], [1, 1, 0, 1, 0, 0, 0, 0], [1, 1, 0, 1, 0, 0, 0, 1], [1, 1, 1, 1, 0, 0, 0, 1], [1, 1, 1, 1, 0, 1, 0, 0], [1, 1, 1, 1, 0, 1, 0, 1], [1, 1, 1, 1, 0, 1, 1, 1], [1, 1, 1, 1, 1, 0, 0, 1], [1, 1, 1, 1, 1, 1, 0, 1], [0, 0, 1, 0, 1, 1, 0, 1], [0, 1, 0, 0, 1, 0, 1, 1], [0, 1, 1, 0, 1, 0, 0, 1], [1, 0, 0, 0, 0, 1, 1, 1], [1, 0, 1, 0, 0, 1, 0, 1], [1, 0, 1, 1, 0, 1, 0, 0], [1, 1, 1, 0, 0, 0, 0, 1]]
     sj_elite_norms = [
@@ -724,8 +788,17 @@ if __name__ == '__main__':
 
     start_time = time()
 
-    if ebsn_mode == "all":  # --- EBSN sweep mode ---
-        print("Running all ebsn variants.")
+    if ebsn_mode == "canonical":  # --- Canonical-EBSN sweep (paper Eq.1) ---
+        print("Running canonical EBSN sweep (paper Eq.1 reduction).")
+        run_canonical_ebsn_sweep(
+            base_sim_params=base_sim_params,
+            n_runs=n_runs,
+            n_cores=n_cores,
+            output_file=output_file,
+            plots=with_logging,
+        )
+    elif ebsn_mode == "all":  # --- DEPRECATED: hardcoded elite-list sweep ---
+        print("Running all ebsn variants (DEPRECATED path; consider ebsn: canonical).")
         run_all_ebsn_variants(
             base_sim_params=base_sim_params,
             n_runs=n_runs,
