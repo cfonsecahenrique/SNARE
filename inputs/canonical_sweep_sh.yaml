@@ -1,0 +1,48 @@
+# Canonical EBSN sweep with Shunning (SH) as the base norm at gamma=1.
+#
+# Identical to canonical_sweep.yaml except sn=[1,0,0,0] (SH) and output file.
+# Note: even at gamma=1, the base SN is consulted whenever the opponent DEFECTS.
+# The base SN (SH here) therefore always influences reputation dynamics.
+#
+# Usage:
+#   python SNARE.py inputs/canonical_sweep_sh.yaml
+
+running:
+  runs: 20
+  cores: all
+  plotting: false
+  output_file: "canonical_sweep_sh.csv"
+
+simulation:
+  ebsn: "canonical"          # triggers run_canonical_ebsn_sweep() in SNARE.py
+  norm:                      # leave blank (canonical mode overrides per-norm)
+  sn: [0, 0, 0, 1]          # SH (Shunning) in model order [DB,DG,CB,CG] — consulted on opponent-defect
+  random_image_matrix: false
+
+  # Public-information regime
+  z: 40
+  observability: 1.0
+  consensus_thresh: 0
+  non_consensus_strategy: emotion
+
+  # Errors
+  chi: 0.01
+  eps: 0.01
+  alpha: 0
+  xi: 0
+
+  # Payoffs
+  benefit: 5
+  cost: 1
+
+  # Evolutionary dynamics
+  beta: 1
+  mu: 1
+  generations: 1600
+  convergence period: 0.25
+
+  # Gamma fixed at 1.0
+  gamma_min: 1
+  gamma_max: 1
+  gamma_delta: 0
+  gamma_gaussian_n: 1

@@ -60,6 +60,11 @@ def orbit(d: Bits) -> Set[Bits]:
     return {d, paper_mirror(d), ep_swap(d), ep_swap(paper_mirror(d))}
 
 
+def ordered_orbit(d: Bits) -> List[Bits]:
+    """Ordered orbit: [identity, mirror, ep-swap, ep-swap(mirror)]."""
+    return [d, paper_mirror(d), ep_swap(d), ep_swap(paper_mirror(d))]
+
+
 def coop_ones(d: Bits) -> int:
     """Number of 1-outputs (Good reputations) on the cooperative-emotion side.
 
@@ -87,6 +92,44 @@ def canonical(d: Bits) -> Bits:
     def score(b: Bits):
         return (coop_ones(b) - comp_ones(b), b[7], b[5], b[1], b)
     return max(orbit(d), key=score)
+
+
+def simulation_canonical(d: Bits, S_star: str, E_star: str, target_rep: int) -> Bits:
+    """Orbit representative most consistent with the observed simulation equilibrium.
+
+    Scores each of the four orbit members against two self-consistency conditions
+    derived from the dominant equilibrium (S_star, E_star, target_rep):
+      (1) the primary action of the dominant strategy maps to ``target_rep``
+      (2) an AllD invader maps to ``1 - target_rep``
+
+    Falls back to :func:`canonical` on ties.
+
+    Parameters
+    ----------
+    d : Bits
+        Any member of the orbit.
+    S_star : str
+        Dominant strategy — ``"Disc"``, ``"pDisc"``, ``"AllC"``, or ``"AllD"``.
+    E_star : str
+        Dominant emotional profile — ``"Coop"`` or ``"Comp"``.
+    target_rep : int
+        Dominant reputation label — ``1`` (Good) or ``0`` (Bad).
+    """
+    ep_bit = 1 if E_star == "Coop" else 0
+    cwrep  = 1 if S_star == "Disc" else 0  # reputation the dominant strat cooperates WITH
+
+    if S_star in ("Disc", "pDisc", "AllC"):
+        cond1 = (4 + 2 * cwrep + ep_bit, target_rep)       # primary action → target_rep
+        cond2 = (    2 * cwrep + ep_bit, 1 - target_rep)   # AllD invader → non-target_rep
+    else:  # AllD dominant
+        cond1 = (    2 * target_rep + ep_bit, target_rep)
+        cond2 = (4 + 2 * target_rep + ep_bit, 1 - target_rep)
+
+    orb = ordered_orbit(d)
+    scores = [int(m[cond1[0]] == cond1[1]) + int(m[cond2[0]] == cond2[1]) for m in orb]
+    best = max(scores)
+    winners = [orb[i] for i, s in enumerate(scores) if s == best]
+    return winners[0] if len(winners) == 1 else canonical(d)
 
 
 def is_trivial(d: Bits) -> bool:

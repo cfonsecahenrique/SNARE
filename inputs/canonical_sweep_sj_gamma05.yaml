@@ -1,0 +1,49 @@
+# SJ-elite EBSNs at gamma=0.5 (7 norms with ACR > 90% under SJ at gamma=1).
+#
+# Runs only the 7 elite EBSN+SJ combinations identified from canonical_sweep_gamma1.csv.
+# Used to build the slopegraph (gamma=1 vs gamma=0.5) for the EBSNs paper.
+#
+# Note: even at gamma=1, the base SN is consulted whenever the opponent DEFECTS.
+# The base SN (SJ here) therefore always influences reputation dynamics.
+#
+# Usage:
+#   python SNARE.py inputs/canonical_sweep_sj_gamma05.yaml
+
+running:
+  runs: 20
+  cores: all
+  plotting: false
+  output_file: "canonical_sweep_sj_gamma05.csv"
+
+simulation:
+  norm: sj_elite         # loads 7 EBSNs from data/new_norms.csv
+  ebsn:                  # overridden by norm mode
+  sn: [1, 0, 0, 1]      # SJ — also set per-variant via 4bit_orig in CSV
+
+  # Public-information regime
+  z: 40
+  observability: 1.0
+  consensus_thresh: 0
+  non_consensus_strategy: emotion
+
+  # Errors
+  chi: 0.01
+  eps: 0.01
+  alpha: 0
+  xi: 0
+
+  # Payoffs
+  benefit: 5
+  cost: 1
+
+  # Evolutionary dynamics
+  beta: 1
+  mu: 1
+  generations: 1600
+  convergence period: 0.25
+
+  # Gamma fixed at 0.5
+  gamma_min: 0.5
+  gamma_max: 0.5
+  gamma_delta: 0
+  gamma_gaussian_n: 0.5
