@@ -15,7 +15,7 @@
 # accordingly on a multi-core box; cores=all uses all-but-one.
 
 running:
-  runs: 25
+  runs: 20
   cores: all
   plotting: false           # per-norm time-series plots not needed for the sweep
   output_file: "canonical_sweep_gamma1.csv"
@@ -27,7 +27,7 @@ simulation:
   random_image_matrix: false
 
   # Public-information regime
-  z: 50
+  z: 40
   observability: 1.0
   consensus_thresh: 0        # no consensus-fallback mechanism at q=1
   non_consensus_strategy: emotion   # irrelevant at q=1
@@ -45,8 +45,8 @@ simulation:
   # Evolutionary dynamics
   beta: 1
   mu: 1                      # mutation rate (divided by Z internally)
-  generations: 2000
-  convergence period: 0.2
+  generations: 1600
+  convergence period: 0.25
 
   # Gamma fixed at 1.0 (full EBSN use; base norm never consulted)
   gamma_min: 1
