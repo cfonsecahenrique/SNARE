@@ -1,6 +1,0 @@
-lair26: longlong test is remaking the acr x ~k multiple-q lines test, for xi=0.01 and longer (4000) generations - done
-lair27: 4000 gens at mu=1 - done
-
-lair23: running Image Scoring for the same combinations - done
-lair24: running Shinning for the same combinations - done
-lair25: running Simple Standing for the same combinations
