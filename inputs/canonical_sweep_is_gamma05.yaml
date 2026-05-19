@@ -1,0 +1,46 @@
+# IS-elite EBSNs at gamma=0.5 (6 norms with ACR >= 80% under Image Scoring at gamma=1).
+#
+# Runs only the 6 elite EBSN+IS combinations identified from canonical_sweep_is.csv.
+# Used to build the slopegraph (gamma=1 vs gamma=0.5) for the EBSNs paper.
+#
+# Usage:
+#   python SNARE.py inputs/canonical_sweep_is_gamma05.yaml
+
+running:
+  runs: 20
+  cores: all
+  plotting: false
+  output_file: "canonical_sweep_is_gamma05.csv"
+
+simulation:
+  norm: is_elite         # loads 6 EBSNs from data/new_norms.csv
+  ebsn:                  # overridden by norm mode
+  sn: [0, 0, 1, 1]      # IS - also set per-variant via 4bit_orig in CSV
+
+  # Public-information regime
+  z: 40
+  observability: 1.0
+  consensus_thresh: 0
+  non_consensus_strategy: emotion
+
+  # Errors
+  chi: 0.01
+  eps: 0.01
+  alpha: 0
+  xi: 0
+
+  # Payoffs
+  benefit: 5
+  cost: 1
+
+  # Evolutionary dynamics
+  beta: 1
+  mu: 1
+  generations: 1600
+  convergence period: 0.25
+
+  # Gamma fixed at 0.5
+  gamma_min: 0.5
+  gamma_max: 0.5
+  gamma_delta: 0
+  gamma_gaussian_n: 0.5

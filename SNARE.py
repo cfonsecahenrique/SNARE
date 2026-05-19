@@ -15,6 +15,8 @@ from constants import *
 import pandas as pd
 from datetime import timedelta
 import itertools
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def safe_print(obj):
     """Print an object, writing UTF-8 directly to stdout.buffer to bypass Windows cp1252 codec issues."""
@@ -370,8 +372,6 @@ def plot_time_series(all_results, model):
 
 
 def plot_time_series_interactive(all_results, model, filepath):
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
 
     cooperation_results = [r[0] for r in all_results]
     combined_strat_results = [r[1] for r in all_results]
