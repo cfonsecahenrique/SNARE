@@ -164,7 +164,7 @@ def is_trivial(bits: tuple) -> bool:
 
 
 def bits_to_str(bits: tuple) -> str:
-    return "".join(map(str, bits))
+    return "".join(map(str, bits)).zfill(8)
 
 
 def ebsn_label(row) -> str:

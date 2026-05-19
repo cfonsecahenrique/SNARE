@@ -46,15 +46,27 @@ for col in ["q", "consensus_thresh", "xi", "alpha", "average_cooperation", "gamm
     df_xi[col] = pd.to_numeric(df_xi[col], errors="coerce")
 df_xi["Z"] = pd.to_numeric(df_xi["Z"], errors="coerce")
 df_xi["gens"] = pd.to_numeric(df_xi["gens"], errors="coerce")
-df_xi = df_xi[
-    (df_xi["non_consensus_strategy"] == "action")
-    & (df_xi["xi"] == XI)
+_base_filter = (
+    (df_xi["xi"] == XI)
     & (df_xi["alpha"] == ALPHA)
     & (df_xi["gamma_center"] == GAMMA_CENTER)
     & (df_xi["Z"] == 50)
     & (df_xi["mu"] == 2)
     & (df_xi["gens"] == 3000)
+)
+# kappa=0: fallback never triggers, so label is irrelevant — use emotion rows as proxy
+df_xi_k0 = df_xi[
+    _base_filter
+    & (df_xi["non_consensus_strategy"] == "emotion")
+    & (df_xi["consensus_thresh"] == 0.0)
 ][["q", "consensus_thresh", "average_cooperation"]]
+# kappa>0: genuine action-fallback rows
+df_xi_action = df_xi[
+    _base_filter
+    & (df_xi["non_consensus_strategy"] == "action")
+    & (df_xi["consensus_thresh"] > 0.0)
+][["q", "consensus_thresh", "average_cooperation"]]
+df_xi = pd.concat([df_xi_k0, df_xi_action], ignore_index=True)
 
 # ── q=1 baseline from consensus_sweep_results.csv (emotion proxy, see docstring) ─
 df_q1 = pd.read_csv(
@@ -154,17 +166,17 @@ legend_handles = [
     for k in k_colored
 ]
 
-ax.legend(handles=legend_handles, frameon=False, fontsize=10,
-          loc="upper right", handlelength=1.8)
+ax.legend(handles=legend_handles, fontsize=10,
+          loc="upper left", bbox_to_anchor=(1.02, 1.0),
+          frameon=True, facecolor="white", edgecolor="#bbbbbb", framealpha=1.0,
+          borderaxespad=0.5, handlelength=1.8)
 
 ax.set_xlabel(r"Private assessment level $(1 - q)$", fontsize=13)
-ax.set_ylabel("Average cooperation rate (%)", fontsize=13)
+ax.set_ylabel(r"Average cooperation ratio $\eta$ (%)", fontsize=13)
 ax.set_xlim(-0.02, 1.02)
 ax.set_ylim(0, 100)
 ax.set_xticks([round(1 - q, 2) for q in sorted(Q_VALS, reverse=True)])
 ax.grid(axis="y", linestyle="--", alpha=0.4)
-
-plt.tight_layout()
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 plots_dir = os.path.join(_HERE, "plots")

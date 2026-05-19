@@ -1,20 +1,11 @@
 """
-Figure 2 (main): average cooperation vs. private assessment level (1-q),
-one line per consensus threshold kappa-tilde.
+Figure: average consensus vs. private assessment level (1-q),
+one line per consensus threshold kappa-tilde — action fallback.
 
-Data sources (stitched):
-  - outputs/xi_robustness.csv     : q in {0.2, 0.4, 0.6, 0.8}, mu=2, gens=3000
-  - outputs/consensus_sweep_results.csv : q=1 only, mu=1, gens=2000
-                                          (non-random IM init — correct SJ baseline)
+Same structure as plot_fig2_action.py but y-axis shows average consensus κ_R.
 
-Both filtered to: emotion fallback, xi=0.01, alpha=0, gamma_center=1, Z=50
-
-x-axis : 1 - q  (0 = fully public, 1 = fully private)
-y-axis : Average cooperation rate (%)
-Lines  : one per kappa-tilde in {0.0, 0.2, 0.4, 0.6, 0.8, 1.0}
-
-Output: plotting/plots/fig2_main.png
-        ../Emotion as a Solution to Private Assessment/PRSB/figs/fig2_main.png
+Output: plotting/plots/fig2_consensus_action.png
+        ../Emotion as a Solution to Private Assessment/PRSB/figs/fig2_consensus_action.png
 """
 
 import os
@@ -23,6 +14,7 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _SNARE_ROOT = os.path.dirname(_HERE)
@@ -44,26 +36,39 @@ df_xi = pd.read_csv(
     os.path.join(_SNARE_ROOT, "outputs", "xi_robustness.csv"),
     names=_XI_COL_NAMES, skiprows=1, on_bad_lines="skip",
 )
-for col in ["q", "consensus_thresh", "xi", "alpha", "average_cooperation", "gamma_center", "mu"]:
+for col in ["q", "consensus_thresh", "xi", "alpha", "average_consensus", "gamma_center", "mu"]:
     df_xi[col] = pd.to_numeric(df_xi[col], errors="coerce")
 df_xi["Z"] = pd.to_numeric(df_xi["Z"], errors="coerce")
 df_xi["gens"] = pd.to_numeric(df_xi["gens"], errors="coerce")
-df_xi = df_xi[
-    (df_xi["non_consensus_strategy"] == "emotion")
-    & (df_xi["xi"] == XI)
+
+_base_filter = (
+    (df_xi["xi"] == XI)
     & (df_xi["alpha"] == ALPHA)
     & (df_xi["gamma_center"] == GAMMA_CENTER)
     & (df_xi["Z"] == 50)
     & (df_xi["mu"] == 2)
     & (df_xi["gens"] == 3000)
-][["q", "consensus_thresh", "average_cooperation"]]
+)
+# kappa=0: fallback never triggers — use emotion rows as proxy
+df_xi_k0 = df_xi[
+    _base_filter
+    & (df_xi["non_consensus_strategy"] == "emotion")
+    & (df_xi["consensus_thresh"] == 0.0)
+][["q", "consensus_thresh", "average_consensus"]]
+# kappa>0: genuine action-fallback rows
+df_xi_action = df_xi[
+    _base_filter
+    & (df_xi["non_consensus_strategy"] == "action")
+    & (df_xi["consensus_thresh"] > 0.0)
+][["q", "consensus_thresh", "average_consensus"]]
+df_xi = pd.concat([df_xi_k0, df_xi_action], ignore_index=True)
 
-# ── Load consensus_sweep_results.csv for q=1 only ────────────────────────────
+# ── q=1 baseline from consensus_sweep_results.csv ────────────────────────────
 df_q1 = pd.read_csv(
     os.path.join(_SNARE_ROOT, "outputs", "consensus_sweep_results.csv"),
     on_bad_lines="skip",
 )
-for col in ["q", "consensus_thresh", "xi", "alpha", "average_cooperation", "gamma_center"]:
+for col in ["q", "consensus_thresh", "xi", "alpha", "average_consensus", "gamma_center"]:
     df_q1[col] = pd.to_numeric(df_q1[col], errors="coerce")
 df_q1 = df_q1[
     (df_q1["fallback"] == "emotion")
@@ -71,12 +76,13 @@ df_q1 = df_q1[
     & (df_q1["alpha"] == ALPHA)
     & (df_q1["gamma_center"] == GAMMA_CENTER)
     & (df_q1["q"] == 1.0)
-][["q", "consensus_thresh", "average_cooperation"]]
+][["q", "consensus_thresh", "average_consensus"]]
 
 # ── Combine ───────────────────────────────────────────────────────────────────
 df = pd.concat([df_xi, df_q1], ignore_index=True)
 df["consensus_thresh"] = df["consensus_thresh"].round(2)
 df["q"] = df["q"].round(2)
+df["private_assessment"] = (1.0 - df["q"]).round(2)
 
 K_VALS = sorted(df["consensus_thresh"].dropna().unique())
 Q_VALS = sorted(df["q"].dropna().unique())
@@ -85,11 +91,8 @@ print(f"kappa-tilde values: {K_VALS}")
 print(f"q values: {Q_VALS}")
 print(f"n rows: {len(df)}")
 
-# Build 1-q column
-df["private_assessment"] = (1.0 - df["q"]).round(2)
-
 agg = (
-    df.groupby(["consensus_thresh", "private_assessment"])["average_cooperation"]
+    df.groupby(["consensus_thresh", "private_assessment"])["average_consensus"]
     .agg(["mean", "sem"])
     .reset_index()
 )
@@ -102,15 +105,12 @@ mpl.rcParams.update({
     "axes.spines.right": False,
 })
 
-# kappa=0 is the pure-SJ baseline (dashed gray); the rest use a sequential palette
 K_BASELINE = 0.0
 k_colored = [k for k in K_VALS if k != K_BASELINE]
 palette = plt.cm.plasma(np.linspace(0.15, 0.85, len(k_colored)))
 color_map = {k: c for k, c in zip(k_colored, palette)}
 
 fig, ax = plt.subplots(figsize=(7, 5))
-
-pa_vals = sorted(agg["private_assessment"].unique())
 
 for k in K_VALS:
     k_data = agg[agg["consensus_thresh"] == k].sort_values("private_assessment")
@@ -144,9 +144,7 @@ for k in K_VALS:
         zorder=zorder - 1,
     )
 
-# ── Legend (two-group: baseline / emotion fallback) ───────────────────────────
-from matplotlib.patches import Patch
-
+# ── Legend ────────────────────────────────────────────────────────────────────
 def section_header(text):
     return Patch(color="none", label=text)
 
@@ -155,7 +153,7 @@ legend_handles = [
     Line2D([0], [0], color="#555555", linestyle="--", linewidth=1.8,
            marker="o", markersize=5,
            label=r"$\tilde{\kappa} = 0.0$  (pure SJ)"),
-    section_header(r"$\bf{Emotion\ fallback}\ (\tilde{\kappa} > 0)$"),
+    section_header(r"$\bf{Action\ fallback}\ (\tilde{\kappa} > 0)$"),
 ] + [
     Line2D([0], [0], color=color_map[k], linestyle="-", linewidth=2.0,
            marker="o", markersize=5,
@@ -169,26 +167,25 @@ ax.legend(handles=legend_handles, fontsize=10,
           borderaxespad=0.5, handlelength=1.8)
 
 ax.set_xlabel(r"Private assessment level $(1 - q)$", fontsize=13)
-ax.set_ylabel(r"Average cooperation ratio $\eta$ (%)", fontsize=13)
+ax.set_ylabel(r"Average consensus $\kappa_R$", fontsize=13)
 ax.set_xlim(-0.02, 1.02)
-ax.set_ylim(0, 100)
+ax.set_ylim(0, 1)
 ax.set_xticks([round(1 - q, 2) for q in sorted(Q_VALS, reverse=True)])
 ax.grid(axis="y", linestyle="--", alpha=0.4)
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 plots_dir = os.path.join(_HERE, "plots")
 os.makedirs(plots_dir, exist_ok=True)
-local_path = os.path.join(plots_dir, "fig2_main.png")
+local_path = os.path.join(plots_dir, "fig2_consensus_action.png")
 plt.savefig(local_path, dpi=200, bbox_inches="tight")
 print(f"Saved: {local_path}")
 
-# Also copy to PRSB figs/
 paper_figs = os.path.join(
     _SNARE_ROOT, "..",
     "Emotion as a Solution to Private Assessment", "PRSB", "figs",
 )
 if os.path.isdir(paper_figs):
-    paper_path = os.path.join(paper_figs, "fig2_main.png")
+    paper_path = os.path.join(paper_figs, "fig2_consensus_action.png")
     plt.savefig(paper_path, dpi=200, bbox_inches="tight")
     print(f"Saved: {paper_path}")
 
