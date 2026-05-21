@@ -612,10 +612,11 @@ def run_all_variants(norm_name, yaml_file, csv_file, n_runs, n_cores, output_fil
         print(f"\n--- Running {variant_id} ---")
         
         sweep_params = []
-        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu"]:
+        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu",
+                      "gamma_gaussian_n", "gamma_min", "gamma_max"]:
             if not aux.is_single_value(sim_params.get(param, 1.0)):
                 sweep_params.append(param)
-            
+
         if len(sweep_params) == 0:
             run_single_value_experiment(n_runs, n_cores, sim_params, output_file=output_file, plots=plots)
         else:
@@ -652,7 +653,8 @@ def run_canonical_ebsn_sweep(base_sim_params, n_runs, n_cores, output_file="resu
 
         sweep_params = []
         for param in ["consensus_thresh", "observability", "alpha", "chi",
-                      "eps", "xi", "z", "benefit", "beta", "mu"]:
+                      "eps", "xi", "z", "benefit", "beta", "mu",
+                      "gamma_gaussian_n", "gamma_min", "gamma_max"]:
             if not aux.is_single_value(sim_params.get(param, 1.0)):
                 sweep_params.append(param)
 
@@ -752,7 +754,8 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, output_file="results
 
         # Determine which parameters to sweep
         sweep_params = []
-        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu"]:
+        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu",
+                      "gamma_gaussian_n", "gamma_min", "gamma_max"]:
             if not aux.is_single_value(sim_params.get(param, 1.0)):
                 sweep_params.append(param)
 
@@ -819,7 +822,8 @@ if __name__ == '__main__':
         )
     else:  # --- Manual mode (use ebsn + sn from YAML) ---
         sweep_params = []
-        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu"]:
+        for param in ["consensus_thresh", "observability", "alpha", "chi", "eps", "xi", "z", "benefit", "beta", "mu",
+                      "gamma_gaussian_n", "gamma_min", "gamma_max"]:
             if not aux.is_single_value(base_sim_params.get(param, 1.0)):
                 sweep_params.append(param)
 
