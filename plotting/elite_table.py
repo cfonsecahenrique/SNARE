@@ -126,13 +126,11 @@ def build_table() -> pd.DataFrame:
         rows.append(agg1)
 
     df = pd.concat(rows, ignore_index=True)
-    # Primary sort: equilibrium (Disc/Good first), then base norm order, then ACR desc
+    # Sort: equilibrium group (Disc/Good, pDisc/Bad, Bimodal), then ACR descending
     equil_order = {"Disc/Good": 0, "pDisc/Bad": 1, "Bimodal": 2}
-    base_order_map = {n: i for i, n in enumerate(BASE_ORDER)}
     df["_esort"] = df["equilibrium"].map(equil_order)
-    df["_bsort"] = df["base_norm"].map(base_order_map)
-    df = df.sort_values(["_esort", "_bsort", "acr_1"], ascending=[True, True, False])
-    df = df.drop(columns=["_esort", "_bsort"])
+    df = df.sort_values(["_esort", "acr_1"], ascending=[True, False])
+    df = df.drop(columns=["_esort"])
     return df.reset_index(drop=True)
 
 
@@ -340,7 +338,7 @@ def write_latex_table(df: pd.DataFrame, out_path: Path) -> None:
             prev_equil = eq
             prev_base  = None
 
-        base_cell = rf"\textbf{{{base}}}" if base != prev_base else ""
+        base_cell = rf"\textbf{{{base}}}" if base != prev_base else base
         prev_base = base
 
         acr_str = f"{row['acr_1']*100:.1f}"
