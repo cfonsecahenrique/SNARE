@@ -1,17 +1,21 @@
-# SJ-elite EBSNs under private assessment — observability sweep.
+# All 29 elite EBSNs under private assessment — observability sweep.
 #
-# Runs the 11 SJ-based elite EBSNs (ACR >= 85% at gamma=1, q=1) across four
-# observability levels (q = 0.4, 0.6, 0.8, 1.0) with full EBSN use (gamma=1).
-# A gamma=0 baseline (pure SJ, EBSN never consulted) is included at each q
-# level for direct comparison.
+# Runs every elite EBSN (ACR >= 85% at gamma=1, q=1) across all four leading
+# base norms (SJ, IS, SH, SS) at four observability levels (q = 0.4, 0.6,
+# 0.8, 1.0).  Each variant carries its own 4bit_orig base norm from the CSV,
+# so SJ-elite, IS-elite, SH-elite, and SS-elite EBSNs are all included with
+# the correct base norm for each.
+#
+# A gamma=0 baseline is included at each q level: with gamma=0 the EBSN is
+# never consulted, so those rows give the pure base-norm performance at each
+# observability level.
 #
 # The non-consensus fallback is set to 'emotion': when fewer than ~80% of
-# observers agree on an agent's reputation (consensus_thresh=0.6), the agent
-# falls back to the EBSN rather than an action-based rule, so emotional
-# profiles can fill the gap left by noisy reputation information.
+# observers agree on a reputation (consensus_thresh=0.6), the agent falls
+# back to the EBSN rather than an action-based rule.
 #
-# Parameter combinations: 11 norms × 4 q-values × 2 gamma-values × 20 runs
-#   = 1760 total runs.
+# Parameter combinations: 29 norms × 4 q-values × 2 gamma-values × 20 runs
+#   = 4640 total runs.
 #
 # Usage:
 #   python SNARE.py inputs/sj_elite_private_assessment.yaml
@@ -20,17 +24,17 @@ running:
   runs: 20
   cores: all
   plotting: false
-  output_file: "sj_elite_private_assessment.csv"
+  output_file: "elite_private_assessment.csv"
 
 simulation:
-  norm: sj_elite_private    # 11 SJ-elite EBSNs from data/new_norms.csv
+  norm: all_elite_private   # 29 elite EBSNs from data/new_norms.csv
   ebsn:                     # overridden by norm mode
-  sn: [1, 0, 0, 1]         # SJ base norm (same for all 11 variants)
+  sn: [1, 0, 0, 1]         # placeholder; actual base norm comes from 4bit_orig
 
   # Private-assessment regime: observability sweep
   z: 50
   observability: [0.4, 0.6, 0.8, 1.0]
-  consensus_thresh: 0.6     # fallback kicks in when consensus < ~80% agreement
+  consensus_thresh: 0.6     # fallback fires when consensus < ~80% agreement
   non_consensus_strategy: emotion   # use EBSN as fallback when reputation is noisy
 
   # Errors (same as canonical sweeps)
@@ -49,7 +53,7 @@ simulation:
   generations: 2000
   convergence period: 0.25
 
-  # Gamma sweep: 0 = pure SJ baseline, 1 = full EBSN use
+  # Gamma sweep: 0 = pure base-norm baseline, 1 = full EBSN use
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0
