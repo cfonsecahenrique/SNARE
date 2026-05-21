@@ -1,0 +1,30 @@
+8bit,Cooperative-Social Norm,Competitive-Social Norm,acr_1,mean_G,n_highG,n_lowG,bimodal,dom,equilibrium,base_norm,label,dom_short
+01011001,paradoxical Shunning,U2,0.933764,0.9737499999999999,20,0,False,Disc_Coop,Disc/Good,Stern Judging,pSH|U2,Disc · Coop-EP
+01011101,All Good,U2,0.9199805,0.9674999999999999,20,0,False,Disc_Coop,Disc/Good,Stern Judging,AG|U2,Disc · Coop-EP
+11001001,Stern Judging,U10,0.8874465,0.9112499999999997,20,0,False,Disc_Coop,Disc/Good,Image Scoring,SJ|U10,Disc · Coop-EP
+11001101,Simple Standing,U10,0.882071,0.92125,20,0,False,Disc_Coop,Disc/Good,Image Scoring,SS|U10,Disc · Coop-EP
+11011001,paradoxical Shunning,U10,0.870499,0.885,19,1,False,Disc_Coop,Disc/Good,Image Scoring,pSH|U10,Disc · Coop-EP
+01001001,Stern Judging,U2,0.8620560000000002,0.93625,20,0,False,Disc_Coop,Disc/Good,Image Scoring,SJ|U2,Disc · Coop-EP
+11011001,paradoxical Shunning,U10,0.9087295,0.96125,20,0,False,Disc_Coop,Disc/Good,Shunning,pSH|U10,Disc · Coop-EP
+01000111,Simple Standing,Shunning,0.8917219999999999,0.8725000000000002,20,0,False,Disc_Coop,Disc/Good,Shunning,SS|SH,Disc · Coop-EP
+11001001,Stern Judging,U10,0.8814359999999999,0.8612499999999998,19,1,False,Disc_Coop,Disc/Good,Shunning,SJ|U10,Disc · Coop-EP
+11000101,Simple Standing,paradoxical Simple Standing,0.8791014999999998,0.8425,18,2,False,Disc_Coop,Disc/Good,Shunning,SS|pSS,Disc · Coop-EP
+11001101,Simple Standing,U10,0.868849,0.9087500000000001,20,0,False,Disc_Coop,Disc/Good,Shunning,SS|U10,Disc · Coop-EP
+01100101,Simple Standing,U4,0.8666174999999999,0.8862499999999999,19,1,False,Disc_Coop,Disc/Good,Shunning,SS|U4,Disc · Coop-EP
+11100101,Simple Standing,paradoxical Image Scoring,0.8650724999999999,0.8587499999999999,19,1,False,Disc_Coop,Disc/Good,Shunning,SS|pIS,Disc · Coop-EP
+11110101,All Good,paradoxical Image Scoring,0.8528930000000001,0.8862499999999999,18,2,False,Disc_Coop,Disc/Good,Shunning,AG|pIS,Disc · Coop-EP
+01011001,paradoxical Shunning,U2,0.8947235000000001,0.9512499999999999,20,0,False,Disc_Coop,Disc/Good,Simple Standing,pSH|U2,Disc · Coop-EP
+01011101,All Good,U2,0.8892365000000002,0.8887499999999999,19,1,False,Disc_Coop,Disc/Good,Simple Standing,AG|U2,Disc · Coop-EP
+11011001,paradoxical Shunning,U10,0.8817330000000002,0.9762500000000001,20,0,False,Disc_Coop,Disc/Good,Simple Standing,pSH|U10,Disc · Coop-EP
+00011001,U5,U2,0.8555379999999999,0.9412500000000001,20,0,False,Disc_Coop,Disc/Good,Simple Standing,U5|U2,Disc · Coop-EP
+01010111,All Good,Shunning,0.9190805,0.01125,0,20,False,pDisc_Comp,pDisc/Bad,Stern Judging,AG|SH,pDisc · Comp-EP
+11010011,paradoxical Shunning,Stern Judging,0.88085,0.075,0,20,False,pDisc_Comp,pDisc/Bad,Stern Judging,pSH|SJ,pDisc · Comp-EP
+11010111,All Good,Stern Judging,0.8627670000000001,0.12500000000000003,1,19,False,pDisc_Comp,pDisc/Bad,Stern Judging,AG|SJ,pDisc · Comp-EP
+01010101,All Good,All Bad,0.9276455,0.30999999999999994,6,14,True,pDisc_Comp,Bimodal,Stern Judging,AG|AB,pDisc · Comp-EP
+01000111,Simple Standing,Shunning,0.921862,0.5925,13,7,True,Disc_Coop,Bimodal,Stern Judging,SS|SH,Disc · Coop-EP
+11010101,All Good,paradoxical Simple Standing,0.9135115,0.2437499999999999,4,16,True,pDisc_Comp,Bimodal,Stern Judging,AG|pSS,pDisc · Comp-EP
+11000111,Simple Standing,Stern Judging,0.9016049999999998,0.385,7,13,True,pDisc_Comp,Bimodal,Stern Judging,SS|SJ,pDisc · Comp-EP
+11001001,Stern Judging,U10,0.8725925,0.40874999999999995,8,12,True,pDisc_Coop,Bimodal,Stern Judging,SJ|U10,pDisc · Coop-EP
+11000101,Simple Standing,paradoxical Simple Standing,0.8653650000000003,0.40750000000000003,8,12,True,pDisc_Comp,Bimodal,Stern Judging,SS|pSS,pDisc · Comp-EP
+11010101,All Good,paradoxical Simple Standing,0.8919229999999999,0.8587499999999999,17,3,True,Disc_Coop,Bimodal,Shunning,AG|pSS,Disc · Coop-EP
+11000111,Simple Standing,Stern Judging,0.8815254999999999,0.79625,17,3,True,Disc_Coop,Bimodal,Shunning,SS|SJ,Disc · Coop-EP
