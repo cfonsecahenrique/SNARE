@@ -32,9 +32,9 @@ simulation:
   sn: [1, 0, 0, 1]         # placeholder; actual base norm comes from 4bit_orig
 
   # Private-assessment regime: observability sweep
-  z: 50
-  observability: [0.4, 0.6, 0.8, 1.0]
-  consensus_thresh: 0.6     # fallback fires when consensus < ~80% agreement
+  z: 40
+  observability: [0.4, 0.6, 0.8]
+  consensus_thresh: 0     # fallback fires when consensus < ~80% agreement
   non_consensus_strategy: emotion   # use EBSN as fallback when reputation is noisy
 
   # Errors (same as canonical sweeps)
@@ -50,11 +50,11 @@ simulation:
   # Evolutionary dynamics
   beta: 1
   mu: 1
-  generations: 2000
+  generations: 1600
   convergence period: 0.25
 
   # Gamma sweep: 0 = pure base-norm baseline, 1 = full EBSN use
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0
-  gamma_gaussian_n: [0, 1]
+  gamma_gaussian_n: [0.5, 1]
