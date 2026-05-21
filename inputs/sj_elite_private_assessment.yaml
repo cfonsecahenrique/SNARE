@@ -1,21 +1,19 @@
 # All 29 elite EBSNs under private assessment — observability sweep.
 #
 # Runs every elite EBSN (ACR >= 85% at gamma=1, q=1) across all four leading
-# base norms (SJ, IS, SH, SS) at four observability levels (q = 0.4, 0.6,
-# 0.8, 1.0).  Each variant carries its own 4bit_orig base norm from the CSV,
-# so SJ-elite, IS-elite, SH-elite, and SS-elite EBSNs are all included with
-# the correct base norm for each.
+# base norms (SJ, IS, SH, SS) at three observability levels (q = 0.4, 0.6,
+# 0.8).  q=1 results are already available from the canonical sweeps.
+# Each variant carries its own 4bit_orig base norm from the CSV.
 #
-# A gamma=0 baseline is included at each q level: with gamma=0 the EBSN is
-# never consulted, so those rows give the pure base-norm performance at each
-# observability level.
+# gamma=[0.5, 1] mirrors the slopegraph design: the gamma=0.5 vs gamma=1
+# comparison is now repeated at reduced observability to ask whether the
+# cooperation gains survive private assessment.
 #
-# The non-consensus fallback is set to 'emotion': when fewer than ~80% of
-# observers agree on a reputation (consensus_thresh=0.6), the agent falls
-# back to the EBSN rather than an action-based rule.
+# consensus_thresh=0 disables the consensus fallback entirely; gamma alone
+# controls whether the EBSN or the base norm is applied.
 #
-# Parameter combinations: 29 norms × 4 q-values × 2 gamma-values × 20 runs
-#   = 4640 total runs.
+# Parameter combinations: 29 norms × 3 q-values × 2 gamma-values × 20 runs
+#   = 3480 total runs.
 #
 # Usage:
 #   python SNARE.py inputs/sj_elite_private_assessment.yaml
