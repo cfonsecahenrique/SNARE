@@ -310,7 +310,7 @@ def write_latex_table(df: pd.DataFrame, out_path: Path) -> None:
         r"\textit{Bimodal}: runs split between the two attractors depending on initial "
         r"conditions; $\bar{G}$ is an average across attractors. "
         r"$n$ = Cooperative-EP, $m$ = Competitive-EP. "
-        r"All results at $\gamma=1$, $Z=50$, $\varepsilon=\chi=0.01$, $\beta=1$.}",
+        r"All results at $\gamma=1$, $Z=40$, $\varepsilon=\chi=0.01$, $\beta=1$.}",
         r"\label{tab:elite}",
         r"\small",
         rf"\begin{{tabular}}{{{col_spec}}}",

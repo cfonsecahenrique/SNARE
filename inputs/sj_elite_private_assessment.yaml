@@ -1,0 +1,56 @@
+# SJ-elite EBSNs under private assessment — observability sweep.
+#
+# Runs the 11 SJ-based elite EBSNs (ACR >= 85% at gamma=1, q=1) across four
+# observability levels (q = 0.4, 0.6, 0.8, 1.0) with full EBSN use (gamma=1).
+# A gamma=0 baseline (pure SJ, EBSN never consulted) is included at each q
+# level for direct comparison.
+#
+# The non-consensus fallback is set to 'emotion': when fewer than ~80% of
+# observers agree on an agent's reputation (consensus_thresh=0.6), the agent
+# falls back to the EBSN rather than an action-based rule, so emotional
+# profiles can fill the gap left by noisy reputation information.
+#
+# Parameter combinations: 11 norms × 4 q-values × 2 gamma-values × 20 runs
+#   = 1760 total runs.
+#
+# Usage:
+#   python SNARE.py inputs/sj_elite_private_assessment.yaml
+
+running:
+  runs: 20
+  cores: all
+  plotting: false
+  output_file: "sj_elite_private_assessment.csv"
+
+simulation:
+  norm: sj_elite_private    # 11 SJ-elite EBSNs from data/new_norms.csv
+  ebsn:                     # overridden by norm mode
+  sn: [1, 0, 0, 1]         # SJ base norm (same for all 11 variants)
+
+  # Private-assessment regime: observability sweep
+  z: 50
+  observability: [0.4, 0.6, 0.8, 1.0]
+  consensus_thresh: 0.6     # fallback kicks in when consensus < ~80% agreement
+  non_consensus_strategy: emotion   # use EBSN as fallback when reputation is noisy
+
+  # Errors (same as canonical sweeps)
+  chi: 0.01
+  eps: 0.01
+  alpha: 0
+  xi: 0
+
+  # Payoffs
+  benefit: 5
+  cost: 1
+
+  # Evolutionary dynamics
+  beta: 1
+  mu: 1
+  generations: 2000
+  convergence period: 0.25
+
+  # Gamma sweep: 0 = pure SJ baseline, 1 = full EBSN use
+  gamma_min: 0
+  gamma_max: 1
+  gamma_delta: 0
+  gamma_gaussian_n: [0, 1]
