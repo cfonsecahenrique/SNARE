@@ -766,10 +766,18 @@ def run_all_ebsn_variants(base_sim_params, n_runs, n_cores, output_file="results
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        raise ValueError("Usage: python SNARE.py <experiment.yaml>")
+    import argparse as _ap
+    _parser = _ap.ArgumentParser()
+    _parser.add_argument("yaml", help="Path to experiment YAML file")
+    _parser.add_argument("--combo", type=int, default=None,
+                         help="SLURM mode: index of parameter combination to run")
+    _parser.add_argument("--run", type=int, default=None,
+                         help="SLURM mode: run index (used only for output file naming)")
+    _args = _parser.parse_args()
 
-    config_file = sys.argv[1]
+    config_file = _args.yaml
+    slurm_combo = _args.combo
+    slurm_run   = _args.run
 
     # Hard-coded path to the master CSV with all norms
     NORM_CSV_PATH = "data/new_norms.csv"
@@ -827,7 +835,21 @@ if __name__ == '__main__':
             if not aux.is_single_value(base_sim_params.get(param, 1.0)):
                 sweep_params.append(param)
 
-        if len(sweep_params) == 0:
+        if slurm_combo is not None and slurm_run is not None:
+            # --- SLURM single-run mode: one simulation, one core, unique output file ---
+            if sweep_params:
+                param_sets, _ = generate_parameter_sets(base_sim_params, sweep_params)
+                sim_params = param_sets[slurm_combo]
+            else:
+                sim_params = base_sim_params  # only one combo (index 0)
+            stem, ext = os.path.splitext(output_file)
+            task_output = f"{stem}_c{slurm_combo:04d}_r{slurm_run:04d}{ext}"
+            model = make_model_from_params(sim_params)
+            safe_print(f"[SLURM] combo={slurm_combo} run={slurm_run} → {task_output}")
+            safe_print(model)
+            os.makedirs("outputs", exist_ok=True)
+            simulation(model, task_output)
+        elif len(sweep_params) == 0:
             run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file=output_file, plots=with_logging)
         else:
             run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=sweep_params, output_file=output_file, plots=with_logging)
