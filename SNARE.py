@@ -39,7 +39,7 @@ def run_simulations_for_model(model, n_runs, n_cores):
     return all_results
 
 
-def simulation(model: Model, output_file: str = "results.csv"):
+def simulation(model: Model, output_file: str = "results.csv", silent: bool = False):
     z = model.population_size
     mu = model.mutation_rate / model.population_size
     gens = model.generations
@@ -72,7 +72,7 @@ def simulation(model: Model, output_file: str = "results.csv"):
     max_randoms_per_gen = int((z * z * 2 * max_randoms_per_pd + z) * 1.2) + 1024
     rng = np.random.default_rng()
 
-    for current_gen in tqdm(range(gens)):
+    for current_gen in tqdm(range(gens), disable=silent):
         past_convergence = current_gen > model.converge
         aux_population: list[Agent] = agents.copy()
         random.shuffle(aux_population)
@@ -848,7 +848,7 @@ if __name__ == '__main__':
             safe_print(f"[SLURM] combo={slurm_combo} run={slurm_run} → {task_output}")
             safe_print(model)
             os.makedirs("outputs", exist_ok=True)
-            simulation(model, task_output)
+            simulation(model, task_output, silent=True)
         elif len(sweep_params) == 0:
             run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file=output_file, plots=with_logging)
         else:

@@ -47,16 +47,36 @@ def expand_param(val):
     return [val]
 
 
-def count_combos(sim_params: dict) -> int:
-    n = 1
+def build_combo_list(sim_params: dict) -> tuple[list[dict], list[str]]:
+    """Return (combos, swept_keys) where combos is one scalar-param dict per combo."""
+    sweep_axes = []
     for key in SWEEP_KEYS:
         val = sim_params.get(key)
         if val is None:
             continue
         vals = expand_param(val)
         if len(vals) > 1:
-            n *= len(vals)
-    return n
+            sweep_axes.append((key, vals))
+
+    if not sweep_axes:
+        return [dict(sim_params)], []
+
+    swept_keys = [k for k, _ in sweep_axes]
+    combos = []
+    for values in itertools.product(*[v for _, v in sweep_axes]):
+        combo = dict(sim_params)
+        for k, v in zip(swept_keys, values):
+            combo[k] = v
+        combos.append(combo)
+    return combos, swept_keys
+
+
+def job_label(combo_params: dict, swept_keys: list[str]) -> str:
+    """Build a squeue-friendly name from only the swept parameter values."""
+    if not swept_keys:
+        return "SN"
+    parts = [f"{k[0]}{combo_params[k]:g}" for k in swept_keys if k in combo_params]
+    return ("SN_" + "_".join(parts))[:15]
 
 
 def running_job_count() -> int:
@@ -68,17 +88,17 @@ def running_job_count() -> int:
     return len(lines)
 
 
-def submit(yaml_path: str, combo: int, run: int, dry_run: bool) -> None:
-    cmd = ["sbatch", JOB_SCRIPT, yaml_path, str(combo), str(run)]
+def submit(yaml_path: str, combo: int, run: int, name: str, dry_run: bool) -> None:
+    cmd = ["sbatch", f"--job-name={name}_r{run:02d}", JOB_SCRIPT, yaml_path, str(combo), str(run)]
     if dry_run:
         print("  " + " ".join(cmd))
         return
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        log(f"  ERROR c={combo:04d} r={run:04d}: {result.stderr.strip()}")
+        log(f"  ERROR {name}_r{run:02d}: {result.stderr.strip()}")
     else:
         job_id = result.stdout.strip().split()[-1]
-        log(f"  Submitted c={combo:04d} r={run:04d} → job {job_id}")
+        log(f"  Submitted {name}_r{run:02d} → job {job_id}")
 
 
 def main() -> None:
@@ -103,7 +123,8 @@ def main() -> None:
 
     n_runs = int(config["running"]["runs"])
     sim_params = config["simulation"]
-    n_combos = count_combos(sim_params)
+    combos, swept_keys = build_combo_list(sim_params)
+    n_combos = len(combos)
     total = n_combos * n_runs
 
     log(f"YAML       : {yaml_path}")
@@ -115,7 +136,8 @@ def main() -> None:
     submitted = 0
     start = time.time()
 
-    for combo in range(n_combos):
+    for combo_idx, combo_params in enumerate(combos):
+        name = job_label(combo_params, swept_keys)
         for run in range(n_runs):
             if not args.dry_run:
                 while True:
@@ -126,7 +148,7 @@ def main() -> None:
                         f"Waiting {args.sleep}s… ({submitted}/{total} submitted)")
                     time.sleep(args.sleep)
 
-            submit(yaml_path, combo, run, args.dry_run)
+            submit(yaml_path, combo_idx, run, name, args.dry_run)
             submitted += 1
 
     elapsed = int(time.time() - start)
