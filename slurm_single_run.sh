@@ -17,8 +17,7 @@ cd "$PROJECT_HOME" || { echo "Cannot cd to $PROJECT_HOME"; exit 1; }
 
 mkdir -p logs outputs
 
-eval "$(micromamba shell hook --shell bash)"
-micromamba activate snare
+source "$PROJECT_HOME/venv/bin/activate"
 
 echo "[$(date)] YAML=$YAML combo=$COMBO run=$RUN host=$(hostname)"
 python SNARE.py "$YAML" --combo "$COMBO" --run "$RUN"
