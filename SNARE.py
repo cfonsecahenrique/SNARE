@@ -770,14 +770,11 @@ if __name__ == '__main__':
     _parser = _ap.ArgumentParser()
     _parser.add_argument("yaml", help="Path to experiment YAML file")
     _parser.add_argument("--combo", type=int, default=None,
-                         help="SLURM mode: index of parameter combination to run")
-    _parser.add_argument("--run", type=int, default=None,
-                         help="SLURM mode: run index (used only for output file naming)")
+                         help="SLURM mode: index of parameter combination to run (all runs via multiprocessing)")
     _args = _parser.parse_args()
 
     config_file = _args.yaml
     slurm_combo = _args.combo
-    slurm_run   = _args.run
 
     # Hard-coded path to the master CSV with all norms
     NORM_CSV_PATH = "data/new_norms.csv"
@@ -835,20 +832,19 @@ if __name__ == '__main__':
             if not aux.is_single_value(base_sim_params.get(param, 1.0)):
                 sweep_params.append(param)
 
-        if slurm_combo is not None and slurm_run is not None:
-            # --- SLURM single-run mode: one simulation, one core, unique output file ---
+        if slurm_combo is not None:
+            # --- SLURM mode: one node per combo, all runs via multiprocessing ---
             if sweep_params:
                 param_sets, _ = generate_parameter_sets(base_sim_params, sweep_params)
                 sim_params = param_sets[slurm_combo]
             else:
-                sim_params = base_sim_params  # only one combo (index 0)
+                sim_params = base_sim_params
             stem, ext = os.path.splitext(output_file)
-            task_output = f"{stem}_c{slurm_combo:04d}_r{slurm_run:04d}{ext}"
-            model = make_model_from_params(sim_params)
-            safe_print(f"[SLURM] combo={slurm_combo} run={slurm_run} → {task_output}")
-            safe_print(model)
+            task_output = f"{stem}_c{slurm_combo:04d}{ext}"
+            safe_print(f"[SLURM] combo={slurm_combo} → {task_output}")
+            safe_print(make_model_from_params(sim_params))
             os.makedirs("outputs", exist_ok=True)
-            simulation(model, task_output, silent=True)
+            run_single_value_experiment(n_runs, n_cores, sim_params, output_file=task_output, plots=False)
         elif len(sweep_params) == 0:
             run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file=output_file, plots=with_logging)
         else:

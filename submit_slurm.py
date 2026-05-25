@@ -88,17 +88,17 @@ def running_job_count() -> int:
     return len(lines)
 
 
-def submit(yaml_path: str, combo: int, run: int, name: str, dry_run: bool) -> None:
-    cmd = ["sbatch", f"--job-name={name}_r{run:02d}", JOB_SCRIPT, yaml_path, str(combo), str(run)]
+def submit(yaml_path: str, combo: int, name: str, dry_run: bool) -> None:
+    cmd = ["sbatch", f"--job-name={name}", JOB_SCRIPT, yaml_path, str(combo)]
     if dry_run:
         print("  " + " ".join(cmd))
         return
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        log(f"  ERROR {name}_r{run:02d}: {result.stderr.strip()}")
+        log(f"  ERROR {name}: {result.stderr.strip()}")
     else:
         job_id = result.stdout.strip().split()[-1]
-        log(f"  Submitted {name}_r{run:02d} → job {job_id}")
+        log(f"  Submitted {name} → job {job_id}")
 
 
 def main() -> None:
@@ -128,8 +128,8 @@ def main() -> None:
     total = n_combos * n_runs
 
     log(f"YAML       : {yaml_path}")
-    log(f"Combos     : {n_combos}  ×  Runs: {n_runs}  =  {total} total jobs")
-    log(f"Throttle   : {args.max_jobs} concurrent  |  sleep: {args.sleep}s")
+    log(f"Combos     : {n_combos}  (each runs {n_runs} repetitions via multiprocessing)")
+    log(f"Jobs       : {n_combos} total  |  throttle: {args.max_jobs} concurrent  |  sleep: {args.sleep}s")
     if args.dry_run:
         log("DRY RUN — no jobs will be submitted.")
 
@@ -138,21 +138,20 @@ def main() -> None:
 
     for combo_idx, combo_params in enumerate(combos):
         name = job_label(combo_params, swept_keys)
-        for run in range(n_runs):
-            if not args.dry_run:
-                while True:
-                    current = running_job_count()
-                    if current < args.max_jobs:
-                        break
-                    log(f"Throttled: {current}/{args.max_jobs} active. "
-                        f"Waiting {args.sleep}s… ({submitted}/{total} submitted)")
-                    time.sleep(args.sleep)
+        if not args.dry_run:
+            while True:
+                current = running_job_count()
+                if current < args.max_jobs:
+                    break
+                log(f"Throttled: {current}/{args.max_jobs} active. "
+                    f"Waiting {args.sleep}s… ({submitted}/{n_combos} submitted)")
+                time.sleep(args.sleep)
 
-            submit(yaml_path, combo_idx, run, name, args.dry_run)
-            submitted += 1
+        submit(yaml_path, combo_idx, name, args.dry_run)
+        submitted += 1
 
     elapsed = int(time.time() - start)
-    log(f"Done. {submitted}/{total} jobs submitted in {elapsed // 60}m {elapsed % 60}s.")
+    log(f"Done. {submitted}/{n_combos} jobs submitted in {elapsed // 60}m {elapsed % 60}s.")
 
 
 if __name__ == "__main__":

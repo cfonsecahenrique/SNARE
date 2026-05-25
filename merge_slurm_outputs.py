@@ -29,7 +29,7 @@ def main() -> None:
 
     base = args.output
     stem, ext = os.path.splitext(base)
-    pattern = f"{stem}_c*_r*{ext}"
+    pattern = f"{stem}_c*{ext}"
 
     files = sorted(glob.glob(pattern))
     if not files:
