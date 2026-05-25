@@ -48,7 +48,7 @@ simulation:
   # Evolutionary dynamics
   beta: 1
   mu: 1
-  generations: 1600
+  generations: 40
   convergence period: 0.25
 
   # Gamma sweep: 0 = pure base-norm baseline, 1 = full EBSN use

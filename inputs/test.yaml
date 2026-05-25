@@ -24,5 +24,5 @@ simulation:
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
-  generations: 1000
+  generations: 25
   convergence period: 0

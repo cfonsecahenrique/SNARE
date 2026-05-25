@@ -45,7 +45,7 @@ simulation:
   # Evolutionary dynamics
   beta: 1
   mu: 1                      # mutation rate (divided by Z internally)
-  generations: 1600
+  generations: 40
   convergence period: 0.25
 
   # Gamma fixed at 1.0 (full EBSN use; base norm never consulted)

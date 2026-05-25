@@ -219,7 +219,7 @@ def make_model_from_params(simulation_parameters):
     benefit = int(simulation_parameters["benefit"])
     cost = int(simulation_parameters["cost"])
     beta = float(simulation_parameters["beta"])
-    generations = int(simulation_parameters["generations"])
+    generations = int(simulation_parameters["generations"]) * z  # generations is a per-agent multiplier
     min_gamma = float(simulation_parameters["gamma_min"])
     max_gamma = float(simulation_parameters["gamma_max"])
     gamma_delta = float(simulation_parameters["gamma_delta"])
