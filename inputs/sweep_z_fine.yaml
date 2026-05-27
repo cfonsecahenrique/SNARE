@@ -36,4 +36,4 @@ simulation:
   gamma_delta: 0
   gamma_gaussian_n: 1
   generations: 40                    # multiplier: G = 40 * Z
-  convergence period: 0.2
+  convergence period: 0.25
