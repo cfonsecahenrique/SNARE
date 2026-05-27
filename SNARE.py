@@ -39,7 +39,7 @@ def run_simulations_for_model(model, n_runs, n_cores):
     return all_results
 
 
-def simulation(model: Model, output_file: str = "results.csv", silent: bool = False):
+def simulation(model: Model, output_file: str = "results.csv", silent: bool = False, log_interval: int = 0):
     z = model.population_size
     mu = model.mutation_rate / model.population_size
     gens = model.generations
@@ -72,7 +72,9 @@ def simulation(model: Model, output_file: str = "results.csv", silent: bool = Fa
     max_randoms_per_gen = int((z * z * 2 * max_randoms_per_pd + z) * 1.2) + 1024
     rng = np.random.default_rng()
 
-    for current_gen in tqdm(range(gens), disable=silent):
+    _t0 = time()
+    _gen_iter = range(gens) if log_interval > 0 else tqdm(range(gens), disable=silent)
+    for current_gen in _gen_iter:
         past_convergence = current_gen > model.converge
         aux_population: list[Agent] = agents.copy()
         random.shuffle(aux_population)
@@ -164,6 +166,19 @@ def simulation(model: Model, output_file: str = "results.csv", silent: bool = Fa
         if past_convergence:
             cooperation_per_gen[current_gen] = cooperative_acts/games_played if games_played > 0 else 0
 
+        if log_interval > 0 and (current_gen + 1) % log_interval == 0:
+            elapsed = time() - _t0
+            pct = (current_gen + 1) / gens
+            eta = elapsed / pct * (1 - pct)
+            coop_so_far = 100 * cooperative_acts / games_played if games_played > 0 else 0
+            print(
+                f"[PID {os.getpid()} | gen {current_gen+1}/{gens} ({100*pct:.0f}%)] "
+                f"coop={coop_so_far:.1f}% | "
+                f"elapsed={str(timedelta(seconds=int(elapsed)))} | "
+                f"eta={str(timedelta(seconds=int(eta)))}",
+                flush=True,
+            )
+
         combined_freq = aux.calculate_combined_strategy_frequency(agents)
         for idx, key in enumerate(aux.COMBINED_STRATEGY_KEYS):
             combined_strats[idx, current_gen] = combined_freq[key]
@@ -185,8 +200,8 @@ def simulation(model: Model, output_file: str = "results.csv", silent: bool = Fa
 
 def simulation_wrapper(args):
     """Wrapper to unpack arguments for multiprocessing."""
-    model, output_file = args
-    return simulation(model, output_file)
+    model, output_file, log_interval = args
+    return simulation(model, output_file, log_interval=log_interval)
 
 
 def read_yaml(filename):
@@ -527,14 +542,20 @@ def plot_parameter_sweep(combinations, avg_cooperations, ebsn, sweep_params, non
     plt.close()
 
 
-def run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file="results.csv", plots=True):
+def run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file="results.csv", plots=True, log_interval: int = 0):
     model = make_model_from_params(base_sim_params)
     safe_print(model)
 
-    all_models_args = [(deepcopy(model), output_file) for _ in range(n_runs)]
+    all_models_args = [(deepcopy(model), output_file, log_interval) for _ in range(n_runs)]
     pool = multiprocessing.Pool(processes=n_cores)
     try:
-        all_results = list(tqdm(pool.imap_unordered(simulation_wrapper, all_models_args), total=n_runs))
+        if log_interval > 0:
+            all_results = []
+            for result in pool.imap_unordered(simulation_wrapper, all_models_args):
+                all_results.append(result)
+                print(f"[PID {os.getpid()}] Completed run {len(all_results)}/{n_runs}", flush=True)
+        else:
+            all_results = list(tqdm(pool.imap_unordered(simulation_wrapper, all_models_args), total=n_runs))
     finally:
         pool.close()
         pool.join()
@@ -555,7 +576,7 @@ def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consen
         model = make_model_from_params(sim_params)
         safe_print(model)
 
-        all_models_args = [(deepcopy(model), output_file) for _ in range(n_runs)]
+        all_models_args = [(deepcopy(model), output_file, 0) for _ in range(n_runs)]
         pool = multiprocessing.Pool(processes=n_cores)
         try:
             all_results = list(tqdm(pool.imap_unordered(simulation_wrapper, all_models_args), total=n_runs))
@@ -841,10 +862,12 @@ if __name__ == '__main__':
                 sim_params = base_sim_params
             stem, ext = os.path.splitext(output_file)
             task_output = f"{stem}_c{slurm_combo:04d}{ext}"
-            safe_print(f"[SLURM] combo={slurm_combo} → {task_output}")
+            safe_print(f"[SLURM] combo={slurm_combo} -> {task_output}")
             safe_print(make_model_from_params(sim_params))
             os.makedirs("outputs", exist_ok=True)
-            run_single_value_experiment(n_runs, n_cores, sim_params, output_file=task_output, plots=False)
+            _gens = int(sim_params.get("generations", 2000)) * int(sim_params.get("z", 50))
+            _log_interval = max(1, _gens // 10)
+            run_single_value_experiment(n_runs, n_cores, sim_params, output_file=task_output, plots=False, log_interval=_log_interval)
         elif len(sweep_params) == 0:
             run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file=output_file, plots=with_logging)
         else:
