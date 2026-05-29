@@ -153,3 +153,4 @@ cython_debug/
 
 # simulation log files
 *.out
+*.err

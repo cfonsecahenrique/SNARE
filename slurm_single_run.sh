@@ -2,9 +2,8 @@
 #SBATCH --job-name=SNARE
 #SBATCH --output=logs/snare_%j.out
 #SBATCH --error=logs/snare_%j.err
-#SBATCH --time=24:00:00
 #SBATCH --ntasks=1
-#SBATCH --partition=SHORT
+#SBATCH --partition=LONG
 
 YAML="$1"
 COMBO="$2"

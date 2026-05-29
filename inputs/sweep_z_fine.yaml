@@ -19,7 +19,7 @@ simulation:
   sn: [1, 0, 0, 1]                  # SJ base norm
   norm:
 
-  z: [40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
+  z: [140, 150]
   mu: 2                              # mu = 2/Z (divided by Z internally)
   chi: 0.01
   eps: 0.01
