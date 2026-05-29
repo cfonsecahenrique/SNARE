@@ -27,10 +27,10 @@ OUTPUTS    = ROOT_DIR / "outputs"
 OUT_DIR    = SCRIPT_DIR / "plots" / "robustness"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-PAPER_ROOT = ROOT_DIR.parent / "Emotion as a Solution to Private Assessment"
 COPY_DIRS  = [
-    PAPER_ROOT / "PRSB" / "figs",
-    PAPER_ROOT / "PNAS" / "figs",
+    ROOT_DIR.parent / "Emotion-as-a-solution-to-Private-Assessment" / "figs",
+    ROOT_DIR.parent / "Proceedings_of_The_Royal_Society_B" / "figs",
+    ROOT_DIR.parent / "-PhD-Thesis-Dissertation" / "Images",
 ]
 
 mpl.rcParams.update({
