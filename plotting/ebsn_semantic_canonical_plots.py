@@ -129,6 +129,8 @@ means = [sum(v) / len(v) for v in ([x for x in vb if x is not None] for vb in pe
 lo = [min(x for x in vb if x is not None) for vb in per_base]
 hi = [max(x for x in vb if x is not None) for vb in per_base]
 
+MARKERS = {"SJ": "o", "IS": "s", "SH": "^", "SS": "D"}
+
 fig, ax = plt.subplots(figsize=(11.5, 5.6))
 x = list(range(8))
 for i in x:
@@ -140,10 +142,10 @@ for i in x:
     ax.bar(i, m, 0.62, color=fc, hatch=hatch, edgecolor="white", zorder=2)
     ax.errorbar(i, m, yerr=[[m - lo[i]], [hi[i] - m]], fmt="none",
                 ecolor="#333333", capsize=5, lw=1.4, zorder=3)
-    # individual base-norm points
-    for v in per_base[i]:
+    # individual base-norm points, shaped by base norm
+    for base, v in zip(bases, per_base[i]):
         if v is not None:
-            ax.plot(i, v, "o", ms=4.5, color="#222222",
+            ax.plot(i, v, MARKERS[base], ms=5.5, color="#222222",
                     markerfacecolor="white", zorder=4)
     ax.text(i, hi[i] + 1.8 if m > 0 else lo[i] - 1.8, f"{m:+.1f}",
             ha="center", va=("bottom" if m > 0 else "top"),
@@ -156,15 +158,20 @@ ax.set_xticklabels([f"{LAB[i]}\n{SEM[i]}" for i in x], fontsize=8)
 ax.set_ylabel("$\\Delta\\eta$ (assign Good $-$ assign Bad), %")
 ax.set_title("Effect of each moral verdict on cooperation, stratified by base norm "
              "($\\gamma=1$)\n"
-             "bar = mean across the 4 base norms; whisker = range; dots = individual base norms; "
+             "bar = mean across the 4 base norms; whisker = range; "
              "grey/hatched = sign flips across bases (not robust)", fontsize=9.5)
 ax.margins(y=0.18)
-# legend proxies
+# legend
 from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
 ax.legend(handles=[
     Patch(facecolor=TEAL, label="robustly rewarded (Good $\\uparrow$ coop)"),
     Patch(facecolor=CORAL, label="robustly penalised (Bad $\\uparrow$ coop)"),
     Patch(facecolor="#cccccc", hatch="////", label="sign flips across base norms"),
+] + [
+    Line2D([0], [0], marker=MARKERS[b], color="#222222", markerfacecolor="white",
+           ms=5.5, linestyle="none", label=b)
+    for b in ["SJ", "IS", "SH", "SS"]
 ], loc="lower left", fontsize=8, framealpha=0.95)
 fig.tight_layout()
 fig.savefig(PLOTS / "ebsn_delta_eta_canonical.png", dpi=170, bbox_inches="tight")

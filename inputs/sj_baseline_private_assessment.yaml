@@ -1,0 +1,54 @@
+# Pure Stern Judging baseline under private assessment — observability sweep.
+#
+# Companion to sj_elite_private_assessment.yaml. Runs the *base norm SJ alone*
+# (gamma=0, so the EBSN never fires) across the same observability grid, with
+# identical errors/payoffs/dynamics. This is the "SJ collapses under private
+# assessment" reference curve that motivates Chapter 4.3: it replaces the old
+# flat 85% guide line in the robustness/slopegraph figures.
+#
+# gamma_center=0 => use_ebsn = rand < 0 is always False => pure SJ.
+# consensus_thresh=0 keeps the consensus gate disabled (matches the elite run).
+#
+# Parameter combinations: 1 norm × 4 q-values × 1 gamma × 20 runs = 80 runs.
+#
+# Usage:
+#   python SNARE.py inputs/sj_baseline_private_assessment.yaml
+
+running:
+  runs: 20
+  cores: all
+  plotting: false
+  output_file: "sj_baseline_private_assessment.csv"
+
+simulation:
+  norm:                     # manual mode: use sn + ebsn below
+  ebsn: [1, 0, 0, 1, 1, 0, 0, 1]   # placeholder; never used at gamma=0
+  sn: [1, 0, 0, 1]          # Stern Judging base norm
+
+  # Private-assessment regime: observability sweep (incl. q=1 reference)
+  z: 40
+  observability: [0.4, 0.6, 0.8, 1.0]
+  consensus_thresh: 0
+  non_consensus_strategy: emotion   # inert at gamma=0
+
+  # Errors (same as elite sweep)
+  chi: 0.01
+  eps: 0.01
+  alpha: 0
+  xi: 0
+
+  # Payoffs
+  benefit: 5
+  cost: 1
+
+  # Evolutionary dynamics
+  beta: 1
+  mu: 1
+  generations: 40
+  convergence period: 0.25
+
+  # Pure base norm: gamma fixed at 0
+  gamma_min: 0
+  gamma_max: 0
+  gamma_delta: 0
+  gamma_gaussian_n: 0

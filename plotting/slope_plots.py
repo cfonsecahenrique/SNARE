@@ -171,6 +171,7 @@ def plot_slope(
     *,
     color_by: str = "cooperative",
     threshold: float = THRESHOLD,
+    sj_baseline: float | None = None,
     ax: plt.Axes | None = None,
     figsize: tuple[float, float] = (5.5, 4.5),
     legend_loc: str = "upper left",
@@ -225,14 +226,24 @@ def plot_slope(
         ax.scatter([GAMMA_RIGHT], [row[GAMMA_RIGHT]],
                    color=colour, s=48, alpha=1.0, edgecolors="white", linewidths=0.5, zorder=5)
 
-    # 5) Baseline reference line
+    # 5) Baseline reference lines
+    # (a) SJ public-info benchmark: the flagship ceiling, shown in every panel
+    #     so the "no EBSN beats SJ under public info" claim is visually explicit
+    #     (mirrors the pure-SJ baseline used in the private-assessment figures).
+    if sj_baseline is not None:
+        ax.axhline(sj_baseline, linestyle="--", linewidth=1.3,
+                   color="#444444", alpha=0.9, zorder=3)
+        ax.text(GAMMA_RIGHT + 0.015, sj_baseline,
+                f"SJ benchmark\nACR={sj_baseline:.2f}",
+                ha="left", va="center", fontsize=6.5, color="#444444")
+    # (b) This panel's own base-norm baseline (omitted when it ~coincides with SJ)
     baseline = _get_baseline_acr(base_norm)
-    if baseline is not None:
-        ax.axhline(baseline, linestyle="--", linewidth=1.1,
-                   color="#444444", alpha=0.85, zorder=3)
+    if baseline is not None and (sj_baseline is None or abs(baseline - sj_baseline) > 0.03):
+        ax.axhline(baseline, linestyle=":", linewidth=1.0,
+                   color="#999999", alpha=0.85, zorder=3)
         ax.text(GAMMA_RIGHT + 0.015, baseline,
                 f"baseline\nACR={baseline:.2f}",
-                ha="left", va="center", fontsize=6.5, color="#444444")
+                ha="left", va="center", fontsize=6.0, color="#999999")
 
     # Stats
     n_elite_lines = int((has_both & is_elite).sum())
@@ -289,9 +300,11 @@ def plot_combined(
     fig, axes = plt.subplots(2, 2, figsize=figsize)
     order = ["Stern Judging", "Simple Standing", "Shunning", "Image Scoring"]
     legend_locs = {"Stern Judging": "lower right"}
+    sj_baseline = _get_baseline_acr("Stern Judging")
     for ax, norm in zip(axes.flat, order):
         wide = aggregate_for_slope(sweeps[norm])
-        plot_slope(wide, norm, color_by=color_by, threshold=threshold, ax=ax,
+        plot_slope(wide, norm, color_by=color_by, threshold=threshold,
+                   sj_baseline=sj_baseline, ax=ax,
                    legend_loc=legend_locs.get(norm, "upper left"))
     fig.suptitle(
         f"EB-norm extensions: ACR from $\\gamma$={GAMMA_LEFT} to $\\gamma$={GAMMA_RIGHT}"
@@ -338,7 +351,8 @@ def main() -> None:
 
     if args.norm:
         wide = aggregate_for_slope(sweeps[args.norm])
-        fig  = plot_slope(wide, args.norm, color_by=args.color, threshold=args.threshold)
+        fig  = plot_slope(wide, args.norm, color_by=args.color, threshold=args.threshold,
+                          sj_baseline=_get_baseline_acr("Stern Judging"))
         safe = args.norm.lower().replace(" ", "_")
         save_figure(fig, PLOTS_DIR / f"slope_{safe}_{args.color}.png")
     else:

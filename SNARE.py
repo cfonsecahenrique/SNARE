@@ -18,6 +18,7 @@ import itertools
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
 def safe_print(obj):
     """Print an object, writing UTF-8 directly to stdout.buffer to bypass Windows cp1252 codec issues."""
     text = str(obj) + "\n"

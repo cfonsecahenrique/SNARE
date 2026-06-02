@@ -133,6 +133,26 @@ def load_q1_data(et: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def load_sj_baseline() -> dict[float, float]:
+    """Mean ACR (%) of pure Stern Judging (gamma=0) under private assessment, per q.
+
+    Produced by inputs/sj_baseline_private_assessment.yaml. This is the
+    reference curve that replaces the old flat 85% guide line: it shows SJ
+    alone collapsing as observability drops, motivating the Chapter 4.3 model.
+    """
+    path = OUTPUTS_DIR / "sj_baseline_private_assessment.csv"
+    if not path.exists():
+        print(f"WARNING: SJ baseline not found at {path} — run "
+              "`python SNARE.py inputs/sj_baseline_private_assessment.yaml` first.")
+        return {}
+    raw = pd.read_csv(path)
+    raw = raw[raw["q"] != "q"].copy()   # drop any repeated header rows
+    for col in ["q", "average_cooperation"]:
+        raw[col] = pd.to_numeric(raw[col], errors="coerce")
+    raw = raw.dropna(subset=["q", "average_cooperation"])
+    return raw.groupby("q")["average_cooperation"].mean().to_dict()
+
+
 def aggregate(df: pd.DataFrame) -> pd.DataFrame:
     return (
         df.groupby(
@@ -145,7 +165,7 @@ def aggregate(df: pd.DataFrame) -> pd.DataFrame:
 
 # ── Figure 1: Three-panel slopegraph ─────────────────────────────────────────
 
-def make_slopegraph(agg: pd.DataFrame) -> plt.Figure:
+def make_slopegraph(agg: pd.DataFrame, baseline: dict[float, float]) -> plt.Figure:
     """γ=0.5 → γ=1 slopegraph at each q level (4 columns, including q=1)."""
     fig, axes = plt.subplots(1, 4, figsize=(17, 6), sharey=True)
     fig.subplots_adjust(wspace=0.08)
@@ -172,13 +192,15 @@ def make_slopegraph(agg: pd.DataFrame) -> plt.Figure:
         ax.set_xticklabels(["γ = 0.5", "γ = 1"], fontsize=10)
         ax.set_xlim(-0.25, 1.25)
         ax.set_title(f"q = {q}", fontsize=11, fontweight="bold")
-        ax.axhline(85, color="grey", lw=0.8, ls="--", alpha=0.5)
+        base = baseline.get(q)
+        if base is not None:
+            ax.axhline(base, color="#444444", lw=1.2, ls="--", alpha=0.85, zorder=2)
         ax.set_ylim(0, 100)
         ax.grid(axis="y", lw=0.4, alpha=0.4)
         ax.spines[["top", "right", "bottom"]].set_visible(False)
         ax.tick_params(axis="x", length=0)
 
-    axes[0].set_ylabel("ACR (%)", fontsize=10)
+    axes[0].set_ylabel(r"Average Cooperation Ratio $\eta$ (%)", fontsize=10)
 
     # Legend
     handles = [
@@ -186,14 +208,15 @@ def make_slopegraph(agg: pd.DataFrame) -> plt.Figure:
         for eq in EQUIL_ORDER if eq in EQUIL_COLOURS
     ]
     handles.append(
-        mlines.Line2D([], [], color="grey", lw=0.8, ls="--", label="85% threshold")
+        mlines.Line2D([], [], color="#444444", lw=1.2, ls="--",
+                      label="pure SJ baseline (γ=0)")
     )
     fig.legend(handles=handles, loc="lower center", ncol=4,
                fontsize=9, frameon=False, bbox_to_anchor=(0.5, -0.02))
 
     fig.suptitle(
-        "Elite EBSNs under private assessment: γ=0.5 vs γ=1\n"
-        "each line = one (EBSN, base norm) pair  |  q = 1.0 from canonical sweeps",
+        "SJ-elite EBSNs under private assessment: γ=0.5 vs γ=1\n"
+        "each line = one SJ-elite EBSN  |  q = 1.0 from canonical sweeps",
         fontsize=11, y=1.01,
     )
     fig.tight_layout()
@@ -202,7 +225,7 @@ def make_slopegraph(agg: pd.DataFrame) -> plt.Figure:
 
 # ── Figure 2: Robustness line plot ───────────────────────────────────────────
 
-def make_robustness_plot(agg: pd.DataFrame) -> plt.Figure:
+def make_robustness_plot(agg: pd.DataFrame, baseline: dict[float, float]) -> plt.Figure:
     """ACR vs q per equilibrium type; solid = γ=1, dashed = γ=0.5."""
     n_eq  = len(EQUIL_ORDER)
     fig, axes = plt.subplots(1, n_eq, figsize=(13, 5), sharey=True)
@@ -211,6 +234,9 @@ def make_robustness_plot(agg: pd.DataFrame) -> plt.Figure:
     ls_map = {0.5: "--", 1.0: "-"}
     lw_ind = 0.9   # individual EBSN lines
     lw_avg = 2.5   # group mean
+
+    base_q   = sorted(baseline)
+    base_acr = [baseline[q] for q in base_q]
 
     for ax, eq in zip(axes, EQUIL_ORDER):
         col = EQUIL_COLOURS.get(eq, "#888888")
@@ -241,25 +267,31 @@ def make_robustness_plot(agg: pd.DataFrame) -> plt.Figure:
         ax.set_xticks([0.4, 0.6, 0.8, 1.0])
         ax.set_xlim(0.33, 1.07)
         ax.set_ylim(0, 100)
-        ax.axhline(85, color="grey", lw=0.8, ls=":", alpha=0.5)
+        if base_q:
+            ax.plot(base_q, base_acr, color="#444444", lw=1.6, ls=":",
+                    alpha=0.9, zorder=2)
+        ax.axhline(85, color="#888888", lw=1.0, ls="-.", alpha=0.7, zorder=2)
         ax.grid(axis="y", lw=0.4, alpha=0.4)
         ax.spines[["top", "right"]].set_visible(False)
 
-    axes[0].set_ylabel("ACR (%)", fontsize=10)
+    axes[0].set_ylabel(r"Average Cooperation Ratio $\eta$ (%)", fontsize=10)
 
     # Legend (one shared)
     solid  = mlines.Line2D([], [], color="grey", lw=2,   ls="-",  label="γ = 1")
     dashed = mlines.Line2D([], [], color="grey", lw=2,   ls="--", label="γ = 0.5")
-    thresh = mlines.Line2D([], [], color="grey", lw=0.8, ls=":",  label="85% threshold")
+    thresh = mlines.Line2D([], [], color="#444444", lw=1.6, ls=":",
+                           label="pure SJ baseline (γ=0)")
+    elite  = mlines.Line2D([], [], color="#888888", lw=1.0, ls="-.",
+                           alpha=0.7, label="elite threshold (85%)")
     fig.legend(
-        handles=[solid, dashed, thresh],
-        loc="lower center", ncol=3, fontsize=9,
+        handles=[solid, dashed, thresh, elite],
+        loc="lower center", ncol=4, fontsize=9,
         frameon=False, bbox_to_anchor=(0.5, -0.04),
     )
 
     fig.suptitle(
-        "Robustness of elite EBSNs under private assessment\n"
-        "thin = individual (EBSN, base norm) · thick = group mean",
+        "Robustness of SJ-elite EBSNs under private assessment\n"
+        "thin = individual EBSN · thick = group mean",
         fontsize=11, y=1.01,
     )
     fig.tight_layout()
@@ -270,32 +302,44 @@ def make_robustness_plot(agg: pd.DataFrame) -> plt.Figure:
 
 def main() -> None:
     df  = load_data()
+
+    # Restrict to EBSNs that are elite specifically under Stern Judging.
+    # Narrative: SJ fails under private assessment — we ask whether emotion
+    # helps in that regime, so the only relevant norms are SJ-elite ones.
+    df = df[df["base_norm"] == "Stern Judging"].copy()
+
     agg = aggregate(df)
 
-    # Append q=1 canonical data
+    # Append q=1 canonical data (SJ only)
     et = pd.read_csv(
         Path(__file__).parent / "plots" / "elite_table.csv",
         dtype={"8bit": str},
     )
     et["8bit"] = et["8bit"].str.zfill(8)
-    q1  = load_q1_data(et)
+    et_sj = et[et["base_norm"] == "Stern Judging"]
+    q1  = load_q1_data(et_sj)
+    q1  = q1[q1["base_norm"] == "Stern Judging"].copy()
     agg = pd.concat([agg, q1], ignore_index=True)
 
-    print(f"Loaded {len(df)} runs, {agg['label'].nunique()} unique EBSNs across "
-          f"{agg['base_norm'].nunique()} base norms")
-    print("Equilibrium counts (unique EBSN×base pairs):")
-    print(agg[["label","base_norm","equilibrium"]].drop_duplicates()
+    print(f"Loaded {len(df)} runs (SJ-elite only), {agg['label'].nunique()} unique EBSNs")
+    print("Equilibrium counts (unique EBSN pairs):")
+    print(agg[["label","equilibrium"]].drop_duplicates()
           ["equilibrium"].value_counts().to_string())
+
+    baseline = load_sj_baseline()
+    if baseline:
+        print("Pure-SJ baseline ACR (%) by q: "
+              + ", ".join(f"{q}: {baseline[q]:.1f}" for q in sorted(baseline)))
 
     PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    fig1 = make_slopegraph(agg)
+    fig1 = make_slopegraph(agg, baseline)
     p1   = PLOTS_DIR / "private_assessment_slopegraph.png"
     fig1.savefig(p1, dpi=180, bbox_inches="tight")
     plt.close(fig1)
     print(f"Saved: {p1}")
 
-    fig2 = make_robustness_plot(agg)
+    fig2 = make_robustness_plot(agg, baseline)
     p2   = PLOTS_DIR / "private_assessment_robustness.png"
     fig2.savefig(p2, dpi=180, bbox_inches="tight")
     plt.close(fig2)
