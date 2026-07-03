@@ -1,8 +1,8 @@
 running:
-  runs: 1
+  runs: 5
   cores: all
   plotting: true
-  output_file: "test.csv"
+  output_file: "test_action_fallback.csv"
 simulation:
   random_image_matrix: false
   norm:
@@ -19,10 +19,10 @@ simulation:
   beta: 1
   observability: 0.6
   consensus_thresh: 0.6
-  non_consensus_strategy: emotion   # emotion-based fallback (Fig. time_series_emotion_fallback)
+  non_consensus_strategy: action   # action-valence fallback (Fig. time_series_action_fallback)
   gamma_min: 0
   gamma_max: 1
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
   generations: 40  # multiplier: actual total generations = generations * z = 1600
-  convergence period: 0
+  convergence period: 0.2

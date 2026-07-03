@@ -295,17 +295,23 @@ def plot_time_series(all_results, model):
     if model.observability != 1:
         num_plots += 1
 
-    fig, axes = plt.subplots(num_plots, 1, figsize=(12, 2 * num_plots), sharex=True)
-    #plt.suptitle("d = " + aux.ebsn_to_GB(model.ebsn))
+    # Larger, more readable text throughout (titles, labels, ticks, legends).
+    TITLE_FS = 18
+    LABEL_FS = 16
+    TICK_FS = 14
+    LEGEND_FS = 13
+
+    fig, axes = plt.subplots(num_plots, 1, figsize=(14, 3.2 * num_plots), sharex=True)
+    # No overall figure title (e.g. norm label) is drawn above the panel grid.
 
     # Plot 1: Cooperation
     axes[0].plot(x, coop_mean, color='blue', label='Mean Cooperation Rate')
     axes[0].fill_between(x, coop_mean - coop_std, coop_mean + coop_std,
                          color='blue', alpha=0.3, label='±1 Std Dev')
-    axes[0].set_title("Average Cooperation Rate Across Simulations")
-    axes[0].set_ylabel("Cooperation Rate")
+    axes[0].set_title("Average Cooperation Rate Across Simulations", fontsize=TITLE_FS)
+    axes[0].set_ylabel("Cooperation Rate", fontsize=LABEL_FS)
     axes[0].set_ylim(0, 1)
-    axes[0].legend()
+    axes[0].legend(fontsize=LEGEND_FS)
     axes[0].grid(True)
 
     # Plot 2: Combined strategies (8 lines: 4 strategies × 2 EPs)
@@ -319,10 +325,10 @@ def plot_time_series(all_results, model):
         axes[1].fill_between(x, combined_mean[i] - combined_std[i],
                              combined_mean[i] + combined_std[i],
                              color=strat_colors[i], alpha=0.15)
-    axes[1].set_ylabel("Frequency")
-    axes[1].set_title("Combined Strategy Frequencies Across Simulations")
+    axes[1].set_ylabel("Frequency", fontsize=LABEL_FS)
+    axes[1].set_title("Combined Strategy Frequencies Across Simulations", fontsize=TITLE_FS)
     axes[1].set_ylim(0, 1)
-    axes[1].legend(ncol=2, fontsize=8)
+    axes[1].legend(ncol=2, fontsize=LEGEND_FS)
     axes[1].grid(True)
 
     # Plot 3: Reputations
@@ -332,9 +338,9 @@ def plot_time_series(all_results, model):
         axes[2].plot(x, rep_mean[i], color=rep_colors[i], label=rep_labels[i])
         axes[2].fill_between(x, rep_mean[i] - rep_std[i], rep_mean[i] + rep_std[i],
                              color=rep_colors[i], alpha=0.3)
-    axes[2].set_ylabel("Reputation Frequency")
-    axes[2].set_title("Reputation Frequencies Across Simulations")
-    axes[2].legend()
+    axes[2].set_ylabel("Reputation Frequency", fontsize=LABEL_FS)
+    axes[2].set_title("Reputation Frequencies Across Simulations", fontsize=TITLE_FS)
+    axes[2].legend(fontsize=LEGEND_FS)
     axes[2].grid(True)
 
     current_plot_idx = 3
@@ -343,10 +349,10 @@ def plot_time_series(all_results, model):
     axes[current_plot_idx].plot(x, fb_mean, color='tab:orange', label='Fallback Ratio')
     axes[current_plot_idx].fill_between(x, fb_mean - fb_std, fb_mean + fb_std,
                          color='tab:orange', alpha=0.3, label='±1 Std Dev')
-    axes[current_plot_idx].set_title("Fallback/Norm Ratio per Generation")
-    axes[current_plot_idx].set_ylabel("Fallback / Observer-Judgements")
+    axes[current_plot_idx].set_title("Fallback/Norm Ratio per Generation", fontsize=TITLE_FS)
+    axes[current_plot_idx].set_ylabel("Fallback Ratio", fontsize=LABEL_FS)
     axes[current_plot_idx].set_ylim(0, 1)
-    axes[current_plot_idx].legend()
+    axes[current_plot_idx].legend(fontsize=LEGEND_FS)
     axes[current_plot_idx].grid(True)
     current_plot_idx += 1
 
@@ -355,9 +361,9 @@ def plot_time_series(all_results, model):
         axes[current_plot_idx].plot(x, gammas_mean, color='blue', label='Average Gamma')
         axes[current_plot_idx].fill_between(x, gammas_mean - gammas_std, gammas_mean + gammas_std,
                              color='blue', alpha=0.3, label='±1 Std Dev')
-        axes[current_plot_idx].set_title("Average Gammas Across Simulations")
-        axes[current_plot_idx].set_ylabel("Gamma Frequency")
-        axes[current_plot_idx].legend()
+        axes[current_plot_idx].set_title("Average Gammas Across Simulations", fontsize=TITLE_FS)
+        axes[current_plot_idx].set_ylabel("Gamma Frequency", fontsize=LABEL_FS)
+        axes[current_plot_idx].legend(fontsize=LEGEND_FS)
         axes[current_plot_idx].grid(True)
         current_plot_idx += 1
 
@@ -366,14 +372,16 @@ def plot_time_series(all_results, model):
         axes[current_plot_idx].plot(x, consensus_mean, color='purple', label='Average Consensus')
         axes[current_plot_idx].fill_between(x, consensus_mean - consensus_std, consensus_mean + consensus_std,
                              color='purple', alpha=0.3, label='±1 Std Dev')
-        axes[current_plot_idx].set_title("Average Consensus Across Simulations")
-        axes[current_plot_idx].set_ylabel("Consensus")
+        axes[current_plot_idx].set_title("Average Consensus Across Simulations", fontsize=TITLE_FS)
+        axes[current_plot_idx].set_ylabel("Consensus", fontsize=LABEL_FS)
         axes[current_plot_idx].set_ylim(0, 1)
-        axes[current_plot_idx].legend()
+        axes[current_plot_idx].legend(fontsize=LEGEND_FS)
         axes[current_plot_idx].grid(True)
         current_plot_idx += 1
 
-    axes[num_plots - 1].set_xlabel("Generation")
+    axes[num_plots - 1].set_xlabel("Generation", fontsize=LABEL_FS)
+    for ax in axes:
+        ax.tick_params(axis='both', labelsize=TICK_FS)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
 
     os.makedirs("simulations", exist_ok=True)
@@ -385,6 +393,101 @@ def plot_time_series(all_results, model):
     plt.close()
 
     plot_time_series_interactive(all_results, model, base_filename + ".html")
+
+
+def plot_time_series_per_run(all_results, model):
+    """Save one time-series figure per run (no averaging), so individual
+    stochastic trajectories can be inspected/compared rather than blended
+    into a mean +/- std band."""
+    TITLE_FS = 18
+    LABEL_FS = 16
+    TICK_FS = 14
+    LEGEND_FS = 13
+
+    strat_colors = ['tab:red', 'tab:red', 'tab:blue', 'tab:blue',
+                    'tab:orange', 'tab:orange', 'tab:green', 'tab:green']
+    strat_linestyles = ['-', '--', '-', '--', '-', '--', '-', '--']
+    rep_labels = ["bad", "good"]
+    rep_colors = ['tab:red', 'tab:cyan']
+
+    os.makedirs("simulations", exist_ok=True)
+    sn_flat = [item for sublist in model.social_norm for item in sublist]
+    sn_str = "".join(map(str, sn_flat))
+    timestamp = int(time())
+
+    num_plots = 4
+    if model.gamma_delta != 0:
+        num_plots += 1
+    if model.observability != 1:
+        num_plots += 1
+
+    for run_idx, result in enumerate(all_results):
+        coop, combined_strat, rep, gammas, consensus, fallback_ratio = result
+        gens = coop.shape[0]
+        x = np.arange(gens)
+
+        fig, axes = plt.subplots(num_plots, 1, figsize=(14, 3.2 * num_plots), sharex=True)
+
+        axes[0].plot(x, coop, color='blue', label='Cooperation Rate')
+        axes[0].set_title("Cooperation Rate", fontsize=TITLE_FS)
+        axes[0].set_ylabel("Cooperation Rate", fontsize=LABEL_FS)
+        axes[0].set_ylim(0, 1)
+        axes[0].legend(fontsize=LEGEND_FS)
+        axes[0].grid(True)
+
+        for i, label in enumerate(aux.COMBINED_STRATEGY_LABELS):
+            axes[1].plot(x, combined_strat[i], color=strat_colors[i],
+                         linestyle=strat_linestyles[i], label=label)
+        axes[1].set_ylabel("Frequency", fontsize=LABEL_FS)
+        axes[1].set_title("Combined Strategy Frequencies", fontsize=TITLE_FS)
+        axes[1].set_ylim(0, 1)
+        axes[1].legend(ncol=2, fontsize=LEGEND_FS)
+        axes[1].grid(True)
+
+        for i in range(2):
+            axes[2].plot(x, rep[i], color=rep_colors[i], label=rep_labels[i])
+        axes[2].set_ylabel("Reputation Frequency", fontsize=LABEL_FS)
+        axes[2].set_title("Reputation Frequencies", fontsize=TITLE_FS)
+        axes[2].legend(fontsize=LEGEND_FS)
+        axes[2].grid(True)
+
+        current_plot_idx = 3
+
+        axes[current_plot_idx].plot(x, fallback_ratio, color='tab:orange', label='Fallback Ratio')
+        axes[current_plot_idx].set_title("Fallback/Norm Ratio per Generation", fontsize=TITLE_FS)
+        axes[current_plot_idx].set_ylabel("Fallback Ratio", fontsize=LABEL_FS)
+        axes[current_plot_idx].set_ylim(0, 1)
+        axes[current_plot_idx].legend(fontsize=LEGEND_FS)
+        axes[current_plot_idx].grid(True)
+        current_plot_idx += 1
+
+        if model.gamma_delta != 0:
+            axes[current_plot_idx].plot(x, gammas, color='blue', label='Average Gamma')
+            axes[current_plot_idx].set_title("Average Gamma", fontsize=TITLE_FS)
+            axes[current_plot_idx].set_ylabel("Gamma", fontsize=LABEL_FS)
+            axes[current_plot_idx].legend(fontsize=LEGEND_FS)
+            axes[current_plot_idx].grid(True)
+            current_plot_idx += 1
+
+        if model.observability != 1:
+            axes[current_plot_idx].plot(x, consensus, color='purple', label='Consensus')
+            axes[current_plot_idx].set_title("Average Consensus", fontsize=TITLE_FS)
+            axes[current_plot_idx].set_ylabel("Consensus", fontsize=LABEL_FS)
+            axes[current_plot_idx].set_ylim(0, 1)
+            axes[current_plot_idx].legend(fontsize=LEGEND_FS)
+            axes[current_plot_idx].grid(True)
+            current_plot_idx += 1
+
+        axes[num_plots - 1].set_xlabel("Generation", fontsize=LABEL_FS)
+        for ax in axes:
+            ax.tick_params(axis='both', labelsize=TICK_FS)
+        plt.tight_layout(rect=[0, 0, 1, 0.95])
+
+        filename = (f"simulations/{sn_str}_G{model.generations}_k{model.consensus_thresh}"
+                    f"_z{model.population_size}_q{model.observability}_xi{model.xi}"
+                    f"_{timestamp}_run{run_idx}.png")
+        plt.savefig(filename)
+        plt.close()
 
 
 def plot_time_series_interactive(all_results, model, filepath):
@@ -562,7 +665,7 @@ def run_single_value_experiment(n_runs, n_cores, base_sim_params, output_file="r
         pool.join()
 
     if plots:
-        plot_time_series(all_results, model)
+        plot_time_series_per_run(all_results, model)
 
 
 def run_sweep_experiment(n_runs, n_cores, base_sim_params, sweep_params=['consensus_thresh'], output_file="results.csv", plots=True):
