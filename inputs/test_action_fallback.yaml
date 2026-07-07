@@ -25,4 +25,4 @@ simulation:
   gamma_delta: 0 # use 0 for homogeneous population
   gamma_gaussian_n: 1
   generations: 40  # multiplier: actual total generations = generations * z = 1600
-  convergence period: 0.2
+  convergence period: 0

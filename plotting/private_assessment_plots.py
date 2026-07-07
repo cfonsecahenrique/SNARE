@@ -11,9 +11,9 @@ Produces:
 
   plotting/plots/private_assessment_robustness.png
       ACR vs q, one panel per equilibrium type.
-      Solid = γ=1, dashed = γ=0.5.  Thin lines = individual EBSNs,
-      thick line = group mean.  Horizontal dotted = q=1 reference from
-      canonical sweeps (acr_1 from elite_table.csv).
+      Solid = γ=1, dashed = γ=0.5.  Each line = one individual EBSN.
+      Horizontal dotted = q=1 reference from canonical sweeps
+      (acr_1 from elite_table.csv).
 
 Usage:
     python plotting/private_assessment_plots.py
@@ -232,8 +232,7 @@ def make_robustness_plot(agg: pd.DataFrame, baseline: dict[float, float]) -> plt
     fig.subplots_adjust(wspace=0.08)
 
     ls_map = {0.5: "--", 1.0: "-"}
-    lw_ind = 0.9   # individual EBSN lines
-    lw_avg = 2.5   # group mean
+    lw_ind = 1.3   # individual EBSN lines
 
     base_q   = sorted(baseline)
     base_acr = [baseline[q] for q in base_q]
@@ -250,16 +249,9 @@ def make_robustness_plot(agg: pd.DataFrame, baseline: dict[float, float]) -> plt
                 ax.plot(
                     grp_sorted["q"],
                     grp_sorted["acr"] * 100,
-                    color=col, alpha=0.25, lw=lw_ind,
+                    color=col, alpha=0.7, lw=lw_ind,
                     ls=ls_map[gamma], zorder=1,
                 )
-            # Group mean
-            mean_line = g_sub.groupby("q")["acr"].mean().reset_index().sort_values("q")
-            ax.plot(
-                mean_line["q"],
-                mean_line["acr"] * 100,
-                color=col, lw=lw_avg, ls=ls_map[gamma], zorder=3,
-            )
 
         ax.set_title(eq, fontsize=10, fontweight="bold",
                      color=col)
@@ -291,7 +283,7 @@ def make_robustness_plot(agg: pd.DataFrame, baseline: dict[float, float]) -> plt
 
     fig.suptitle(
         "Robustness of SJ-elite EBSNs under private assessment\n"
-        "thin = individual EBSN · thick = group mean",
+        "each line = one individual EBSN",
         fontsize=11, y=1.01,
     )
     fig.tight_layout()
